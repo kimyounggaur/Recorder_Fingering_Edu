@@ -1,0 +1,12 @@
+.git
+.next
+.sites-dev.log
+.vinext
+.wrangler
+coverage
+dist
+node_modules
+output
+outputs
+work
+*.tsbuildinfo
