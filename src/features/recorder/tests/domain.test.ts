@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { getFingeringDiff } from "../animation/getFingeringDiff";
@@ -8,6 +10,7 @@ import {
   HOLE_NUMBER_LABELS,
 } from "../data/fingerings";
 import { NOTE_META, NOTE_ORDER } from "../data/noteMeta";
+import { getRecorderPoseSource, RECORDER_POSE_SOURCES } from "../data/poseAssets";
 import type { HoleId } from "../model/types";
 import { buildInstruction } from "../utils/buildInstruction";
 import {
@@ -89,6 +92,37 @@ describe("recorder domain data", () => {
     for (const note of NOTE_ORDER) {
       if (note === "fa") continue;
       expect(FINGERINGS.baroque[note]).toEqual(FINGERINGS.german[note]);
+    }
+  });
+
+  it("maps every lesson note to an aligned pose and changes only fa by system", () => {
+    for (const note of NOTE_ORDER) {
+      const baroqueSource = getRecorderPoseSource(note, "baroque");
+      const germanSource = getRecorderPoseSource(note, "german");
+
+      expect(RECORDER_POSE_SOURCES).toContain(baroqueSource);
+      expect(RECORDER_POSE_SOURCES).toContain(germanSource);
+      expect(baroqueSource.endsWith(".png")).toBe(true);
+
+      if (note === "fa") {
+        expect(baroqueSource).toBe("/fingering/poses/fa-baroque.png");
+        expect(germanSource).toBe("/fingering/poses/fa-german.png");
+      } else {
+        expect(germanSource).toBe(baroqueSource);
+      }
+    }
+  });
+
+  it("ships all nine pose files in one aligned 976×1360 frame", () => {
+    expect(new Set(RECORDER_POSE_SOURCES).size).toBe(9);
+
+    for (const source of RECORDER_POSE_SOURCES) {
+      const png = readFileSync(
+        join(process.cwd(), "public", source.replace(/^\//, "")),
+      );
+      expect(png.subarray(1, 4).toString("ascii")).toBe("PNG");
+      expect(png.readUInt32BE(16)).toBe(976);
+      expect(png.readUInt32BE(20)).toBe(1360);
     }
   });
 

@@ -166,8 +166,9 @@ export function RecorderLearningApp() {
   }, []);
 
   const getReplayStart = useCallback(
-    (): readonly HoleId[] => transitionOrigin?.closedHoles ?? [],
-    [transitionOrigin],
+    (): readonly HoleId[] =>
+      transitionOrigin?.closedHoles ?? getVisualClosedHoles(),
+    [getVisualClosedHoles, transitionOrigin],
   );
 
   const updatePreferences = useCallback(
@@ -485,6 +486,13 @@ export function RecorderLearningApp() {
           <div className="recorder-stage-frame">
             <RecorderScene
               className="recorder-scene"
+              note={selectedNote}
+              system={system}
+              speed={preferences.speed}
+              stepMode={stepMode}
+              transitionKey={animationKey}
+              transitionFromNote={transitionOrigin?.note ?? null}
+              transitionFromSystem={transitionOrigin?.system ?? null}
               holeStates={displayAnimation.holeStates}
               currentClosedHoles={displayAnimation.visualClosedHoles}
               toOpen={displayAnimation.diff.toOpen}

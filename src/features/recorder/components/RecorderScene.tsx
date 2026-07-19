@@ -1,20 +1,31 @@
-import { useId, type SVGProps } from "react";
-import { HOLE_NUMBER_LABELS } from "../data/fingerings";
+import { useId, type HTMLAttributes } from "react";
 import {
-  FRONT_HOLE_IDS,
-  HOLE_IDS,
-  HOLE_LAYOUT,
-  RECORDER_SCENE_VIEW_BOX,
-} from "../data/holeLayout";
-import type { AnimationPhase, HoleId, HoleState } from "../model/types";
-import { FingerLayer } from "./FingerLayer";
-import { Hole, HoleLabel, type HoleTransition } from "./Hole";
-import { RearThumbInset } from "./RearThumbInset";
-import { RecorderBody } from "./RecorderBody";
-import { RecorderDebugOverlay } from "./RecorderDebugOverlay";
+  FINGERINGS,
+  FINGER_LABELS,
+  HOLE_NUMBER_LABELS,
+} from "../data/fingerings";
+import { HOLE_IDS } from "../data/holeLayout";
+import { getRecorderPoseSource } from "../data/poseAssets";
+import type {
+  AnimationPhase,
+  FingeringSystem,
+  HoleId,
+  HoleState,
+  PlaybackSpeed,
+  SolfegeId,
+} from "../model/types";
+import { RecorderFingeringMap } from "./RecorderFingeringMap";
+import { RecorderPoseStage } from "./RecorderPoseStage";
 
 export interface RecorderSceneProps
-  extends Omit<SVGProps<SVGSVGElement>, "children" | "title"> {
+  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "title"> {
+  note: SolfegeId;
+  system: FingeringSystem;
+  speed?: PlaybackSpeed;
+  stepMode?: boolean;
+  transitionKey?: number;
+  transitionFromNote?: SolfegeId | null;
+  transitionFromSystem?: FingeringSystem | null;
   holeStates?: Partial<Record<HoleId, HoleState>>;
   currentClosedHoles?: readonly HoleId[];
   toOpen?: readonly HoleId[];
@@ -27,115 +38,54 @@ export interface RecorderSceneProps
   title?: string;
   description?: string;
 }
-
-function transitionFor(
-  id: HoleId,
-  toOpen: readonly HoleId[],
-  toClose: readonly HoleId[],
-): HoleTransition {
-  if (toOpen.includes(id)) return "opening";
-  if (toClose.includes(id)) return "closing";
-  return "steady";
+function ChangeList({
+  holes,
+  kind,
+}: {
+  holes: readonly HoleId[];
+  kind: "release" | "press";
+}) {
+  if (!holes.length) return null;
+  return (
+    <div className={`pose-change-list pose-change-list--${kind}`}>
+      <span className="pose-change-list__label">
+        {kind === "release" ? "떼기" : "막기"}
+      </span>
+      <div className="pose-change-list__chips">
+        {holes.map((hole) => (
+          <span key={hole} className="pose-change-chip">
+            <strong>{HOLE_NUMBER_LABELS[hole]}</strong>
+            <span>{FINGER_LABELS[hole]}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
-function MotionEffects({
-  toOpen,
-  toClose,
-  phase,
-}: {
-  toOpen: readonly HoleId[];
-  toClose: readonly HoleId[];
-  phase: AnimationPhase;
-}) {
-  const releaseActive =
-    phase === "highlight-release" || phase === "releasing";
-  const pressActive =
-    phase === "highlight-press" || phase === "pressing" || phase === "contact";
-
+function sameHoles(
+  first: readonly HoleId[],
+  second: readonly HoleId[],
+): boolean {
   return (
-    <g id="motion-effects" className="recorder-motion-effects" aria-hidden="true">
-      {releaseActive
-        ? toOpen.map((id) => {
-            const { x, y, radius } = HOLE_LAYOUT[id];
-            return (
-              <g
-                key={`open-${id}`}
-                className="recorder-motion-effect recorder-motion-effect--release"
-                data-effect-hole={id}
-              >
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={radius + 22}
-                  fill="none"
-                  stroke="#1f70c1"
-                  strokeWidth="7"
-                  strokeDasharray="10 7"
-                />
-                <path
-                  d={`M ${x} ${y - radius - 15} V ${y - radius - 63} M ${
-                    x - 14
-                  } ${y - radius - 49} L ${x} ${y - radius - 65} L ${
-                    x + 14
-                  } ${y - radius - 49}`}
-                  fill="none"
-                  stroke="#1f70c1"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="7"
-                />
-              </g>
-            );
-          })
-        : null}
-
-      {pressActive
-        ? toClose.map((id) => {
-            const { x, y, radius } = HOLE_LAYOUT[id];
-            return (
-              <g
-                key={`close-${id}`}
-                className={`recorder-motion-effect recorder-motion-effect--press${
-                  phase === "contact" ? " recorder-motion-effect--contact" : ""
-                }`}
-                data-effect-hole={id}
-              >
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={radius + (phase === "contact" ? 28 : 22)}
-                  fill="none"
-                  stroke="#e2a600"
-                  strokeWidth={phase === "contact" ? 10 : 7}
-                  opacity={phase === "contact" ? 0.82 : 1}
-                />
-                {phase !== "contact" ? (
-                  <path
-                    d={`M ${x} ${y - radius - 61} V ${
-                      y - radius - 17
-                    } M ${x - 14} ${y - radius - 31} L ${x} ${
-                      y - radius - 15
-                    } L ${x + 14} ${y - radius - 31}`}
-                    fill="none"
-                    stroke="#b47700"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="7"
-                  />
-                ) : null}
-              </g>
-            );
-          })
-        : null}
-    </g>
+    first.length === second.length &&
+    first.every((hole, index) => hole === second[index])
   );
 }
 
 /**
- * One data-driven inline SVG scene. Notes never swap complete images; only the
- * semantic hole states and each independent finger transform change.
+ * User-provided complete hand poses form the main stage. A compact semantic
+ * diagram remains data-driven so every hole, label, transition ring and test
+ * reads the same fingering state as the lesson text and audio.
  */
 export function RecorderScene({
+  note,
+  system,
+  speed = "normal",
+  stepMode = false,
+  transitionKey = 0,
+  transitionFromNote = null,
+  transitionFromSystem = null,
   holeStates = {},
   currentClosedHoles = [],
   toOpen = [],
@@ -148,8 +98,7 @@ export function RecorderScene({
   title = "현재 리코더 운지",
   description,
   className,
-  style,
-  ...svgProps
+  ...divProps
 }: RecorderSceneProps) {
   const sceneId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const titleId = `recorder-scene-title-${sceneId}`;
@@ -169,9 +118,28 @@ export function RecorderScene({
     ? `${actualClosed.map((id) => HOLE_NUMBER_LABELS[id]).join(", ")}번 구멍을 막은 현재 운지입니다.`
     : "모든 구멍을 연 현재 운지입니다.";
 
+  const poseMatchesVisualState = sameHoles(
+    actualClosed,
+    FINGERINGS[system][note],
+  );
+  const holdPreviousPose =
+    stepMode && !poseMatchesVisualState && transitionFromNote !== null;
+  const displayedPoseNote = holdPreviousPose ? transitionFromNote : note;
+  const displayedPoseSystem = holdPreviousPose
+    ? transitionFromSystem ?? system
+    : system;
+  const poseSource = getRecorderPoseSource(
+    displayedPoseNote,
+    displayedPoseSystem,
+  );
+  const replaySource = transitionFromNote
+    ? getRecorderPoseSource(transitionFromNote, transitionFromSystem ?? system)
+    : null;
+  const poseDuration = reducedMotion ? 0 : speed === "slow" ? 720 : 260;
+
   return (
-    <svg
-      {...svgProps}
+    <div
+      {...divProps}
       className={[
         "recorder-scene",
         `recorder-scene--phase-${phase}`,
@@ -181,111 +149,83 @@ export function RecorderScene({
       ]
         .filter(Boolean)
         .join(" ")}
-      viewBox={RECORDER_SCENE_VIEW_BOX}
-      preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-labelledby={`${titleId} ${descriptionId}`}
-      focusable="false"
       data-testid="recorder-scene"
       data-phase={phase}
       data-reduced-motion={reducedMotion ? "true" : "false"}
       data-debug={debug ? "true" : "false"}
       data-closed-holes={actualClosed.join(" ")}
-      style={style}
+      data-note={note}
+      data-fingering-system={system}
     >
-      <title id={titleId}>{title}</title>
-      <desc id={descriptionId}>{description ?? defaultDescription}</desc>
+      <span id={titleId} className="sr-only">{title}</span>
+      <span id={descriptionId} className="sr-only">
+        {description ?? defaultDescription}
+      </span>
 
-      <g id="scene-background" className="recorder-scene__background" aria-hidden="true">
-        <rect x="18" y="18" width="964" height="1564" rx="52" fill="#f7fbf8" />
-        <path
-          d="M74 86 H926 M74 1518 H926"
-          fill="none"
-          stroke="#d9e9e4"
-          strokeWidth="5"
-          strokeDasharray="18 16"
+      <section className="recorder-pose-panel" aria-hidden="true">
+        <div className="recorder-pose-panel__topline">
+          <span className="recorder-pose-panel__kicker">실제 손 모양</span>
+          <span className="recorder-pose-panel__open-key">
+            <i aria-hidden="true" /> 회색 손가락은 떼어요
+          </span>
+        </div>
+        <RecorderPoseStage
+          source={poseSource}
+          replaySource={replaySource}
+          transitionKey={`${transitionKey}:${poseSource}`}
+          duration={poseDuration}
+          reducedMotion={reducedMotion}
         />
-        <circle cx="882" cy="142" r="52" fill="#e6f3ef" />
-        <circle cx="104" cy="1462" r="74" fill="#eef6dc" />
-      </g>
+        <div className="recorder-pose-panel__hand-guide">
+          <span><b>왼손</b> 화면 오른쪽 · 위쪽 구멍</span>
+          <span><b>오른손</b> 화면 왼쪽 · 아래쪽 구멍</span>
+        </div>
+      </section>
 
-      <RecorderBody instanceId={`recorder-${sceneId}`} />
-
-      <g id="front-holes" className="recorder-scene__front-holes" aria-hidden="true">
-        {FRONT_HOLE_IDS.map((id) => (
-          <Hole
-            key={id}
-            id={id}
-            state={normalizedStates[id]}
-            transition={transitionFor(id, toOpen, toClose)}
-            phase={phase}
-            showNumber={false}
-          />
-        ))}
-      </g>
-
-      <RearThumbInset
-        state={normalizedStates.T0}
-        transition={transitionFor("T0", toOpen, toClose)}
-        phase={phase}
-        showNumber={false}
-      />
-
-      <g id="hand-guides" className="recorder-scene__hand-guides" aria-hidden="true">
-        <path
-          d="M114 789 C210 823 306 806 385 752"
-          fill="none"
-          stroke="#82a9a5"
-          strokeWidth="4"
-          strokeDasharray="12 11"
-        />
-        <text x="146" y="820" fill="#557773" fontSize="23" fontWeight="800">
-          왼손 · 위쪽
-        </text>
-        <path
-          d="M616 1328 C706 1370 805 1374 897 1332"
-          fill="none"
-          stroke="#82a9a5"
-          strokeWidth="4"
-          strokeDasharray="12 11"
-        />
-        <text x="746" y="1404" fill="#557773" fontSize="23" fontWeight="800">
-          오른손 · 아래쪽
-        </text>
-      </g>
-
-      <FingerLayer
-        holeStates={normalizedStates}
-        currentClosedHoles={actualClosed}
-        toOpen={toOpen}
-        toClose={toClose}
-        phase={phase}
-        showFingerNames={showFingerNames}
-        reducedMotion={reducedMotion}
-      />
-
-      <g id="hole-labels" className="recorder-scene__hole-labels" aria-hidden="true">
-        {HOLE_IDS.map((id) => (
-          <HoleLabel
-            key={id}
-            id={id}
-            state={normalizedStates[id]}
-            transition={transitionFor(id, toOpen, toClose)}
-            phase={phase}
-            showNumber={showHoleNumbers}
-          />
-        ))}
-      </g>
-
-      <MotionEffects toOpen={toOpen} toClose={toClose} phase={phase} />
-
-      {debug ? (
-        <RecorderDebugOverlay
+      <section className="fingering-map-panel" aria-hidden="true">
+        <div className="fingering-map-panel__heading">
+          <div>
+            <span>구멍 지도</span>
+            <strong>0–7번 접촉 상태</strong>
+          </div>
+          <span className="fingering-map-panel__system">
+            {system === "baroque" ? "바로크식" : "독일식"}
+          </span>
+        </div>
+        <RecorderFingeringMap
           holeStates={normalizedStates}
           currentClosedHoles={actualClosed}
+          toOpen={toOpen}
+          toClose={toClose}
           phase={phase}
+          showHoleNumbers={showHoleNumbers}
+          showFingerNames={showFingerNames}
+          title={`${title} 구멍 지도`}
+          description={description ?? defaultDescription}
         />
+        <div className="fingering-map-panel__legend">
+          <span><i className="map-legend-dot map-legend-dot--closed" /> 막음</span>
+          <span><i className="map-legend-dot map-legend-dot--open" /> 열림</span>
+        </div>
+      </section>
+
+      <div className="recorder-scene__changes" aria-hidden="true">
+        <ChangeList holes={toOpen} kind="release" />
+        <ChangeList holes={toClose} kind="press" />
+        {!toOpen.length && !toClose.length ? (
+          <p className="pose-change-stable">손 모양과 구멍 지도가 일치했어요.</p>
+        ) : null}
+      </div>
+
+      {debug ? (
+        <div className="recorder-scene__debug-readout" aria-hidden="true">
+          <strong>POSE</strong>
+          <span>{poseSource}</span>
+          <span>{actualClosed.join(" ")}</span>
+        </div>
       ) : null}
-    </svg>
+    </div>
   );
 }

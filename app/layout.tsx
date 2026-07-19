@@ -4,7 +4,7 @@ import "./globals.css";
 
 const title = "리코더 운지법 배우기";
 const description =
-  "숫자 버튼과 양손 손가락 애니메이션으로 소프라노 리코더의 기본 8음 운지를 배워요.";
+  "숫자 버튼과 실제 손 모양 애니메이션으로 소프라노 리코더의 기본 8음 운지를 배워요.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
         ? "http"
         : "https";
   const origin = `${protocol}://${host}`;
-  const socialImage = new URL("/og.png", origin).toString();
+  const socialImage = new URL("/og-remastered.png", origin).toString();
 
   return {
     metadataBase: new URL(origin),
@@ -48,9 +48,9 @@ export async function generateMetadata(): Promise<Metadata> {
       images: [
         {
           url: socialImage,
-          width: 1731,
+          width: 1730,
           height: 909,
-          alt: "리코더와 양손 손가락으로 운지법을 배우는 교육용 웹앱",
+          alt: "선화로 그린 리코더와 양손으로 운지법을 배우는 교육용 웹앱",
         },
       ],
     },

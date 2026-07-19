@@ -3,14 +3,14 @@ import { expect, test, type Page } from "@playwright/test";
 type FingeringSystem = "baroque" | "german";
 
 const NOTES = [
-  { button: 1, solfege: "도", subject: "도가", name: "C" },
-  { button: 2, solfege: "레", subject: "레가", name: "D" },
-  { button: 3, solfege: "미", subject: "미가", name: "E" },
-  { button: 4, solfege: "파", subject: "파가", name: "F" },
-  { button: 5, solfege: "솔", subject: "솔이", name: "G" },
-  { button: 6, solfege: "라", subject: "라가", name: "A" },
-  { button: 7, solfege: "시", subject: "시가", name: "B" },
-  { button: 8, solfege: "높은 도", subject: "높은 도가", name: "C′" },
+  { button: 1, solfege: "도", subject: "도가", name: "C", pose: "do.png" },
+  { button: 2, solfege: "레", subject: "레가", name: "D", pose: "re.png" },
+  { button: 3, solfege: "미", subject: "미가", name: "E", pose: "mi.png" },
+  { button: 4, solfege: "파", subject: "파가", name: "F", pose: "fa-german.png" },
+  { button: 5, solfege: "솔", subject: "솔이", name: "G", pose: "sol.png" },
+  { button: 6, solfege: "라", subject: "라가", name: "A", pose: "la.png" },
+  { button: 7, solfege: "시", subject: "시가", name: "B", pose: "si.png" },
+  { button: 8, solfege: "높은 도", subject: "높은 도가", name: "C′", pose: "high-do.png" },
 ] as const;
 
 function watchForBrowserErrors(page: Page): string[] {
@@ -19,6 +19,19 @@ function watchForBrowserErrors(page: Page): string[] {
   page.on("console", (message) => {
     if (message.type() === "error") {
       errors.push(`console: ${message.text()}`);
+    }
+  });
+  page.on("requestfailed", (request) => {
+    if (decodeURIComponent(request.url()).includes("/fingering/poses/")) {
+      errors.push(`pose request failed: ${request.url()}`);
+    }
+  });
+  page.on("response", (response) => {
+    if (
+      decodeURIComponent(response.url()).includes("/fingering/poses/") &&
+      !response.ok()
+    ) {
+      errors.push(`pose response ${response.status()}: ${response.url()}`);
     }
   });
   return errors;
@@ -74,6 +87,10 @@ test("onboarding selection and all eight notes stay synchronized", async ({
     await expect(page.getByTestId("live-region")).toContainText(
       `${note.subject} 선택되었습니다.`,
     );
+    await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
+      "data-rendered-source",
+      `/fingering/poses/${note.pose}`,
+    );
   }
 
   await page.getByRole("button", { name: "높은 도 소리 듣기" }).click();
@@ -91,6 +108,14 @@ test("파 opens only R6 and R7 when switching to german fingering", async ({
   await openAppAndChoose(page, "baroque");
 
   await page.getByTestId("note-button-4").click();
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
+    "data-pose-source",
+    "/fingering/poses/fa-baroque.png",
+  );
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
+    "data-rendered-source",
+    "/fingering/poses/fa-baroque.png",
+  );
   await expect(page.getByTestId("recorder-scene")).toHaveAttribute(
     "data-closed-holes",
     "T0 L1 L2 L3 R4 R6 R7",
@@ -110,6 +135,14 @@ test("파 opens only R6 and R7 when switching to german fingering", async ({
   await expect(hole(page, "R5")).toHaveAttribute("data-hole-state", "open");
   await expect(hole(page, "R6")).toHaveAttribute("data-hole-state", "open");
   await expect(hole(page, "R7")).toHaveAttribute("data-hole-state", "open");
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
+    "data-pose-source",
+    "/fingering/poses/fa-german.png",
+  );
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
+    "data-rendered-source",
+    "/fingering/poses/fa-german.png",
+  );
   expect(browserErrors).toEqual([]);
 });
 
@@ -182,6 +215,10 @@ test("rapid 1→8→4→5 input remains on the final 솔 fingering", async ({
   await expect(page.getByTestId("recorder-scene")).toHaveAttribute(
     "data-phase",
     "settled",
+  );
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
+    "data-rendered-source",
+    "/fingering/poses/sol.png",
   );
   expect(browserErrors).toEqual([]);
 });

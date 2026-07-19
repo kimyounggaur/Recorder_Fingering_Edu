@@ -532,27 +532,367 @@ h2 {
 .recorder-stage-frame {
   display: grid;
   width: 100%;
-  min-height: 530px;
-  max-height: min(72vh, 790px);
+  min-height: 570px;
+  max-height: min(76vh, 820px);
   place-items: center;
   overflow: hidden;
-  border: 1px solid #dfe6f2;
-  border-radius: 22px;
+  border: 1px solid #dfd7c8;
+  border-radius: 24px;
   background:
-    linear-gradient(rgb(54 85 154 / 4%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(54 85 154 / 4%) 1px, transparent 1px),
-    linear-gradient(180deg, #fbfdff, #f1f5fc);
-  background-size: 32px 32px, 32px 32px, auto;
+    radial-gradient(circle at 10% 8%, rgb(255 255 255 / 90%), transparent 17rem),
+    linear-gradient(145deg, #f6f1e7 0%, #ebe4d7 100%);
 }
 
 .recorder-scene {
-  display: block;
-  width: auto;
-  max-width: 100%;
-  height: min(69vh, 760px);
+  position: relative;
+  display: grid;
+  width: 100%;
+  max-width: none;
+  height: min(73vh, 790px);
   max-height: 100%;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.42fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "pose map"
+    "changes changes";
+  gap: clamp(10px, 1.4vw, 16px);
+  padding: clamp(10px, 1.6vw, 16px);
+  overflow: hidden;
+  filter: none;
+}
+
+.recorder-pose-panel {
+  position: relative;
+  grid-area: pose;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgb(213 203 184 / 88%);
+  border-radius: 19px;
+  background: #fff;
+  box-shadow: 0 16px 35px rgb(72 55 34 / 12%);
+}
+
+.recorder-pose-panel__topline,
+.recorder-pose-panel__hand-guide,
+.fingering-map-panel__heading,
+.fingering-map-panel__legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.recorder-pose-panel__topline {
+  position: relative;
+  z-index: 2;
+  padding: 11px 13px 8px;
+  border-bottom: 1px solid #eee7db;
+  background: rgb(255 255 255 / 94%);
+}
+
+.recorder-pose-panel__kicker {
+  color: #214e43;
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.recorder-pose-panel__open-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #6b6d6a;
+  font-size: 0.67rem;
+  font-weight: 800;
+}
+
+.recorder-pose-panel__open-key i {
+  width: 12px;
+  height: 12px;
+  border: 1px solid #777;
+  border-radius: 50%;
+  background: #c8c8c8;
+}
+
+.recorder-pose-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, transparent 49.8%, rgb(40 79 69 / 5%) 50%, transparent 50.2%),
+    #fff;
+}
+
+.recorder-pose-stage__fallback,
+.recorder-pose-stage__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.recorder-pose-stage__fallback {
+  object-fit: contain;
+  opacity: 1;
+  transition: opacity 120ms ease;
+}
+
+.recorder-pose-stage__canvas {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.recorder-pose-stage[data-ready="true"] .recorder-pose-stage__fallback {
+  opacity: 0;
+}
+
+.recorder-pose-stage[data-ready="true"] .recorder-pose-stage__canvas {
+  opacity: 1;
+}
+
+.recorder-pose-panel__hand-guide {
+  padding: 8px 11px 10px;
+  border-top: 1px solid #eee7db;
+  color: #65706b;
+  font-size: 0.62rem;
+  line-height: 1.25;
+}
+
+.recorder-pose-panel__hand-guide b {
+  color: #244d43;
+  font-weight: 950;
+}
+
+.fingering-map-panel {
+  grid-area: map;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  padding: 12px 10px 10px;
+  overflow: hidden;
+  border: 1px solid #bad0c6;
+  border-radius: 19px;
+  background:
+    radial-gradient(circle at 75% 4%, rgb(255 255 255 / 78%), transparent 9rem),
+    linear-gradient(180deg, #edf5f0, #ddebe4);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 90%);
+}
+
+.fingering-map-panel__heading {
+  align-items: flex-start;
+  margin-bottom: 5px;
+}
+
+.fingering-map-panel__heading > div > span,
+.fingering-map-panel__heading > div > strong {
+  display: block;
+}
+
+.fingering-map-panel__heading > div > span {
+  color: #638076;
+  font-size: 0.61rem;
+  font-weight: 900;
+}
+
+.fingering-map-panel__heading > div > strong {
+  color: #183e35;
+  font-size: 0.74rem;
+  line-height: 1.15;
+}
+
+.fingering-map-panel__system {
+  flex: 0 0 auto;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: #fff;
+  color: #315b50;
+  font-size: 0.57rem;
+  font-weight: 950;
+}
+
+.fingering-map {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  flex: 1;
   overflow: visible;
-  filter: drop-shadow(0 18px 25px rgb(47 67 104 / 9%));
+}
+
+.fingering-map text {
+  fill: #36584f;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 850;
+}
+
+.fingering-map__view-label {
+  fill: #5f7b73 !important;
+  font-size: 14px !important;
+  font-weight: 950 !important;
+}
+
+.fingering-map__hand-label {
+  fill: #58746b !important;
+  font-size: 13px !important;
+  font-weight: 950 !important;
+}
+
+.fingering-map__hole-number {
+  fill: #27463e !important;
+  font-size: 12px !important;
+  font-weight: 950 !important;
+}
+
+.fingering-map__finger-name {
+  fill: #395e54 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+}
+
+.fingering-map__hole--highlighted .fingering-map__disc-outline {
+  filter: drop-shadow(0 0 4px rgb(210 117 30 / 58%));
+}
+
+.fingering-map__hole--opening.fingering-map__hole--highlighted .fingering-map__disc-outline {
+  filter: drop-shadow(0 0 4px rgb(36 120 189 / 65%));
+}
+
+.fingering-map__legend {
+  display: none;
+}
+
+.fingering-map-panel__legend {
+  justify-content: center;
+  padding-top: 6px;
+  border-top: 1px solid rgb(99 133 121 / 20%);
+  color: #49675e;
+  font-size: 0.59rem;
+  font-weight: 850;
+}
+
+.fingering-map-panel__legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.map-legend-dot {
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid #203d36;
+  border-radius: 50%;
+}
+
+.map-legend-dot--closed {
+  background: #203d36;
+  box-shadow: inset 0 0 0 1.5px #fff;
+}
+
+.map-legend-dot--open {
+  background: #fff;
+}
+
+.recorder-scene__changes {
+  grid-area: changes;
+  display: grid;
+  min-height: 39px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pose-change-list {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  border-radius: 12px;
+}
+
+.pose-change-list--release {
+  background: #e7f3ff;
+  color: #1d5f9d;
+}
+
+.pose-change-list--press {
+  background: #fff2cc;
+  color: #765100;
+}
+
+.pose-change-list__label {
+  flex: 0 0 auto;
+  font-size: 0.64rem;
+  font-weight: 950;
+}
+
+.pose-change-list__chips {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pose-change-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border: 1px solid rgb(255 255 255 / 70%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 74%);
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.pose-change-chip strong {
+  font-size: 0.67rem;
+  font-weight: 950;
+}
+
+.pose-change-stable {
+  grid-column: 1 / -1;
+  align-self: center;
+  margin: 0;
+  color: #517067;
+  font-size: 0.69rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+.recorder-scene__debug-readout {
+  position: absolute;
+  z-index: 10;
+  right: 20px;
+  bottom: 60px;
+  display: grid;
+  max-width: 70%;
+  gap: 2px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: rgb(18 33 30 / 88%);
+  color: #fff;
+  font: 600 10px/1.3 ui-monospace, monospace;
+}
+
+.fingering-map__change-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  pointer-events: none;
+}
+
+.fingering-map__change-ring--press {
+  animation: fingering-map-press 560ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.fingering-map__change-ring--release {
+  animation: fingering-map-release 560ms cubic-bezier(.22, 1, .36, 1) both;
 }
 
 .recorder-scene__background {
@@ -1103,6 +1443,18 @@ kbd {
   100% { opacity: 0.45; stroke-width: 4; }
 }
 
+@keyframes fingering-map-press {
+  0% { opacity: 0; transform: scale(1.55); }
+  38% { opacity: 1; }
+  100% { opacity: 0.22; transform: scale(0.82); }
+}
+
+@keyframes fingering-map-release {
+  0% { opacity: 0; transform: scale(0.72); }
+  35% { opacity: 1; }
+  100% { opacity: 0.18; transform: scale(1.7); }
+}
+
 @media (max-width: 1280px) {
   .learning-grid {
     grid-template-columns: minmax(265px, 0.82fr) minmax(420px, 1.45fr) minmax(290px, 0.88fr);
@@ -1236,15 +1588,16 @@ kbd {
   }
 
   .recorder-stage-frame {
-    min-height: 0;
+    min-height: 540px;
     max-height: none;
-    aspect-ratio: 5 / 7.6;
+    aspect-ratio: auto;
   }
 
   .recorder-scene {
     width: 100%;
-    height: auto;
+    height: 560px;
     max-height: none;
+    grid-template-columns: minmax(0, 1fr) minmax(116px, 0.44fr);
   }
 
   .settings-card {
@@ -1347,6 +1700,35 @@ kbd {
     gap: 7px 10px;
     font-size: 0.69rem;
   }
+
+  .recorder-stage-frame {
+    min-height: 900px;
+  }
+
+  .recorder-scene {
+    height: 920px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 500px 350px auto;
+    grid-template-areas:
+      "pose"
+      "map"
+      "changes";
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .recorder-pose-panel__open-key,
+  .recorder-pose-panel__hand-guide {
+    display: none;
+  }
+
+  .fingering-map-panel {
+    padding-inline: 12px;
+  }
+
+  .pose-change-chip span {
+    display: none;
+  }
 }
 
 @media (orientation: landscape) and (max-height: 720px) and (min-width: 760px) {
@@ -1428,6 +1810,39 @@ kbd {
     width: auto;
     height: 250px;
     max-height: 250px;
+    grid-template-columns: minmax(0, 1fr) minmax(92px, 0.38fr);
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .recorder-pose-panel__topline,
+  .recorder-pose-panel__hand-guide,
+  .fingering-map-panel__heading,
+  .fingering-map-panel__legend {
+    display: none;
+  }
+
+  .fingering-map-panel {
+    padding: 5px;
+    border-radius: 12px;
+  }
+
+  .recorder-pose-panel {
+    border-radius: 12px;
+  }
+
+  .recorder-scene__changes {
+    min-height: 24px;
+    gap: 4px;
+  }
+
+  .pose-change-list {
+    min-height: 24px;
+    padding: 2px 5px;
+  }
+
+  .pose-change-chip span {
+    display: none;
   }
 
   .keypad-card {

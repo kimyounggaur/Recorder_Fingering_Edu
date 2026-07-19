@@ -140,6 +140,10 @@ describe("RecorderLearningApp", () => {
     expect(hole("R5")).toHaveAttribute("data-hole-state", "open");
     expect(hole("R6")).toHaveAttribute("data-hole-state", "closed");
     expect(hole("R7")).toHaveAttribute("data-hole-state", "closed");
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute(
+      "data-pose-source",
+      "/fingering/poses/fa-baroque.png",
+    );
 
     fireEvent.click(screen.getByRole("radio", { name: /독일식/ }));
     await finishAnimations();
@@ -149,6 +153,10 @@ describe("RecorderLearningApp", () => {
     expect(hole("R5")).toHaveAttribute("data-hole-state", "open");
     expect(hole("R6")).toHaveAttribute("data-hole-state", "open");
     expect(hole("R7")).toHaveAttribute("data-hole-state", "open");
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute(
+      "data-pose-source",
+      "/fingering/poses/fa-german.png",
+    );
   });
 
   it("toggles mute and reflects it in the sound controls", async () => {
@@ -239,6 +247,34 @@ describe("RecorderLearningApp", () => {
     expect(audioMock.playAtContact).toHaveBeenCalledTimes(1);
     expect(audioMock.playAtContact).toHaveBeenCalledWith("C", 2);
     expect(screen.getByText("1/7")).toBeInTheDocument();
+  });
+
+  it("switches a release-only step pose when its map reaches the target", async () => {
+    await renderReadyApp();
+
+    fireEvent.click(screen.getByTestId("step-mode-toggle"));
+    fireEvent.click(noteButton(2));
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute(
+      "data-pose-source",
+      "/fingering/poses/do.png",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute(
+      "data-pose-source",
+      "/fingering/poses/do.png",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
+    expect(hole("R7")).toHaveAttribute("data-hole-state", "open");
+    expect(screen.getByTestId("recorder-scene")).toHaveAttribute(
+      "data-closed-holes",
+      "T0 L1 L2 L3 R4 R5 R6",
+    );
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute(
+      "data-pose-source",
+      "/fingering/poses/re.png",
+    );
   });
 
   it("traps help focus, blocks global shortcuts, and restores the opener", async () => {
