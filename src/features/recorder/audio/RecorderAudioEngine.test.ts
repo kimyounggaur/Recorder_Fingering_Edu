@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { RecorderAudioEngine } from "./RecorderAudioEngine";
 import {
+  RECORDER_NOTE_FREQUENCIES_HZ,
   WebAudioRecorderEngine,
   getRecorderNoteFrequency,
 } from "./WebAudioRecorderEngine";
@@ -157,16 +158,42 @@ class DeferredAudioEngine implements RecorderAudioEngine {
 
 describe("recorder audio pitch mapping", () => {
   it.each([
-    ["C", 261.63],
+    ["C4", 261.63],
+    ["C#4", 277.18],
     ["D4", 293.66],
-    ["E", 329.63],
+    ["D#4", 311.13],
+    ["E4", 329.63],
     ["F4", 349.23],
-    ["G", 392],
+    ["F#4", 369.99],
+    ["G4", 392],
+    ["G#4", 415.3],
     ["A4", 440],
+    ["A#4", 466.16],
+    ["B4", 493.88],
+    ["C5", 523.25],
+    ["D5", 587.33],
+    ["E5", 659.25],
+    ["F5", 698.46],
+    ["G5", 783.99],
+  ])("maps %s to %s Hz", (key, expected) => {
+    expect(getRecorderNoteFrequency(key)).toBe(expected);
+  });
+
+  it("contains all 17 canonical lesson frequencies", () => {
+    expect(Object.keys(RECORDER_NOTE_FREQUENCIES_HZ)).toHaveLength(17);
+  });
+
+  it.each([
+    ["C", 261.63],
+    ["D", 293.66],
+    ["E", 329.63],
+    ["F", 349.23],
+    ["G", 392],
+    ["A", 440],
     ["B", 493.88],
     ["HIGH_C", 523.25],
-    ["C5", 523.25],
-  ])("maps %s to %s Hz", (key, expected) => {
+    ["high-c", 523.25],
+  ])("keeps the legacy %s alias at %s Hz", (key, expected) => {
     expect(getRecorderNoteFrequency(key)).toBe(expected);
   });
 

@@ -40,7 +40,11 @@ export function PlaybackControls({
       <div className="sequence-controls">
         <div>
           <p className="eyebrow">자동 순서 연습</p>
-          <p>도부터 높은 도까지 · {sequencePosition + 1}/8</p>
+          <p>
+            도부터 높은 도까지 · {sequencePosition >= 0
+              ? `${sequencePosition + 1}/8`
+              : "기본 음계 8음"}
+          </p>
         </div>
         <div className="sequence-buttons">
           <button type="button" className="text-button" onClick={onSequenceReset}>

@@ -1,11 +1,16 @@
 interface StaffNoteProps {
   step: number;
   label: string;
+  accidental?: "sharp";
 }
 
-export function StaffNote({ step, label }: StaffNoteProps) {
+export function StaffNote({ step, label, accidental }: StaffNoteProps) {
   const noteY = 92 - step * 7;
-  const needsLedger = step === 0;
+  const ledgerLines = [92, 22].filter(
+    (lineY) => (lineY === 92 && step === 0) || (lineY === 22 && step >= 10),
+  );
+  const stemEndY =
+    noteY < 36 ? Math.min(104, noteY + 45) : Math.max(20, noteY - 45);
 
   return (
     <svg
@@ -25,15 +30,32 @@ export function StaffNote({ step, label }: StaffNoteProps) {
             className="staff-line"
           />
         ))}
-        {needsLedger ? (
-          <line x1="93" x2="137" y1="92" y2="92" className="staff-line" />
+        {ledgerLines.map((lineY) => (
+          <line
+            key={lineY}
+            x1="93"
+            x2="137"
+            y1={lineY}
+            y2={lineY}
+            className="staff-line"
+          />
+        ))}
+        {accidental === "sharp" ? (
+          <text
+            x="85"
+            y={noteY + 8}
+            className="staff-accidental"
+            textAnchor="middle"
+          >
+            ♯
+          </text>
         ) : null}
         <ellipse cx="115" cy={noteY} rx="13" ry="9" className="staff-head" />
         <line
           x1="127"
           x2="127"
           y1={noteY}
-          y2={Math.max(20, noteY - 45)}
+          y2={stemEndY}
           className="staff-stem"
         />
       </g>

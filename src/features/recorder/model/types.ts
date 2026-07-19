@@ -21,6 +21,8 @@ export type HoleState = "open" | "closed" | "half" | "partial";
 
 export type UiButtonNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
+export type NoteBank = "low" | "high" | "chromatic";
+
 export type SolfegeId =
   | "do"
   | "re"
@@ -29,7 +31,18 @@ export type SolfegeId =
   | "sol"
   | "la"
   | "si"
-  | "highDo";
+  | "highDo"
+  | "doSharp"
+  | "reSharp"
+  | "faSharp"
+  | "solSharp"
+  | "laSharp"
+  | "highRe"
+  | "highMi"
+  | "highFa"
+  | "highSol";
+
+export type FingeringStateMap = Readonly<Record<HoleId, HoleState>>;
 
 export interface NoteMeta {
   id: SolfegeId;
@@ -39,6 +52,7 @@ export interface NoteMeta {
   staffStep: number;
   audioKey: string;
   shortInstruction: string;
+  accidental?: "sharp";
 }
 
 export type AnimationPhase =

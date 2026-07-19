@@ -7,9 +7,16 @@ interface NoteCardProps {
   system: FingeringSystem;
   onPlay: () => void;
   muted: boolean;
+  shortcutLabel: string;
 }
 
-export function NoteCard({ note, system, onPlay, muted }: NoteCardProps) {
+export function NoteCard({
+  note,
+  system,
+  onPlay,
+  muted,
+  shortcutLabel,
+}: NoteCardProps) {
   const systemLabel = system === "baroque" ? "바로크식" : "독일식";
 
   return (
@@ -20,13 +27,17 @@ export function NoteCard({ note, system, onPlay, muted }: NoteCardProps) {
       </div>
       <div className="note-card-main">
         <div>
-          <p className="note-number">숫자 {note.button}</p>
+          <p className="note-number">단축키 {shortcutLabel}</p>
           <h2 id="current-note-heading" className="current-solfege">
             {note.solfegeKo}
           </h2>
           <p className="note-name">음 이름 {note.noteName}</p>
         </div>
-        <StaffNote step={note.staffStep} label={note.solfegeKo} />
+        <StaffNote
+          step={note.staffStep}
+          label={note.solfegeKo}
+          accidental={note.accidental}
+        />
       </div>
       <p className="note-short-instruction">{note.shortInstruction}</p>
       <button type="button" className="primary-button full-width" onClick={onPlay}>

@@ -492,6 +492,12 @@ h2 {
   transform-origin: center;
 }
 
+.staff-accidental {
+  fill: #465269;
+  font-size: 27px;
+  font-weight: 850;
+}
+
 .note-short-instruction {
   min-height: 58px;
   margin-bottom: 17px;
@@ -798,6 +804,15 @@ h2 {
   background: #fff;
 }
 
+.map-legend-dot--half {
+  background: linear-gradient(90deg, #203d36 50%, #fff 50%);
+}
+
+.map-legend-dot--partial {
+  background: linear-gradient(90deg, #203d36 50%, #fff 50%);
+  border-radius: 4px;
+}
+
 .recorder-scene__changes {
   grid-area: changes;
   display: grid;
@@ -968,6 +983,15 @@ h2 {
 .legend-hole.closed {
   background: #273742;
   box-shadow: inset 0 0 0 2px #fff;
+}
+
+.legend-hole.half {
+  background: linear-gradient(90deg, #273742 50%, #fff 50%);
+}
+
+.legend-hole.partial {
+  background: linear-gradient(90deg, #273742 50%, #fff 50%);
+  border-radius: 5px;
 }
 
 .legend-arrow {
@@ -1211,6 +1235,71 @@ h2 {
   font-weight: 750;
 }
 
+.note-bank-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 5px;
+  border: 1px solid #d9e0ec;
+  border-radius: 16px;
+  background: #f2f5fa;
+}
+
+.note-bank-tab {
+  display: grid;
+  min-width: 0;
+  min-height: 52px;
+  place-content: center;
+  gap: 2px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: #4e5c70;
+  text-align: center;
+}
+
+.note-bank-tab span {
+  font-size: 0.91rem;
+  font-weight: 900;
+}
+
+.note-bank-tab small {
+  color: #718095;
+  font-size: 0.69rem;
+  font-weight: 800;
+}
+
+.note-bank-tab:hover {
+  background: rgb(255 255 255 / 72%);
+}
+
+.note-bank-tab[aria-selected="true"] {
+  border-color: #9eb5e4;
+  background: #fff;
+  color: var(--color-primary-strong);
+  box-shadow: 0 4px 12px rgb(40 88 199 / 12%);
+}
+
+.note-bank-tab[aria-selected="true"] small {
+  color: var(--color-primary);
+}
+
+.note-bank-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 2px 9px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.note-bank-caption strong {
+  color: var(--color-text);
+  font-size: 0.84rem;
+}
+
 .note-keypad {
   display: grid;
   grid-template-columns: repeat(8, minmax(78px, 1fr));
@@ -1272,6 +1361,22 @@ h2 {
   line-height: 1.15;
   text-overflow: clip;
   white-space: normal;
+}
+
+.note-key-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.note-key-pitch {
+  overflow: hidden;
+  color: #6b778b;
+  font-size: 0.67rem;
+  font-weight: 800;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .note-key-mark {
@@ -1641,6 +1746,19 @@ kbd {
     font-size: clamp(0.86rem, 3.7vw, 1rem);
   }
 
+  .note-bank-tab {
+    min-height: 48px;
+    padding-inline: 4px;
+  }
+
+  .note-bank-tab span {
+    font-size: 0.8rem;
+  }
+
+  .note-bank-tab small {
+    font-size: 0.61rem;
+  }
+
   .note-key-mark {
     top: 3px;
     right: 5px;
@@ -1847,6 +1965,30 @@ kbd {
 
   .keypad-card {
     margin-top: 0;
+  }
+
+  .note-bank-tabs {
+    gap: 4px;
+    margin-bottom: 6px;
+    padding: 3px;
+    border-radius: 10px;
+  }
+
+  .note-bank-tab {
+    min-height: 32px;
+    gap: 0;
+    padding: 2px 3px;
+    border-radius: 8px;
+  }
+
+  .note-bank-tab span {
+    font-size: 0.68rem;
+  }
+
+  .note-bank-tab small,
+  .note-bank-caption,
+  .note-key-pitch {
+    display: none;
   }
 
   .note-keypad {

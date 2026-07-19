@@ -2,7 +2,9 @@ import { getFingeringDiff } from "../animation/getFingeringDiff";
 import {
   ALL_HOLES,
   FINGERINGS,
+  FINGERING_STATES,
   FINGER_LABELS,
+  getFullyClosedHoles,
   HOLE_NUMBER_LABELS,
 } from "../data/fingerings";
 import { NOTE_META } from "../data/noteMeta";
@@ -95,6 +97,18 @@ function buildSystemHint(
   note: SolfegeId,
   system: FingeringSystem,
 ): string | null {
+  if (note === "highFa") {
+    return system === "baroque"
+      ? "바로크식 높은 파예요. 엄지를 살짝 열고 1, 2, 3, 4, 6번을 막아요."
+      : "독일식 높은 파예요. 엄지를 살짝 열고 1, 2, 3, 4번을 막아요.";
+  }
+
+  if (note === "faSharp") {
+    return system === "baroque"
+      ? "바로크식 파♯/솔♭이에요. 4번과 7번은 열고 5번과 6번을 막아요."
+      : "독일식 파♯/솔♭이에요. 4번은 열고 5번, 6번, 7번을 막아요.";
+  }
+
   if (note !== "fa") return null;
 
   if (system === "baroque") {
@@ -114,7 +128,15 @@ function buildMovementGuide(
   const expectedPreviousFingering = FINGERINGS[previousSystem][previousNote];
   const previousFingering = actualStartClosedHoles ?? expectedPreviousFingering;
   const nextFingering = FINGERINGS[system][note];
+  const expectedPreviousStates = FINGERING_STATES[previousSystem][previousNote];
+  const nextStates = FINGERING_STATES[system][note];
   const { toOpen, toClose } = getFingeringDiff(previousFingering, nextFingering);
+  const coverageChanges = ALL_HOLES.filter(
+    (hole) =>
+      expectedPreviousStates[hole] !== nextStates[hole] &&
+      expectedPreviousStates[hole] !== "open" &&
+      nextStates[hole] !== "open",
+  );
   const previousName = NOTE_META[previousNote].solfegeKo;
   const nextName = NOTE_META[note].solfegeKo;
   const startsFromExpectedPose =
@@ -145,7 +167,23 @@ function buildMovementGuide(
     );
   }
 
-  if (toOpen.length === 0 && toClose.length === 0) {
+  for (const hole of coverageChanges) {
+    const number = HOLE_NUMBER_LABELS[hole];
+    const targetState = nextStates[hole];
+    if (targetState === "half") {
+      sentences.push(`${number}번 엄지구멍은 반만 열어 주세요.`);
+    } else if (targetState === "partial") {
+      sentences.push(`${number}번 이중 구멍은 한쪽만 막아 주세요.`);
+    } else if (targetState === "closed") {
+      sentences.push(`${number}번 구멍을 완전히 막아 주세요.`);
+    }
+  }
+
+  if (
+    toOpen.length === 0 &&
+    toClose.length === 0 &&
+    coverageChanges.length === 0
+  ) {
     sentences.push("손가락은 그대로 두면 돼요.");
   }
 
@@ -156,11 +194,27 @@ export function buildInstructionParts(
   options: BuildInstructionOptions,
 ): FingeringInstructionParts {
   const { note, system, previousNote = null } = options;
-  const closedHoles = FINGERINGS[system][note];
+  const fingering = FINGERING_STATES[system][note];
+  const contactedHoles = FINGERINGS[system][note];
+  const closedHoles = getFullyClosedHoles(fingering);
+  const halfHoles = ALL_HOLES.filter((hole) => fingering[hole] === "half");
+  const partialHoles = ALL_HOLES.filter(
+    (hole) => fingering[hole] === "partial",
+  );
   const noteName = NOTE_META[note].solfegeKo;
   const holeNumbers = closedHoles.map((id) => HOLE_NUMBER_LABELS[id]).join(", ");
-  const summary = `${noteName}${topicParticle(noteName)} ${holeNumbers}번 구멍을 막아요.`;
-  const fingerGuide = buildFingerGuide(closedHoles);
+  const coverageDetails = [
+    halfHoles.length
+      ? `${halfHoles.map((id) => HOLE_NUMBER_LABELS[id]).join(", ")}번은 반만 열어요.`
+      : null,
+    partialHoles.length
+      ? `${partialHoles.map((id) => HOLE_NUMBER_LABELS[id]).join(", ")}번 이중 구멍은 한쪽만 막아요.`
+      : null,
+  ].filter((detail): detail is string => detail !== null);
+  const summary = `${noteName}${topicParticle(noteName)} ${holeNumbers}번 구멍을 막아요.${
+    coverageDetails.length ? ` ${coverageDetails.join(" ")}` : ""
+  }`;
+  const fingerGuide = buildFingerGuide(contactedHoles);
   const systemHint = buildSystemHint(note, system);
   const transition = previousNote
     ? buildMovementGuide(

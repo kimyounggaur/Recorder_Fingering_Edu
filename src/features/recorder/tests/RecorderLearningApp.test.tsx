@@ -88,20 +88,21 @@ afterEach(() => {
 });
 
 describe("RecorderLearningApp", () => {
-  it("renders buttons 1–8 and selects 솔 / G with aria-pressed", async () => {
+  it("renders the low bank and selects 솔 / G4 with aria-pressed", async () => {
     await renderReadyApp();
 
     const labels = ["도", "레", "미", "파", "솔", "라", "시", "높은 도"];
+    const pitches = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];
     labels.forEach((label, index) => {
       expect(noteButton(index + 1)).toHaveAccessibleName(
-        `${index + 1}번, ${label}`,
+        `Ctrl와 ${index + 1}번, ${label}, ${pitches[index]}`,
       );
     });
 
     fireEvent.click(noteButton(5));
 
     expect(screen.getByRole("heading", { level: 2, name: "솔" })).toBeInTheDocument();
-    expect(screen.getByText("음 이름 G")).toBeInTheDocument();
+    expect(screen.getByText("음 이름 G4")).toBeInTheDocument();
     expect(noteButton(5)).toHaveAttribute("aria-pressed", "true");
     expect(noteButton(1)).toHaveAttribute("aria-pressed", "false");
   });
@@ -112,7 +113,7 @@ describe("RecorderLearningApp", () => {
     fireEvent.click(noteButton(5));
 
     expect(screen.getByTestId("live-region")).toHaveTextContent(
-      "솔이 선택되었습니다. 0, 1, 2, 3번 구멍을 막습니다.",
+      "솔이 선택되었습니다. G4. 0, 1, 2, 3번 구멍을 막습니다.",
     );
     expect(screen.getByTestId("live-region")).toHaveAttribute(
       "aria-live",
@@ -128,6 +129,90 @@ describe("RecorderLearningApp", () => {
     await finishAnimations();
 
     expectClosedHoles(["T0", "L2"]);
+  });
+
+  it("offers a visible high bank and keeps high F system-specific", async () => {
+    vi.useFakeTimers();
+    await renderReadyApp();
+
+    fireEvent.click(screen.getByTestId("note-bank-high"));
+    expect(screen.getByTestId("note-bank-high")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.queryByTestId("note-button-8")).not.toBeInTheDocument();
+
+    const highFa = screen.getByTestId("note-button-high-4");
+    expect(highFa).toHaveAccessibleName("Shift와 4번, 높은 파, F5");
+    fireEvent.click(highFa);
+    await finishAnimations();
+
+    expect(screen.getByRole("heading", { level: 2, name: "높은 파" })).toBeInTheDocument();
+    expect(screen.getByText("음 이름 F5")).toBeInTheDocument();
+    expect(hole("T0")).toHaveAttribute("data-hole-state", "half");
+    expect(hole("R6")).toHaveAttribute("data-hole-state", "closed");
+    expect(screen.getByTestId("recorder-scene")).toHaveAttribute(
+      "data-contacted-holes",
+      "T0 L1 L2 L3 R4 R6",
+    );
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute(
+      "data-pose-source",
+      "/fingering/poses/f5-baroque.png",
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: /독일식/ }));
+    await finishAnimations();
+
+    expect(hole("T0")).toHaveAttribute("data-hole-state", "half");
+    expect(hole("R6")).toHaveAttribute("data-hole-state", "open");
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute(
+      "data-pose-source",
+      "/fingering/poses/f5-german.png",
+    );
+  });
+
+  it("maps Shift, Alt, and Ctrl chords to their note banks", async () => {
+    vi.useFakeTimers();
+    await renderReadyApp();
+
+    expect(
+      fireEvent.keyDown(window, {
+        key: "@",
+        code: "Digit2",
+        shiftKey: true,
+      }),
+    ).toBe(false);
+    expect(document.getElementById("current-note-heading")).toHaveTextContent(
+      "높은 레",
+    );
+    expect(screen.getByTestId("note-bank-high")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+
+    fireEvent.keyDown(window, { key: "1", code: "Digit1", altKey: true });
+    await finishAnimations();
+    expect(document.getElementById("current-note-heading")).toHaveTextContent(
+      "도♯/레♭",
+    );
+    expect(screen.getByTestId("note-bank-chromatic")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(hole("R7")).toHaveAttribute("data-hole-state", "partial");
+    expect(screen.getByTestId("recorder-scene")).toHaveAttribute(
+      "data-contacted-holes",
+      "T0 L1 L2 L3 R4 R5 R6 R7",
+    );
+
+    fireEvent.keyDown(window, { key: "5", code: "Digit5", ctrlKey: true });
+    expect(document.getElementById("current-note-heading")).toHaveTextContent(
+      "솔",
+    );
+    expect(screen.getByTestId("note-bank-low")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
   it("opens R6 and R7 when 파 changes from baroque to german", async () => {
@@ -285,7 +370,12 @@ describe("RecorderLearningApp", () => {
 
     const close = screen.getByRole("button", { name: "도움말 닫기" });
     expect(close).toHaveFocus();
-    fireEvent.keyDown(window, { key: "5" });
+    fireEvent.keyDown(window, { key: "5", code: "Digit5" });
+    fireEvent.keyDown(window, {
+      key: "@",
+      code: "Digit2",
+      shiftKey: true,
+    });
     expect(document.getElementById("current-note-heading")).toHaveTextContent("도");
 
     fireEvent.keyDown(window, { key: "Tab" });

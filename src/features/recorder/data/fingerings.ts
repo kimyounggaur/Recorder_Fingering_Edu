@@ -1,4 +1,11 @@
-import type { FingeringSystem, HoleId, SolfegeId } from "../model/types";
+import type {
+  FingeringStateMap,
+  FingeringSystem,
+  HoleId,
+  HoleState,
+  SolfegeId,
+} from "../model/types";
+import { ALL_NOTE_IDS } from "./noteMeta";
 
 export const ALL_HOLES: readonly HoleId[] = [
   "T0",
@@ -33,28 +40,110 @@ export const HOLE_NUMBER_LABELS: Record<HoleId, string> = {
   R7: "7",
 };
 
+function makeFingering(
+  contacted: readonly HoleId[],
+  overrides: Partial<Record<HoleId, HoleState>> = {},
+): FingeringStateMap {
+  const contactedSet = new Set(contacted);
+  return Object.fromEntries(
+    ALL_HOLES.map((hole) => [
+      hole,
+      overrides[hole] ?? (contactedSet.has(hole) ? "closed" : "open"),
+    ]),
+  ) as Record<HoleId, HoleState>;
+}
+
+const COMMON_FINGERING_STATES: Record<
+  Exclude<SolfegeId, "fa" | "faSharp" | "highFa">,
+  FingeringStateMap
+> = {
+  do: makeFingering(ALL_HOLES),
+  re: makeFingering(["T0", "L1", "L2", "L3", "R4", "R5", "R6"]),
+  mi: makeFingering(["T0", "L1", "L2", "L3", "R4", "R5"]),
+  sol: makeFingering(["T0", "L1", "L2", "L3"]),
+  la: makeFingering(["T0", "L1", "L2"]),
+  si: makeFingering(["T0", "L1"]),
+  highDo: makeFingering(["T0", "L2"]),
+  doSharp: makeFingering(
+    ["T0", "L1", "L2", "L3", "R4", "R5", "R6", "R7"],
+    { R7: "partial" },
+  ),
+  reSharp: makeFingering(
+    ["T0", "L1", "L2", "L3", "R4", "R5", "R6"],
+    { R6: "partial" },
+  ),
+  solSharp: makeFingering(
+    ["T0", "L1", "L2", "R4", "R5", "R6"],
+    { R6: "partial" },
+  ),
+  laSharp: makeFingering(["T0", "L1", "L3", "R4"]),
+  highRe: makeFingering(["L2"]),
+  highMi: makeFingering(
+    ["T0", "L1", "L2", "L3", "R4", "R5"],
+    { T0: "half" },
+  ),
+  highSol: makeFingering(["T0", "L1", "L2", "L3"], { T0: "half" }),
+};
+
+export const FINGERING_STATES: Record<
+  FingeringSystem,
+  Record<SolfegeId, FingeringStateMap>
+> = {
+  baroque: {
+    ...COMMON_FINGERING_STATES,
+    fa: makeFingering(["T0", "L1", "L2", "L3", "R4", "R6", "R7"]),
+    faSharp: makeFingering(["T0", "L1", "L2", "L3", "R5", "R6"]),
+    highFa: makeFingering(
+      ["T0", "L1", "L2", "L3", "R4", "R6"],
+      { T0: "half" },
+    ),
+  },
+  german: {
+    ...COMMON_FINGERING_STATES,
+    fa: makeFingering(["T0", "L1", "L2", "L3", "R4"]),
+    faSharp: makeFingering([
+      "T0",
+      "L1",
+      "L2",
+      "L3",
+      "R5",
+      "R6",
+      "R7",
+    ]),
+    highFa: makeFingering(["T0", "L1", "L2", "L3", "R4"], {
+      T0: "half",
+    }),
+  },
+};
+
+export function getContactedHoles(
+  fingering: FingeringStateMap,
+): readonly HoleId[] {
+  return ALL_HOLES.filter((hole) => fingering[hole] !== "open");
+}
+
+export function getFullyClosedHoles(
+  fingering: FingeringStateMap,
+): readonly HoleId[] {
+  return ALL_HOLES.filter((hole) => fingering[hole] === "closed");
+}
+
+/**
+ * Compatibility view used by the existing contact/release animation. Entries
+ * include fully, half and partially covered holes because a finger still
+ * contacts the recorder in all three states.
+ */
 export const FINGERINGS: Record<
   FingeringSystem,
   Record<SolfegeId, readonly HoleId[]>
-> = {
-  baroque: {
-    do: ["T0", "L1", "L2", "L3", "R4", "R5", "R6", "R7"],
-    re: ["T0", "L1", "L2", "L3", "R4", "R5", "R6"],
-    mi: ["T0", "L1", "L2", "L3", "R4", "R5"],
-    fa: ["T0", "L1", "L2", "L3", "R4", "R6", "R7"],
-    sol: ["T0", "L1", "L2", "L3"],
-    la: ["T0", "L1", "L2"],
-    si: ["T0", "L1"],
-    highDo: ["T0", "L2"],
-  },
-  german: {
-    do: ["T0", "L1", "L2", "L3", "R4", "R5", "R6", "R7"],
-    re: ["T0", "L1", "L2", "L3", "R4", "R5", "R6"],
-    mi: ["T0", "L1", "L2", "L3", "R4", "R5"],
-    fa: ["T0", "L1", "L2", "L3", "R4"],
-    sol: ["T0", "L1", "L2", "L3"],
-    la: ["T0", "L1", "L2"],
-    si: ["T0", "L1"],
-    highDo: ["T0", "L2"],
-  },
-};
+> = Object.fromEntries(
+  (["baroque", "german"] as const).map((system) => [
+    system,
+    Object.fromEntries(
+      ALL_NOTE_IDS.map((note) => [
+        note,
+        getContactedHoles(FINGERING_STATES[system][note]),
+      ]),
+    ),
+  ]),
+) as Record<FingeringSystem, Record<SolfegeId, readonly HoleId[]>>;

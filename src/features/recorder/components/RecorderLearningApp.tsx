@@ -7,10 +7,28 @@ import {
   useRef,
   useState,
 } from "react";
-import type { FingeringSystem, HoleId, SolfegeId } from "../model/types";
-import { FINGERINGS, HOLE_NUMBER_LABELS } from "../data/fingerings";
-import { NOTE_META, NOTE_ORDER } from "../data/noteMeta";
+import type {
+  FingeringStateMap,
+  FingeringSystem,
+  HoleId,
+  HoleState,
+  NoteBank,
+  SolfegeId,
+} from "../model/types";
+import {
+  ALL_HOLES,
+  FINGERINGS,
+  FINGERING_STATES,
+  HOLE_NUMBER_LABELS,
+} from "../data/fingerings";
+import {
+  NOTE_BANK_MODIFIERS,
+  NOTE_BANKS,
+  NOTE_META,
+  NOTE_ORDER,
+} from "../data/noteMeta";
 import { buildInstruction } from "../utils/buildInstruction";
+import { resolveNoteShortcut } from "../utils/resolveNoteShortcut";
 import {
   DEFAULT_PREFERENCES,
   loadPreferences,
@@ -60,6 +78,25 @@ function withKoreanSubjectParticle(value: string): string {
   return `${value}${hasFinalConsonant ? "이" : "가"}`;
 }
 
+function describeFingeringForLive(fingering: FingeringStateMap): string {
+  const closed = ALL_HOLES.filter((hole) => fingering[hole] === "closed");
+  const half = ALL_HOLES.filter((hole) => fingering[hole] === "half");
+  const partial = ALL_HOLES.filter((hole) => fingering[hole] === "partial");
+  const clauses = [
+    closed.length
+      ? `${closed.map((hole) => HOLE_NUMBER_LABELS[hole]).join(", ")}번 구멍을 막습니다.`
+      : null,
+    half.length
+      ? `${half.map((hole) => HOLE_NUMBER_LABELS[hole]).join(", ")}번 엄지구멍은 반만 엽니다.`
+      : null,
+    partial.length
+      ? `${partial.map((hole) => HOLE_NUMBER_LABELS[hole]).join(", ")}번 이중 구멍은 한쪽만 막습니다.`
+      : null,
+  ].filter((clause): clause is string => clause !== null);
+
+  return clauses.join(" ");
+}
+
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
 
@@ -80,6 +117,7 @@ export function RecorderLearningApp() {
   }));
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [selectedNote, setSelectedNote] = useState<SolfegeId>("do");
+  const [activeBank, setActiveBank] = useState<NoteBank>("low");
   const [transitionOrigin, setTransitionOrigin] =
     useState<TransitionOrigin | null>(null);
   const [animationKey, setAnimationKey] = useState(0);
@@ -131,7 +169,22 @@ export function RecorderLearningApp() {
 
   const system = preferences.fingeringSystem;
   const currentNote = NOTE_META[selectedNote];
+  const targetFingering = FINGERING_STATES[system][selectedNote];
   const targetClosedHoles = FINGERINGS[system][selectedNote];
+  const activeBankEntry = NOTE_BANKS[activeBank].find(
+    (entry) => entry.note === selectedNote,
+  );
+  const shortcutBank: NoteBank = activeBankEntry
+    ? activeBank
+    : NOTE_BANKS.low.some((entry) => entry.note === selectedNote)
+      ? "low"
+      : NOTE_BANKS.high.some((entry) => entry.note === selectedNote)
+        ? "high"
+        : "chromatic";
+  const shortcutEntry = NOTE_BANKS[shortcutBank].find(
+    (entry) => entry.note === selectedNote,
+  )!;
+  const currentShortcutLabel = `${NOTE_BANK_MODIFIERS[shortcutBank]} + ${shortcutEntry.digit}`;
 
   const playCurrentAtContact = useCallback(() => {
     const requestId = activeAudioRequestRef.current;
@@ -153,6 +206,20 @@ export function RecorderLearningApp() {
   });
   const displayAnimation = animation;
   const { getVisualClosedHoles } = animation;
+  const displayedHoleStates = useMemo(
+    () =>
+      Object.fromEntries(
+        ALL_HOLES.map((hole) => {
+          if (displayAnimation.holeStates[hole] === "open") {
+            return [hole, "open"];
+          }
+
+          const targetState = targetFingering[hole];
+          return [hole, targetState === "open" ? "closed" : targetState];
+        }),
+      ) as Record<HoleId, HoleState>,
+    [displayAnimation.holeStates, targetFingering],
+  );
 
   const requestAnimation = useCallback((restartClosedHoles?: readonly HoleId[]) => {
     const key = animationCounterRef.current + 1;
@@ -185,8 +252,16 @@ export function RecorderLearningApp() {
   }, [beginPlaybackRequest]);
 
   const selectNote = useCallback(
-    (note: SolfegeId, options: { stopSequence?: boolean; play?: boolean } = {}) => {
-      const { stopSequence = true, play = true } = options;
+    (
+      note: SolfegeId,
+      options: {
+        stopSequence?: boolean;
+        play?: boolean;
+        bank?: NoteBank;
+      } = {},
+    ) => {
+      const { stopSequence = true, play = true, bank } = options;
+      if (bank) setActiveBank(bank);
       if (stopSequence) {
         setSequencePlaying(false);
         setSequencePaused(false);
@@ -308,12 +383,23 @@ export function RecorderLearningApp() {
   );
 
   const currentIndex = NOTE_ORDER.indexOf(selectedNote);
+  const activeBankNotes = useMemo(
+    () => NOTE_BANKS[activeBank].map((entry) => entry.note),
+    [activeBank],
+  );
+  const activeBankIndex = activeBankNotes.indexOf(selectedNote);
   const goPrevious = useCallback(() => {
-    selectNote(NOTE_ORDER[(currentIndex - 1 + NOTE_ORDER.length) % NOTE_ORDER.length]);
-  }, [currentIndex, selectNote]);
+    const index = activeBankIndex < 0 ? 0 : activeBankIndex;
+    const note = activeBankNotes[
+      (index - 1 + activeBankNotes.length) % activeBankNotes.length
+    ];
+    selectNote(note, { bank: activeBank });
+  }, [activeBank, activeBankIndex, activeBankNotes, selectNote]);
   const goNext = useCallback(() => {
-    selectNote(NOTE_ORDER[(currentIndex + 1) % NOTE_ORDER.length]);
-  }, [currentIndex, selectNote]);
+    const index = activeBankIndex < 0 ? -1 : activeBankIndex;
+    const note = activeBankNotes[(index + 1) % activeBankNotes.length];
+    selectNote(note, { bank: activeBank });
+  }, [activeBank, activeBankIndex, activeBankNotes, selectNote]);
 
   const toggleSequence = useCallback(() => {
     if (sequencePlaying) {
@@ -327,13 +413,17 @@ export function RecorderLearningApp() {
 
     setStepMode(false);
     if (sequencePaused) {
-      selectNote(selectedNote, { stopSequence: false, play: true });
+      selectNote(selectedNote, {
+        stopSequence: false,
+        play: true,
+        bank: "low",
+      });
       setSequencePaused(false);
       setSequencePlaying(true);
       return;
     }
 
-    selectNote("do", { stopSequence: false, play: true });
+    selectNote("do", { stopSequence: false, play: true, bank: "low" });
     setSequencePaused(false);
     setSequencePlaying(true);
   }, [selectNote, selectedNote, sequencePaused, sequencePlaying, stopAudio]);
@@ -341,7 +431,7 @@ export function RecorderLearningApp() {
   const resetSequence = useCallback(() => {
     setSequencePlaying(false);
     setSequencePaused(false);
-    selectNote("do", { stopSequence: false, play: false });
+    selectNote("do", { stopSequence: false, play: false, bank: "low" });
   }, [selectNote]);
 
   useEffect(() => {
@@ -354,7 +444,11 @@ export function RecorderLearningApp() {
         setSequencePaused(false);
         return;
       }
-      selectNote(NOTE_ORDER[index + 1], { stopSequence: false, play: true });
+      selectNote(NOTE_ORDER[index + 1], {
+        stopSequence: false,
+        play: true,
+        bank: "low",
+      });
     }, interval);
     return () => window.clearTimeout(timer);
   }, [preferences.speed, selectNote, selectedNote, sequencePlaying]);
@@ -362,13 +456,21 @@ export function RecorderLearningApp() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (helpOpen) return;
-      if (isTypingTarget(event.target) || event.metaKey || event.ctrlKey || event.altKey) return;
+      if (isTypingTarget(event.target) || event.isComposing) return;
 
-      if (/^[1-8]$/.test(event.key)) {
+      const shortcutNote = resolveNoteShortcut(event);
+      if (shortcutNote) {
+        const bank: NoteBank = event.shiftKey
+          ? "high"
+          : event.altKey
+            ? "chromatic"
+            : "low";
         event.preventDefault();
-        selectNote(NOTE_ORDER[Number(event.key) - 1]);
+        selectNote(shortcutNote, { bank });
         return;
       }
+
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       if (event.key === "ArrowLeft") {
         event.preventDefault();
         goPrevious();
@@ -402,9 +504,7 @@ export function RecorderLearningApp() {
     ],
   );
 
-  const liveMessage = `${withKoreanSubjectParticle(currentNote.solfegeKo)} 선택되었습니다. ${targetClosedHoles
-    .map((hole) => HOLE_NUMBER_LABELS[hole])
-    .join(", ")}번 구멍을 막습니다.`;
+  const liveMessage = `${withKoreanSubjectParticle(currentNote.solfegeKo)} 선택되었습니다. ${currentNote.noteName}. ${describeFingeringForLive(targetFingering)}`;
 
   const toggleFullscreen = useCallback(async () => {
     try {
@@ -440,7 +540,7 @@ export function RecorderLearningApp() {
           <div>
             <p className="eyebrow">손가락이 움직이는 음악 교실</p>
             <h1>리코더 운지법 배우기</h1>
-            <p>숫자 버튼을 눌러 손가락의 움직임을 살펴보세요.</p>
+            <p>낮은 음·높은 음·반음을 고르고 손가락 움직임을 살펴보세요.</p>
           </div>
         </div>
         <div className="header-actions">
@@ -469,6 +569,7 @@ export function RecorderLearningApp() {
             system={system}
             onPlay={playCurrentNote}
             muted={preferences.isMuted}
+            shortcutLabel={currentShortcutLabel}
           />
         </div>
 
@@ -493,7 +594,7 @@ export function RecorderLearningApp() {
               transitionKey={animationKey}
               transitionFromNote={transitionOrigin?.note ?? null}
               transitionFromSystem={transitionOrigin?.system ?? null}
-              holeStates={displayAnimation.holeStates}
+              holeStates={displayedHoleStates}
               currentClosedHoles={displayAnimation.visualClosedHoles}
               toOpen={displayAnimation.diff.toOpen}
               toClose={displayAnimation.diff.toClose}
@@ -525,7 +626,12 @@ export function RecorderLearningApp() {
         </div>
 
         <div className="keypad-area">
-          <NoteKeypad selectedNote={selectedNote} onSelect={selectNote} />
+          <NoteKeypad
+            selectedNote={selectedNote}
+            activeBank={activeBank}
+            onBankChange={setActiveBank}
+            onSelect={(note, bank) => selectNote(note, { bank })}
+          />
         </div>
 
         <div className="settings-area">

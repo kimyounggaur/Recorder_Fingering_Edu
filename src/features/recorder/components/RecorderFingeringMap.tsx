@@ -161,6 +161,25 @@ function HoleDiscs({
 
   const gap = layout.gap ?? 0;
 
+  if (state === "partial") {
+    return (
+      <>
+        <HoleDisc
+          x={layout.x - gap}
+          y={layout.y}
+          radius={layout.radius}
+          state="closed"
+        />
+        <HoleDisc
+          x={layout.x + gap}
+          y={layout.y}
+          radius={layout.radius}
+          state="open"
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <HoleDisc
@@ -315,7 +334,7 @@ function MapHole({
   showFingerNames: boolean;
 }) {
   const highlighted = isHoleTransitionHighlighted(transition, phase);
-  const pressed = state === "closed";
+  const pressed = state !== "open";
 
   return (
     <g
@@ -383,8 +402,9 @@ export function RecorderFingeringMap({
     {} as Record<HoleId, HoleState>,
   );
   const closedHoles = HOLE_IDS.filter((id) => states[id] === "closed");
-  const defaultDescription = closedHoles.length
-    ? `${closedHoles.map((id) => HOLE_NUMBER_LABELS[id]).join(", ")}번 구멍을 막은 운지입니다.`
+  const contactedHoles = HOLE_IDS.filter((id) => states[id] !== "open");
+  const defaultDescription = contactedHoles.length
+    ? `${contactedHoles.map((id) => HOLE_NUMBER_LABELS[id]).join(", ")}번 구멍에 손가락이 닿은 운지입니다.`
     : "모든 구멍을 연 운지입니다.";
   const fingerDescription = showFingerNames
     ? ` 담당 손가락은 ${HOLE_IDS.map(
@@ -410,6 +430,7 @@ export function RecorderFingeringMap({
       data-testid="recorder-fingering-map"
       data-phase={phase}
       data-closed-holes={closedHoles.join(" ")}
+      data-contacted-holes={contactedHoles.join(" ")}
     >
       <title id={titleId}>{title}</title>
       <desc id={descriptionId}>
@@ -555,6 +576,12 @@ export function RecorderFingeringMap({
         <text x="49" y="582">막음</text>
         <circle cx="94" cy="578" r="8" fill="#fffdf7" stroke="#24343c" strokeWidth="2" />
         <text x="109" y="582">열림</text>
+        <path d="M 153 578 A 8 8 0 0 0 169 578 L 153 578 Z" fill="#24343c" />
+        <circle cx="161" cy="578" r="8" fill="none" stroke="#24343c" strokeWidth="2" />
+        <text x="176" y="582">반개방</text>
+        <circle cx="256" cy="578" r="8" fill="#fffdf7" stroke="#24343c" strokeWidth="2" />
+        <path d="M 256 570 A 8 8 0 0 0 256 586 Z" fill="#24343c" />
+        <text x="271" y="582">한쪽만</text>
       </g>
     </svg>
   );

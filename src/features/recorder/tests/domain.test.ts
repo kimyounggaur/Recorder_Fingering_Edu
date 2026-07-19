@@ -6,12 +6,18 @@ import { getFingeringDiff } from "../animation/getFingeringDiff";
 import {
   ALL_HOLES,
   FINGERINGS,
+  FINGERING_STATES,
   FINGER_LABELS,
   HOLE_NUMBER_LABELS,
 } from "../data/fingerings";
-import { NOTE_META, NOTE_ORDER } from "../data/noteMeta";
+import {
+  ALL_NOTE_IDS,
+  NOTE_BANKS,
+  NOTE_META,
+  NOTE_ORDER,
+} from "../data/noteMeta";
 import { getRecorderPoseSource, RECORDER_POSE_SOURCES } from "../data/poseAssets";
-import type { HoleId } from "../model/types";
+import type { HoleId, HoleState, SolfegeId } from "../model/types";
 import { buildInstruction } from "../utils/buildInstruction";
 import {
   DEFAULT_PREFERENCES,
@@ -22,49 +28,111 @@ import {
 } from "../utils/storage";
 
 describe("recorder domain data", () => {
-  it("keeps the specified baroque and german fingerings", () => {
-    expect(FINGERINGS.baroque.do).toEqual([
-      "T0",
-      "L1",
-      "L2",
-      "L3",
-      "R4",
-      "R5",
-      "R6",
-      "R7",
+  it("contains 17 notes and exposes 8/5/5 banks with C5 shared", () => {
+    expect(ALL_NOTE_IDS).toHaveLength(17);
+    expect(new Set(ALL_NOTE_IDS).size).toBe(17);
+    expect(Object.keys(NOTE_META).sort()).toEqual([...ALL_NOTE_IDS].sort());
+
+    expect(NOTE_BANKS.low).toHaveLength(8);
+    expect(NOTE_BANKS.high).toHaveLength(5);
+    expect(NOTE_BANKS.chromatic).toHaveLength(5);
+    expect(NOTE_BANKS.low.map(({ digit }) => digit)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8,
     ]);
-    expect(FINGERINGS.baroque.fa).toEqual([
-      "T0",
-      "L1",
-      "L2",
-      "L3",
-      "R4",
-      "R6",
-      "R7",
+    expect(NOTE_BANKS.high.map(({ digit }) => digit)).toEqual([1, 2, 3, 4, 5]);
+    expect(NOTE_BANKS.chromatic.map(({ digit }) => digit)).toEqual([
+      1, 2, 3, 4, 5,
     ]);
-    expect(FINGERINGS.german.fa).toEqual([
-      "T0",
-      "L1",
-      "L2",
-      "L3",
-      "R4",
-    ]);
-    expect(FINGERINGS.baroque.highDo).toEqual(["T0", "L2"]);
-    expect(FINGERINGS.german.highDo).toEqual(["T0", "L2"]);
+    expect(NOTE_BANKS.low[7]).toEqual({ note: "highDo", digit: 8 });
+    expect(NOTE_BANKS.high[0]).toEqual({ note: "highDo", digit: 1 });
+    expect(
+      new Set(Object.values(NOTE_BANKS).flatMap((bank) => bank.map(({ note }) => note))),
+    ).toEqual(new Set(ALL_NOTE_IDS));
   });
 
-  it("contains eight notes, valid holes, and no duplicate holes", () => {
-    const validHoles = new Set<HoleId>(ALL_HOLES);
+  it("provides a valid complete FingeringStateMap for every note and system", () => {
+    const validStates = new Set<HoleState>([
+      "open",
+      "closed",
+      "half",
+      "partial",
+    ]);
 
     for (const system of ["baroque", "german"] as const) {
-      expect(Object.keys(FINGERINGS[system])).toHaveLength(8);
+      expect(Object.keys(FINGERING_STATES[system]).sort()).toEqual(
+        [...ALL_NOTE_IDS].sort(),
+      );
 
-      for (const note of NOTE_ORDER) {
-        const fingering = FINGERINGS[system][note];
-        expect(fingering.every((hole) => validHoles.has(hole))).toBe(true);
-        expect(new Set(fingering).size).toBe(fingering.length);
+      for (const note of ALL_NOTE_IDS) {
+        const states = FINGERING_STATES[system][note];
+        expect(Object.keys(states)).toEqual(ALL_HOLES);
+        expect(Object.values(states).every((state) => validStates.has(state))).toBe(
+          true,
+        );
+        expect(FINGERINGS[system][note]).toEqual(
+          ALL_HOLES.filter((hole) => states[hole] !== "open"),
+        );
       }
     }
+  });
+
+  it("marks C-sharp, D-sharp, and G-sharp double holes as partial", () => {
+    const partialHoleByNote = {
+      doSharp: "R7",
+      reSharp: "R6",
+      solSharp: "R6",
+    } as const satisfies Partial<Record<SolfegeId, HoleId>>;
+
+    for (const system of ["baroque", "german"] as const) {
+      for (const [note, partialHole] of Object.entries(partialHoleByNote) as Array<
+        [keyof typeof partialHoleByNote, HoleId]
+      >) {
+        const states = FINGERING_STATES[system][note];
+        expect(states[partialHole]).toBe("partial");
+        expect(
+          ALL_HOLES.filter((hole) => states[hole] === "partial"),
+        ).toEqual([partialHole]);
+      }
+    }
+  });
+
+  it("uses a half-open thumb for E5, F5, and G5", () => {
+    for (const system of ["baroque", "german"] as const) {
+      for (const note of ["highMi", "highFa", "highSol"] as const) {
+        const states = FINGERING_STATES[system][note];
+        expect(states.T0).toBe("half");
+        expect(ALL_HOLES.filter((hole) => states[hole] === "half")).toEqual([
+          "T0",
+        ]);
+      }
+    }
+  });
+
+  it("differs by system only for fa, fa-sharp, and high fa", () => {
+    const systemSpecificNotes = new Set<SolfegeId>([
+      "fa",
+      "faSharp",
+      "highFa",
+    ]);
+
+    for (const note of ALL_NOTE_IDS) {
+      if (systemSpecificNotes.has(note)) {
+        expect(FINGERING_STATES.baroque[note]).not.toEqual(
+          FINGERING_STATES.german[note],
+        );
+      } else {
+        expect(FINGERING_STATES.baroque[note]).toEqual(
+          FINGERING_STATES.german[note],
+        );
+      }
+    }
+
+    expect(FINGERING_STATES.baroque.fa.R6).toBe("closed");
+    expect(FINGERING_STATES.german.fa.R6).toBe("open");
+    expect(FINGERING_STATES.baroque.faSharp.R7).toBe("open");
+    expect(FINGERING_STATES.german.faSharp.R7).toBe("closed");
+    expect(FINGERING_STATES.baroque.highFa.R6).toBe("closed");
+    expect(FINGERING_STATES.german.highFa.R6).toBe("open");
   });
 
   it("maps every hole to one finger and one physical number", () => {
@@ -88,15 +156,14 @@ describe("recorder domain data", () => {
     ]);
   });
 
-  it("differs between systems only for fa", () => {
-    for (const note of NOTE_ORDER) {
-      if (note === "fa") continue;
-      expect(FINGERINGS.baroque[note]).toEqual(FINGERINGS.german[note]);
-    }
-  });
+  it("maps every note to a pose and changes system-specific notes", () => {
+    const systemSpecificNotes = new Set<SolfegeId>([
+      "fa",
+      "faSharp",
+      "highFa",
+    ]);
 
-  it("maps every lesson note to an aligned pose and changes only fa by system", () => {
-    for (const note of NOTE_ORDER) {
+    for (const note of ALL_NOTE_IDS) {
       const baroqueSource = getRecorderPoseSource(note, "baroque");
       const germanSource = getRecorderPoseSource(note, "german");
 
@@ -104,17 +171,17 @@ describe("recorder domain data", () => {
       expect(RECORDER_POSE_SOURCES).toContain(germanSource);
       expect(baroqueSource.endsWith(".png")).toBe(true);
 
-      if (note === "fa") {
-        expect(baroqueSource).toBe("/fingering/poses/fa-baroque.png");
-        expect(germanSource).toBe("/fingering/poses/fa-german.png");
+      if (systemSpecificNotes.has(note)) {
+        expect(germanSource).not.toBe(baroqueSource);
       } else {
         expect(germanSource).toBe(baroqueSource);
       }
     }
   });
 
-  it("ships all nine pose files in one aligned 976×1360 frame", () => {
-    expect(new Set(RECORDER_POSE_SOURCES).size).toBe(9);
+  it("ships all 20 pose files in one aligned 976×1360 frame", () => {
+    expect(RECORDER_POSE_SOURCES).toHaveLength(20);
+    expect(new Set(RECORDER_POSE_SOURCES).size).toBe(20);
 
     for (const source of RECORDER_POSE_SOURCES) {
       const png = readFileSync(
@@ -181,6 +248,32 @@ describe("buildInstruction", () => {
     expect(buildInstruction("fa", "german")).toContain(
       "독일식 파예요. 4번까지 막고 5번, 6번, 7번 구멍은 열어요.",
     );
+  });
+
+  it("describes partial double holes and half-open thumbs", () => {
+    expect(buildInstruction("doSharp", "baroque")).toContain(
+      "7번 이중 구멍은 한쪽만 막아요.",
+    );
+    expect(buildInstruction("highMi", "baroque")).toContain(
+      "0번은 반만 열어요.",
+    );
+    expect(buildInstruction("highFa", "baroque")).toContain(
+      "바로크식 높은 파예요.",
+    );
+    expect(buildInstruction("highFa", "german")).toContain(
+      "독일식 높은 파예요.",
+    );
+  });
+
+  it("explains a coverage-only change instead of calling it unchanged", () => {
+    const instruction = buildInstruction({
+      note: "doSharp",
+      system: "baroque",
+      previousNote: "do",
+    });
+
+    expect(instruction).toContain("7번 이중 구멍은 한쪽만 막아 주세요.");
+    expect(instruction).not.toContain("손가락은 그대로 두면 돼요.");
   });
 
   it("describes the movement from the previous fingering", () => {

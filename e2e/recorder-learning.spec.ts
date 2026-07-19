@@ -3,14 +3,14 @@ import { expect, test, type Page } from "@playwright/test";
 type FingeringSystem = "baroque" | "german";
 
 const NOTES = [
-  { button: 1, solfege: "도", subject: "도가", name: "C", pose: "do.png" },
-  { button: 2, solfege: "레", subject: "레가", name: "D", pose: "re.png" },
-  { button: 3, solfege: "미", subject: "미가", name: "E", pose: "mi.png" },
-  { button: 4, solfege: "파", subject: "파가", name: "F", pose: "fa-german.png" },
-  { button: 5, solfege: "솔", subject: "솔이", name: "G", pose: "sol.png" },
-  { button: 6, solfege: "라", subject: "라가", name: "A", pose: "la.png" },
-  { button: 7, solfege: "시", subject: "시가", name: "B", pose: "si.png" },
-  { button: 8, solfege: "높은 도", subject: "높은 도가", name: "C′", pose: "high-do.png" },
+  { button: 1, solfege: "도", subject: "도가", name: "C4", pose: "do.png" },
+  { button: 2, solfege: "레", subject: "레가", name: "D4", pose: "re.png" },
+  { button: 3, solfege: "미", subject: "미가", name: "E4", pose: "mi.png" },
+  { button: 4, solfege: "파", subject: "파가", name: "F4", pose: "fa-german.png" },
+  { button: 5, solfege: "솔", subject: "솔이", name: "G4", pose: "sol.png" },
+  { button: 6, solfege: "라", subject: "라가", name: "A4", pose: "la.png" },
+  { button: 7, solfege: "시", subject: "시가", name: "B4", pose: "si.png" },
+  { button: 8, solfege: "높은 도", subject: "높은 도가", name: "C5", pose: "high-do.png" },
 ] as const;
 
 function watchForBrowserErrors(page: Page): string[] {
@@ -146,7 +146,7 @@ test("파 opens only R6 and R7 when switching to german fingering", async ({
   expect(browserErrors).toEqual([]);
 });
 
-test("keyboard 5 selects 솔 and slow viewing can be enabled", async ({ page }) => {
+test("keyboard 5 selects 솔 / G4 and slow viewing can be enabled", async ({ page }) => {
   const browserErrors = watchForBrowserErrors(page);
   await openAppAndChoose(page, "baroque");
 
@@ -154,7 +154,7 @@ test("keyboard 5 selects 솔 and slow viewing can be enabled", async ({ page }) 
   await page.keyboard.press("5");
 
   await expect(page.locator("#current-note-heading")).toHaveText("솔");
-  await expect(page.locator(".note-name")).toHaveText("음 이름 G");
+  await expect(page.locator(".note-name")).toHaveText("음 이름 G4");
   await expect(page.getByTestId("note-button-5")).toHaveAttribute(
     "aria-pressed",
     "true",
@@ -168,6 +168,61 @@ test("keyboard 5 selects 솔 and slow viewing can be enabled", async ({ page }) 
   const slow = page.getByRole("radio", { name: /느리게/ });
   await slow.check();
   await expect(slow).toBeChecked();
+  expect(browserErrors).toEqual([]);
+});
+
+test("high and chromatic shortcuts animate half and partial holes", async ({
+  page,
+}) => {
+  const browserErrors = watchForBrowserErrors(page);
+  await openAppAndChoose(page, "baroque");
+
+  await page.getByRole("heading", { level: 1 }).click();
+  await page.keyboard.press("Shift+Digit4");
+  await expect(page.locator("#current-note-heading")).toHaveText("높은 파");
+  await expect(page.locator(".note-name")).toHaveText("음 이름 F5");
+  await expect(page.getByTestId("note-bank-high")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(hole(page, "T0")).toHaveAttribute("data-hole-state", "half");
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
+    "data-rendered-source",
+    "/fingering/poses/f5-baroque.png",
+  );
+
+  await page.keyboard.press("Alt+Digit1");
+  await expect(page.locator("#current-note-heading")).toHaveText("도♯/레♭");
+  await expect(page.locator(".note-name")).toHaveText("음 이름 C♯4 / D♭4");
+  await expect(page.getByTestId("note-bank-chromatic")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(hole(page, "R7")).toHaveAttribute(
+    "data-hole-state",
+    "partial",
+  );
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
+    "data-rendered-source",
+    "/fingering/poses/cs4.png",
+  );
+
+  await page.evaluate(() => {
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "5",
+        code: "Digit5",
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  });
+  await expect(page.locator("#current-note-heading")).toHaveText("솔");
+  await expect(page.getByTestId("note-bank-low")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
   expect(browserErrors).toEqual([]);
 });
 
@@ -203,7 +258,7 @@ test("rapid 1→8→4→5 input remains on the final 솔 fingering", async ({
   await page.waitForTimeout(1_200);
 
   await expect(page.locator("#current-note-heading")).toHaveText("솔");
-  await expect(page.locator(".note-name")).toHaveText("음 이름 G");
+  await expect(page.locator(".note-name")).toHaveText("음 이름 G4");
   await expect(page.getByTestId("note-button-5")).toHaveAttribute(
     "aria-pressed",
     "true",

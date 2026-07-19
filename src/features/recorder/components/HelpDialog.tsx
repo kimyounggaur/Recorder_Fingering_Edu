@@ -100,16 +100,19 @@ export function HelpDialog({ open, onClose }: HelpDialogProps) {
           </button>
         </div>
         <ol className="help-steps">
-          <li><strong>숫자 1–8</strong> 중 배울 음을 고릅니다.</li>
+          <li><strong>낮은 계이름·높은 계이름·반음</strong> 탭에서 배울 음을 고릅니다.</li>
           <li><strong>파란 ↑</strong> 손가락을 먼저 떼고, <strong>노란 ↓</strong> 손가락을 구멍에 붙입니다.</li>
           <li>천천히 보고 싶다면 <strong>느리게</strong> 또는 <strong>단계별 보기</strong>를 켭니다.</li>
         </ol>
         <div className="keyboard-guide">
-          <span><kbd>1</kbd>–<kbd>8</kbd> 음 선택</span>
+          <span><kbd>1</kbd>–<kbd>8</kbd> 기본 음계</span>
+          <span><kbd>Ctrl</kbd>+<kbd>1–8</kbd> 낮은 계이름</span>
+          <span><kbd>Shift</kbd>+<kbd>1–5</kbd> 높은 계이름</span>
+          <span><kbd>Alt</kbd>+<kbd>1–5</kbd> 반음</span>
           <span><kbd>←</kbd><kbd>→</kbd> 이전·다음</span>
           <span><kbd>Space</kbd> 음 재생</span>
         </div>
-        <p className="help-note">0번 엄지구멍은 리코더 뒤쪽에 있어 왼쪽 위의 보조 그림으로 함께 보여 줍니다.</p>
+        <p className="help-note">브라우저가 Ctrl 또는 Alt 단축키를 먼저 사용할 때는 화면의 음역 탭과 숫자 버튼을 누르면 항상 선택할 수 있어요. 0번 엄지구멍은 뒤쪽 보조 그림으로 함께 보여 줍니다.</p>
       </section>
     </div>,
     document.body,

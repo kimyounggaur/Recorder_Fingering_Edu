@@ -1,6 +1,6 @@
 import { useId, type HTMLAttributes } from "react";
 import {
-  FINGERINGS,
+  FINGERING_STATES,
   FINGER_LABELS,
   HOLE_NUMBER_LABELS,
 } from "../data/fingerings";
@@ -63,14 +63,11 @@ function ChangeList({
   );
 }
 
-function sameHoles(
-  first: readonly HoleId[],
-  second: readonly HoleId[],
+function sameFingeringStates(
+  first: Record<HoleId, HoleState>,
+  second: Readonly<Record<HoleId, HoleState>>,
 ): boolean {
-  return (
-    first.length === second.length &&
-    first.every((hole, index) => hole === second[index])
-  );
+  return HOLE_IDS.every((hole) => first[hole] === second[hole]);
 }
 
 /**
@@ -114,13 +111,16 @@ export function RecorderScene({
   const actualClosed = HOLE_IDS.filter(
     (id) => normalizedStates[id] === "closed",
   );
-  const defaultDescription = actualClosed.length
-    ? `${actualClosed.map((id) => HOLE_NUMBER_LABELS[id]).join(", ")}번 구멍을 막은 현재 운지입니다.`
+  const actualContacted = HOLE_IDS.filter(
+    (id) => normalizedStates[id] !== "open",
+  );
+  const defaultDescription = actualContacted.length
+    ? `${actualContacted.map((id) => HOLE_NUMBER_LABELS[id]).join(", ")}번 구멍에 손가락이 닿은 현재 운지입니다.`
     : "모든 구멍을 연 현재 운지입니다.";
 
-  const poseMatchesVisualState = sameHoles(
-    actualClosed,
-    FINGERINGS[system][note],
+  const poseMatchesVisualState = sameFingeringStates(
+    normalizedStates,
+    FINGERING_STATES[system][note],
   );
   const holdPreviousPose =
     stepMode && !poseMatchesVisualState && transitionFromNote !== null;
@@ -156,6 +156,7 @@ export function RecorderScene({
       data-reduced-motion={reducedMotion ? "true" : "false"}
       data-debug={debug ? "true" : "false"}
       data-closed-holes={actualClosed.join(" ")}
+      data-contacted-holes={actualContacted.join(" ")}
       data-note={note}
       data-fingering-system={system}
     >
@@ -208,6 +209,8 @@ export function RecorderScene({
         <div className="fingering-map-panel__legend">
           <span><i className="map-legend-dot map-legend-dot--closed" /> 막음</span>
           <span><i className="map-legend-dot map-legend-dot--open" /> 열림</span>
+          <span><i className="map-legend-dot map-legend-dot--half" /> 반개방</span>
+          <span><i className="map-legend-dot map-legend-dot--partial" /> 한쪽만</span>
         </div>
       </section>
 
