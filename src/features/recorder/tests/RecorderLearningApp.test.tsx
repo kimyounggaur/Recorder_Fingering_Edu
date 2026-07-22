@@ -107,6 +107,19 @@ describe("RecorderLearningApp", () => {
     expect(noteButton(1)).toHaveAttribute("aria-pressed", "false");
   });
 
+  it("blocks context menus and dragging for the app image stage", async () => {
+    await renderReadyApp();
+
+    const app = document.querySelector(".recorder-app");
+    const poseImage = document.querySelector(".recorder-pose-stage__fallback");
+    expect(app).not.toBeNull();
+    expect(poseImage).not.toBeNull();
+
+    expect(fireEvent.contextMenu(app!)).toBe(false);
+    expect(poseImage).toHaveAttribute("draggable", "false");
+    expect(fireEvent.dragStart(poseImage!)).toBe(false);
+  });
+
   it("updates the polite live region for the selected note", async () => {
     await renderReadyApp();
 

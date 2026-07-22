@@ -252,11 +252,15 @@ export function RecorderPoseStage({
         sizes="(max-width: 700px) 76vw, (max-width: 1100px) 48vw, 390px"
         unoptimized
         aria-hidden="true"
+        draggable={false}
+        onContextMenu={(event) => event.preventDefault()}
       />
       <canvas
         ref={canvasRef}
         className="recorder-pose-stage__canvas"
         aria-hidden="true"
+        draggable={false}
+        onContextMenu={(event) => event.preventDefault()}
       />
     </div>
   );

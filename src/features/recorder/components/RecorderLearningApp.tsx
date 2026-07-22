@@ -532,6 +532,8 @@ export function RecorderLearningApp() {
       data-reduced-motion={reducedMotion}
       data-speed={preferences.speed}
       data-animation-preparing={displayAnimation.isPreparing}
+      onContextMenu={(event) => event.preventDefault()}
+      onDragStart={(event) => event.preventDefault()}
     >
       <a className="skip-link" href="#learning-stage">학습 무대로 건너뛰기</a>
       <header className="app-header">
