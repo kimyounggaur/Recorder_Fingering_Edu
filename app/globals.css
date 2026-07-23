@@ -1528,6 +1528,44 @@ kbd {
   font: 700 11px/1.4 ui-monospace, monospace;
 }
 
+.debug-panel__audio-demo {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgb(210 59 59 / 35%);
+}
+
+.debug-panel__audio-demo-title {
+  color: #5f1616;
+  font-size: 0.72rem;
+}
+
+.debug-panel__audio-demo-button {
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid #a62626;
+  border-radius: 7px;
+  background: #fff2f2;
+  color: #7d1d1d;
+  font: inherit;
+  cursor: pointer;
+}
+
+.debug-panel__audio-demo-button:hover {
+  background: #ffe1e1;
+}
+
+.debug-panel__audio-demo-button:focus-visible {
+  outline: 3px solid rgb(210 59 59 / 35%);
+  outline-offset: 2px;
+}
+
+.debug-panel__audio-demo-status {
+  min-height: 1.4em;
+  color: #5f1616;
+}
+
 .error-fallback {
   display: grid;
   min-height: 100vh;

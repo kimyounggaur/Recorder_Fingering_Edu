@@ -1,10 +1,10 @@
 # 리코더 오디오 샘플과 라이선스
 
-이 디렉터리는 향후 로컬 리코더 샘플을 둘 자리입니다. **현재 저장소에는 녹음 샘플이 없으며 이 README 외의 오디오 파일을 사용하지 않습니다.** 앱의 기본 소리는 `src/features/recorder/audio/WebAudioRecorderEngine.ts`가 브라우저에서 실시간으로 만드는 triangle oscillator 합성음입니다. 따라서 현재 오디오 자산에 별도 제3자 음원 라이선스나 저작자 표시는 없습니다.
+이 디렉터리는 향후 로컬 리코더 샘플을 둘 자리입니다. **현재 저장소에는 녹음 샘플이 없으며 이 README 외의 오디오 파일을 사용하지 않습니다.** 앱의 기본 소리는 `src/features/recorder/audio/WebAudioRecorderEngine.ts`가 브라우저에서 실시간으로 만드는 임시 합성 연습음입니다. 세 개의 sine 배음과 짧은 band-pass 치프, 미세한 진폭 변화를 조합하지만 실제 리코더 녹음은 아닙니다. 따라서 현재 오디오 자산에 별도 제3자 음원 라이선스나 저작자 표시는 없습니다.
 
 ## 현재 오디오 키
 
-`src/features/recorder/data/noteMeta.ts`가 앱에서 사용하는 `audioKey`를 정하고, `WebAudioRecorderEngine.ts`의 `RECORDER_AUDIO_KEY_TO_PITCH`가 다음 피치 키로 정규화합니다.
+`src/features/recorder/data/noteMeta.ts`가 앱에서 사용하는 `audioKey`를 정하고, `src/features/recorder/audio/frequencies.ts`의 `RECORDER_AUDIO_KEY_TO_PITCH`가 다음 피치 키로 정규화합니다.
 
 | 계이름 | 앱 `audioKey` | 현재 피치 키 | 권장 샘플 파일명 |
 |---|---|---|---|
@@ -63,7 +63,7 @@ export interface RecorderAudioEngine {
 
 샘플 품질이나 라이선스에 문제가 생기면 `useRecorderAudio.ts`의 기본 팩토리를 다시 `createWebAudioRecorderEngine`으로 지정합니다. 합성 엔진은 preload할 파일이 없고 네트워크 요청도 하지 않습니다.
 
-합성음의 주파수, 길이와 페이드는 `WebAudioRecorderEngine.ts`에서 관리합니다. 합성음은 실제 리코더 녹음으로 표기하지 말고 사용자 화면과 문서에서 계속 “합성 연습음”으로 안내합니다.
+합성음의 주파수와 키 별칭은 `frequencies.ts`, 배음·치프·엔벨로프·길이와 페이드는 `WebAudioRecorderEngine.ts`에서 관리합니다. 기본 길이는 700ms이고 연습·퀴즈용 엔진은 `durationMs: 500`으로 만들 수 있습니다. 합성음은 실제 리코더 녹음으로 표기하지 말고 사용자 화면과 문서에서 계속 “합성 연습음”으로 안내합니다.
 
 ## 라이선스 기록 규칙
 
@@ -79,7 +79,7 @@ export interface RecorderAudioEngine {
 
 ## 교체 후 검수
 
-- 1–8 모든 버튼이 올바른 샘플을 재생하는가
+- 낮은 음·높은 음·반음의 17개 고유 음높이가 모두 올바르게 재생되는가
 - 파의 체계 변경은 같은 F 음을 사용하면서 SVG 운지만 달라지는가
 - 첫 사용자 클릭 전에 `AudioContext`나 네트워크 재생이 시작되지 않는가
 - `1→8→4→5` 연타 뒤 마지막 솔만 들리는가

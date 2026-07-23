@@ -1,95 +1,69 @@
 import type { RecorderAudioEngine } from "./RecorderAudioEngine";
+import { getRecorderNoteFrequency } from "./frequencies";
 
-export const RECORDER_NOTE_FREQUENCIES_HZ = {
-  C4: 261.63,
-  "C#4": 277.18,
-  D4: 293.66,
-  "D#4": 311.13,
-  E4: 329.63,
-  F4: 349.23,
-  "F#4": 369.99,
-  G4: 392,
-  "G#4": 415.3,
-  A4: 440,
-  "A#4": 466.16,
-  B4: 493.88,
-  C5: 523.25,
-  D5: 587.33,
-  E5: 659.25,
-  F5: 698.46,
-  G5: 783.99,
+export {
+  BASIC_RECORDER_DEMO_AUDIO_KEYS,
+  RECORDER_AUDIO_KEY_TO_PITCH,
+  RECORDER_NOTE_FREQUENCIES_HZ,
+  getRecorderNoteFrequency,
+} from "./frequencies";
+export type { RecorderPitchKey } from "./frequencies";
+
+export const DEFAULT_RECORDER_NOTE_DURATION_MS = 700;
+export const PRACTICE_RECORDER_NOTE_DURATION_MS = 500;
+export const DEFAULT_RECORDER_TRANSITION_FADE_MS = 80;
+
+export const RECORDER_SYNTHESIS_PROFILE = {
+  partials: [
+    { harmonic: 1, gain: 1 },
+    { harmonic: 2, gain: 0.18 },
+    { harmonic: 3, gain: 0.08 },
+  ],
+  chiffDurationMs: 30,
+  chiffGain: 0.12,
+  chiffFilterQ: 8,
+  attackMs: 40,
+  sustainLevel: 0.8,
+  releaseMs: 200,
+  vibratoRateHz: 4.5,
+  vibratoDepth: 0.02,
 } as const;
-
-export type RecorderPitchKey = keyof typeof RECORDER_NOTE_FREQUENCIES_HZ;
-
-/**
- * The short keys are the values used by NOTE_META. Canonical pitch keys are
- * accepted too, which makes swapping in named sample files straightforward.
- */
-export const RECORDER_AUDIO_KEY_TO_PITCH: Readonly<
-  Record<string, RecorderPitchKey>
-> = {
-  C: "C4",
-  C4: "C4",
-  "C#4": "C#4",
-  D: "D4",
-  D4: "D4",
-  "D#4": "D#4",
-  E: "E4",
-  E4: "E4",
-  F: "F4",
-  F4: "F4",
-  "F#4": "F#4",
-  G: "G4",
-  G4: "G4",
-  "G#4": "G#4",
-  A: "A4",
-  A4: "A4",
-  "A#4": "A#4",
-  B: "B4",
-  B4: "B4",
-  HIGH_C: "C5",
-  "HIGH-C": "C5",
-  C5: "C5",
-  D5: "D5",
-  E5: "E5",
-  F5: "F5",
-  G5: "G5",
-};
-
-export function getRecorderNoteFrequency(noteKey: string): number | null {
-  const normalizedKey = noteKey.trim().toUpperCase();
-  const pitchKey = RECORDER_AUDIO_KEY_TO_PITCH[normalizedKey];
-
-  return pitchKey === undefined
-    ? null
-    : RECORDER_NOTE_FREQUENCIES_HZ[pitchKey];
-}
 
 export interface WebAudioRecorderEngineOptions {
   /** Dependency seam for deterministic unit tests. */
   contextFactory?: () => AudioContext | null;
-  /** Clamped to the product requirement of 600–900 ms. */
+  /** Defaults to 700 ms. Pass 500 ms for practice and quiz feedback. */
   durationMs?: number;
   /** Tail release within the note envelope. */
   fadeOutMs?: number;
   /** Fade used when a newer note supersedes the current one. */
   transitionFadeMs?: number;
+  /** Disable the subtle 4.5 Hz, ±2% expression when a steadier tone is needed. */
+  vibratoEnabled?: boolean;
+  /** Amplitude depth from 0 to 4%; defaults to 2%. */
+  vibratoDepth?: number;
+  /** Random source for the short chiff buffer; useful in deterministic tests. */
+  randomSource?: () => number;
 }
 
+type VoiceSource = OscillatorNode | AudioBufferSourceNode;
+
 interface ActiveVoice {
-  oscillator: OscillatorNode;
-  gainNode: GainNode;
+  primaryOscillator: OscillatorNode;
+  continuousSources: OscillatorNode[];
+  sources: VoiceSource[];
+  nodes: AudioNode[];
+  masterEnvelope: GainNode;
   stopAt: number;
   ended: boolean;
 }
 
 const MIN_GAIN = 0.0001;
-const PEAK_GAIN = 0.18;
-const SUSTAIN_GAIN = 0.125;
-const DEFAULT_DURATION_MS = 780;
-const DEFAULT_RELEASE_MS = 125;
-const DEFAULT_TRANSITION_FADE_MS = 55;
+const OUTPUT_GAIN = 0.16;
+const MIN_DURATION_MS = 300;
+const MAX_DURATION_MS = 2_000;
+const SOURCE_TAIL_SECONDS = 0.02;
+const TRANSITION_STOP_PADDING_SECONDS = 0.005;
 
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
@@ -111,22 +85,70 @@ function createBrowserAudioContext(): AudioContext | null {
   }
 }
 
+function setAudioParam(
+  parameter: AudioParam,
+  value: number,
+  at: number,
+): void {
+  parameter.setValueAtTime(value, at);
+}
+
+function cancelAndHoldAudioParam(
+  parameter: AudioParam,
+  at: number,
+  fallbackValue: number,
+): void {
+  try {
+    parameter.cancelAndHoldAtTime(at);
+  } catch {
+    parameter.cancelScheduledValues(at);
+    parameter.setValueAtTime(
+      clamp(finiteOr(parameter.value, fallbackValue), MIN_GAIN, 1),
+      at,
+    );
+  }
+}
+
+function stopSource(source: VoiceSource, at?: number): void {
+  try {
+    if (at === undefined) {
+      source.stop();
+    } else {
+      source.stop(at);
+    }
+  } catch {
+    // A partially-created or already-ended source is safe to ignore.
+  }
+}
+
+function disconnectNode(node: AudioNode): void {
+  try {
+    node.disconnect();
+  } catch {
+    // A node can already be disconnected by a browser after ending.
+  }
+}
+
 /**
- * A lightweight synthesized fallback. It never creates an AudioContext until
- * unlock() is called from a user gesture.
+ * Recorder-like synthesized fallback. AudioContext creation remains gated by
+ * unlock(), while every note gets its own short-lived synthesis graph.
  */
 export class WebAudioRecorderEngine implements RecorderAudioEngine {
   private readonly contextFactory: () => AudioContext | null;
 
   private readonly durationMs: number;
 
-  private readonly fadeOutMs: number;
+  private readonly releaseMs: number;
 
   private readonly transitionFadeMs: number;
 
-  private context: AudioContext | null = null;
+  private readonly vibratoEnabled: boolean;
 
-  private activeVoice: ActiveVoice | null = null;
+  private readonly vibratoDepth: number;
+
+  private readonly randomSource: () => number;
+
+  private context: AudioContext | null = null;
 
   private readonly voices = new Set<ActiveVoice>();
 
@@ -141,20 +163,33 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
   public constructor(options: WebAudioRecorderEngineOptions = {}) {
     this.contextFactory = options.contextFactory ?? createBrowserAudioContext;
     this.durationMs = clamp(
-      finiteOr(options.durationMs, DEFAULT_DURATION_MS),
-      600,
-      900,
+      finiteOr(options.durationMs, DEFAULT_RECORDER_NOTE_DURATION_MS),
+      MIN_DURATION_MS,
+      MAX_DURATION_MS,
     );
-    this.fadeOutMs = clamp(
-      finiteOr(options.fadeOutMs, DEFAULT_RELEASE_MS),
-      70,
-      Math.min(220, this.durationMs / 2),
+    this.releaseMs = clamp(
+      finiteOr(options.fadeOutMs, RECORDER_SYNTHESIS_PROFILE.releaseMs),
+      50,
+      Math.max(
+        50,
+        this.durationMs - RECORDER_SYNTHESIS_PROFILE.attackMs - 20,
+      ),
     );
     this.transitionFadeMs = clamp(
-      finiteOr(options.transitionFadeMs, DEFAULT_TRANSITION_FADE_MS),
+      finiteOr(
+        options.transitionFadeMs,
+        DEFAULT_RECORDER_TRANSITION_FADE_MS,
+      ),
       0,
-      180,
+      500,
     );
+    this.vibratoEnabled = options.vibratoEnabled ?? true;
+    this.vibratoDepth = clamp(
+      finiteOr(options.vibratoDepth, RECORDER_SYNTHESIS_PROFILE.vibratoDepth),
+      0,
+      0.04,
+    );
+    this.randomSource = options.randomSource ?? Math.random;
   }
 
   public async unlock(): Promise<boolean> {
@@ -272,66 +307,172 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
   }
 
   private startVoice(context: AudioContext, frequency: number): void {
-    let oscillator: OscillatorNode | null = null;
-    let gainNode: GainNode | null = null;
+    const sources: VoiceSource[] = [];
+    const continuousSources: OscillatorNode[] = [];
+    const nodes: AudioNode[] = [];
+    let voice: ActiveVoice | null = null;
 
     try {
       const now = context.currentTime;
-      const attackSeconds = 0.018;
       const endAt = now + this.durationMs / 1_000;
-      const releaseAt = endAt - this.fadeOutMs / 1_000;
+      const attackAt =
+        now + RECORDER_SYNTHESIS_PROFILE.attackMs / 1_000;
+      const releaseAt = Math.max(
+        attackAt + 0.02,
+        endAt - this.releaseMs / 1_000,
+      );
+      const sustainAt = Math.min(releaseAt, attackAt + 0.04);
+      const stopAt = endAt + SOURCE_TAIL_SECONDS;
 
-      oscillator = context.createOscillator();
-      gainNode = context.createGain();
+      const masterEnvelope = context.createGain();
+      const expressionGain = context.createGain();
+      const outputGain = context.createGain();
+      nodes.push(masterEnvelope, expressionGain, outputGain);
 
-      // A triangle wave is intentionally a neutral temporary timbre, not a
-      // claim that this is a sampled acoustic recorder.
-      oscillator.type = "triangle";
-      oscillator.frequency.setValueAtTime(frequency, now);
+      masterEnvelope.gain.cancelScheduledValues(now);
+      masterEnvelope.gain.setValueAtTime(MIN_GAIN, now);
+      masterEnvelope.gain.linearRampToValueAtTime(1, attackAt);
+      masterEnvelope.gain.exponentialRampToValueAtTime(
+        RECORDER_SYNTHESIS_PROFILE.sustainLevel,
+        sustainAt,
+      );
+      masterEnvelope.gain.setValueAtTime(
+        RECORDER_SYNTHESIS_PROFILE.sustainLevel,
+        releaseAt,
+      );
+      masterEnvelope.gain.exponentialRampToValueAtTime(MIN_GAIN, endAt);
 
-      gainNode.gain.cancelScheduledValues(now);
-      gainNode.gain.setValueAtTime(MIN_GAIN, now);
-      gainNode.gain.linearRampToValueAtTime(PEAK_GAIN, now + attackSeconds);
-      gainNode.gain.linearRampToValueAtTime(SUSTAIN_GAIN, releaseAt);
-      gainNode.gain.exponentialRampToValueAtTime(MIN_GAIN, endAt);
+      expressionGain.gain.cancelScheduledValues(now);
+      setAudioParam(expressionGain.gain, 1, now);
+      outputGain.gain.cancelScheduledValues(now);
+      setAudioParam(outputGain.gain, OUTPUT_GAIN, now);
 
-      oscillator.connect(gainNode);
-      gainNode.connect(context.destination);
+      masterEnvelope.connect(expressionGain);
+      expressionGain.connect(outputGain);
+      outputGain.connect(context.destination);
 
-      const voice: ActiveVoice = {
-        oscillator,
-        gainNode,
-        stopAt: endAt + 0.02,
-        ended: false,
-      };
+      const carrierOscillators = RECORDER_SYNTHESIS_PROFILE.partials.map(
+        (partial) => {
+          const oscillator = context.createOscillator();
+          const partialGain = context.createGain();
+          nodes.push(oscillator, partialGain);
+          sources.push(oscillator);
+          continuousSources.push(oscillator);
 
-      oscillator.onended = () => this.releaseVoice(voice);
-      oscillator.start(now);
-      oscillator.stop(voice.stopAt);
+          oscillator.type = "sine";
+          oscillator.frequency.setValueAtTime(
+            frequency * partial.harmonic,
+            now,
+          );
+          partialGain.gain.cancelScheduledValues(now);
+          setAudioParam(partialGain.gain, partial.gain, now);
 
-      this.voices.add(voice);
-      this.activeVoice = voice;
-    } catch {
-      if (oscillator !== null) {
-        try {
-          oscillator.stop();
-        } catch {
-          // It may not have started yet.
-        }
+          oscillator.connect(partialGain);
+          partialGain.connect(masterEnvelope);
+          return oscillator;
+        },
+      );
 
-        try {
-          oscillator.disconnect();
-        } catch {
-          // Already disconnected.
-        }
+      if (this.vibratoEnabled && this.vibratoDepth > 0) {
+        const lfo = context.createOscillator();
+        const lfoDepth = context.createGain();
+        nodes.push(lfo, lfoDepth);
+        sources.push(lfo);
+        continuousSources.push(lfo);
+
+        lfo.type = "sine";
+        lfo.frequency.setValueAtTime(
+          RECORDER_SYNTHESIS_PROFILE.vibratoRateHz,
+          now,
+        );
+        lfoDepth.gain.cancelScheduledValues(now);
+        setAudioParam(lfoDepth.gain, this.vibratoDepth, now);
+        lfo.connect(lfoDepth);
+        lfoDepth.connect(expressionGain.gain);
       }
 
-      if (gainNode !== null) {
-        try {
-          gainNode.disconnect();
-        } catch {
-          // Already disconnected.
+      const noiseSource = context.createBufferSource();
+      const noiseFilter = context.createBiquadFilter();
+      const noiseGain = context.createGain();
+      nodes.push(noiseSource, noiseFilter, noiseGain);
+      sources.push(noiseSource);
+
+      const sampleRate = finiteOr(context.sampleRate, 48_000);
+      const noiseFrameCount = Math.max(
+        1,
+        Math.round(
+          sampleRate * RECORDER_SYNTHESIS_PROFILE.chiffDurationMs / 1_000,
+        ),
+      );
+      const noiseBuffer = context.createBuffer(
+        1,
+        noiseFrameCount,
+        sampleRate,
+      );
+      const noiseData = noiseBuffer.getChannelData(0);
+      for (let index = 0; index < noiseData.length; index += 1) {
+        noiseData[index] = this.randomSource() * 2 - 1;
+      }
+      noiseSource.buffer = noiseBuffer;
+
+      noiseFilter.type = "bandpass";
+      noiseFilter.frequency.setValueAtTime(
+        Math.min(frequency * 2, sampleRate * 0.45),
+        now,
+      );
+      noiseFilter.Q.setValueAtTime(
+        RECORDER_SYNTHESIS_PROFILE.chiffFilterQ,
+        now,
+      );
+      noiseGain.gain.cancelScheduledValues(now);
+      noiseGain.gain.setValueAtTime(
+        RECORDER_SYNTHESIS_PROFILE.chiffGain,
+        now,
+      );
+      noiseGain.gain.exponentialRampToValueAtTime(
+        MIN_GAIN,
+        now + RECORDER_SYNTHESIS_PROFILE.chiffDurationMs / 1_000,
+      );
+
+      noiseSource.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(masterEnvelope);
+
+      const primaryOscillator = carrierOscillators[0];
+      voice = {
+        primaryOscillator,
+        continuousSources,
+        sources,
+        nodes,
+        masterEnvelope,
+        stopAt,
+        ended: false,
+      };
+      primaryOscillator.onended = () => this.releaseVoice(voice!);
+      this.voices.add(voice);
+
+      for (const source of continuousSources) {
+        source.start(now);
+        source.stop(stopAt);
+      }
+      noiseSource.start(now);
+      noiseSource.stop(
+        now + RECORDER_SYNTHESIS_PROFILE.chiffDurationMs / 1_000,
+      );
+    } catch {
+      if (voice !== null) {
+        for (const source of voice.sources) {
+          stopSource(source);
         }
+        this.releaseVoice(voice);
+        return;
+      }
+
+      for (const source of sources) {
+        stopSource(source);
+      }
+      for (const node of new Set(nodes)) {
+        disconnectNode(node);
       }
     }
   }
@@ -340,8 +481,6 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
     for (const voice of this.voices) {
       this.fadeVoice(voice, fadeMs);
     }
-
-    this.activeVoice = null;
   }
 
   private fadeVoice(voice: ActiveVoice, fadeMs: number): void {
@@ -360,23 +499,26 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
     const stopAt = Math.min(voice.stopAt, requestedStopAt);
 
     try {
-      const currentGain = clamp(
-        finiteOr(voice.gainNode.gain.value, SUSTAIN_GAIN),
-        MIN_GAIN,
-        PEAK_GAIN,
+      cancelAndHoldAudioParam(
+        voice.masterEnvelope.gain,
+        now,
+        RECORDER_SYNTHESIS_PROFILE.sustainLevel,
       );
-      voice.gainNode.gain.cancelScheduledValues(now);
-      voice.gainNode.gain.setValueAtTime(currentGain, now);
 
       if (stopAt > now) {
-        voice.gainNode.gain.exponentialRampToValueAtTime(MIN_GAIN, stopAt);
+        voice.masterEnvelope.gain.exponentialRampToValueAtTime(
+          MIN_GAIN,
+          stopAt,
+        );
       } else {
-        voice.gainNode.gain.setValueAtTime(MIN_GAIN, now);
+        voice.masterEnvelope.gain.setValueAtTime(MIN_GAIN, now);
       }
 
       if (stopAt < voice.stopAt) {
         voice.stopAt = stopAt;
-        voice.oscillator.stop(stopAt + 0.005);
+        for (const source of voice.continuousSources) {
+          stopSource(source, stopAt + TRANSITION_STOP_PADDING_SECONDS);
+        }
       }
     } catch {
       this.releaseVoice(voice);
@@ -390,20 +532,18 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
     for (const voice of voices) {
       try {
         if (now !== undefined) {
-          voice.gainNode.gain.cancelScheduledValues(now);
-          voice.gainNode.gain.setValueAtTime(MIN_GAIN, now);
-          voice.oscillator.stop(now);
-        } else {
-          voice.oscillator.stop();
+          voice.masterEnvelope.gain.cancelScheduledValues(now);
+          voice.masterEnvelope.gain.setValueAtTime(MIN_GAIN, now);
         }
       } catch {
-        // The source may already have ended.
+        // Continue with source shutdown and graph cleanup.
       }
 
+      for (const source of voice.sources) {
+        stopSource(source, now);
+      }
       this.releaseVoice(voice);
     }
-
-    this.activeVoice = null;
   }
 
   private releaseVoice(voice: ActiveVoice): void {
@@ -412,21 +552,11 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
     }
 
     voice.ended = true;
+    voice.primaryOscillator.onended = null;
     this.voices.delete(voice);
-    if (this.activeVoice === voice) {
-      this.activeVoice = null;
-    }
 
-    try {
-      voice.oscillator.disconnect();
-    } catch {
-      // Already disconnected.
-    }
-
-    try {
-      voice.gainNode.disconnect();
-    } catch {
-      // Already disconnected.
+    for (const node of new Set(voice.nodes)) {
+      disconnectNode(node);
     }
   }
 }

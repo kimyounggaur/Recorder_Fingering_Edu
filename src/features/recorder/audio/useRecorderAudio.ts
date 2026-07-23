@@ -163,7 +163,7 @@ export function useRecorderAudio(
     const requestId = latestRequestIdRef.current;
 
     if (!disposedRef.current) {
-      getEngine().stop(55);
+      getEngine().stop();
       // unlock() starts synchronously here, while the user gesture is active.
       void unlock();
     }
@@ -217,7 +217,7 @@ export function useRecorderAudio(
   );
 
   const cancelPlaybackRequest = useCallback(
-    (requestId?: RecorderAudioRequestId, fadeMs = 55): void => {
+    (requestId?: RecorderAudioRequestId, fadeMs?: number): void => {
       if (
         requestId !== undefined &&
         requestId !== latestRequestIdRef.current
@@ -234,7 +234,7 @@ export function useRecorderAudio(
   );
 
   const stop = useCallback(
-    (fadeMs = 55): void => {
+    (fadeMs?: number): void => {
       cancelPlaybackRequest(undefined, fadeMs);
     },
     [cancelPlaybackRequest],

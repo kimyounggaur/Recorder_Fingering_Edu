@@ -36,6 +36,7 @@ import {
   type RecorderPreferences,
 } from "../utils/storage";
 import { useFingeringAnimation } from "../animation/useFingeringAnimation";
+import { BASIC_RECORDER_DEMO_AUDIO_KEYS } from "../audio/frequencies";
 import { useRecorderAudio } from "../audio/useRecorderAudio";
 import type { RecorderAudioRequestId } from "../audio/useRecorderAudio";
 import { NoteCard } from "./NoteCard";
@@ -58,6 +59,12 @@ interface AnimationRestart {
   key: number;
   closedHoles: HoleId[];
 }
+
+const DEBUG_ASCENDING_DEMO_INTERVAL_MS = 900;
+
+type DebugAudioDemoStatus =
+  | { phase: "idle" | "stopped" | "complete" }
+  | { phase: "playing"; noteIndex: number };
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -130,8 +137,14 @@ export function RecorderLearningApp() {
   const [sequencePaused, setSequencePaused] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [debug, setDebug] = useState(false);
+  const [debugAudioDemoStatus, setDebugAudioDemoStatus] =
+    useState<DebugAudioDemoStatus>({ phase: "idle" });
   const activeAudioRequestRef = useRef<RecorderAudioRequestId | null>(null);
   const animationCounterRef = useRef(0);
+  const debugAudioDemoRequestRef =
+    useRef<RecorderAudioRequestId | null>(null);
+  const debugAudioDemoRunRef = useRef(0);
+  const debugAudioDemoTimerRef = useRef<number | null>(null);
   const reducedMotion = usePrefersReducedMotion();
 
   const audio = useRecorderAudio({
@@ -144,6 +157,110 @@ export function RecorderLearningApp() {
     setMuted: setAudioMuted,
     stop: stopAudio,
   } = audio;
+
+  const updatePreferences = useCallback(
+    (patch: Partial<RecorderPreferences>) => {
+      setPreferences((current) => ({ ...current, ...patch }));
+    },
+    [],
+  );
+
+  const cancelDebugAudioDemo = useCallback(() => {
+    debugAudioDemoRunRef.current += 1;
+    if (debugAudioDemoTimerRef.current !== null) {
+      window.clearTimeout(debugAudioDemoTimerRef.current);
+      debugAudioDemoTimerRef.current = null;
+    }
+    debugAudioDemoRequestRef.current = null;
+    stopAudio();
+  }, [stopAudio]);
+
+  const stopDebugAudioDemo = useCallback(() => {
+    cancelDebugAudioDemo();
+    setDebugAudioDemoStatus({ phase: "stopped" });
+  }, [cancelDebugAudioDemo]);
+
+  const startDebugAudioDemo = useCallback(() => {
+    cancelDebugAudioDemo();
+    const runId = debugAudioDemoRunRef.current;
+
+    setSequencePlaying(false);
+    setSequencePaused(false);
+    activeAudioRequestRef.current = null;
+    setPlayOnContact(false);
+
+    if (preferences.isMuted) {
+      setAudioMuted(false);
+      updatePreferences({ isMuted: false });
+    }
+
+    // This must stay in the click handler so Web Audio unlock begins during
+    // the initiating user gesture. The resulting request guards all 9 notes.
+    const requestId = beginPlaybackRequest();
+    debugAudioDemoRequestRef.current = requestId;
+
+    const playNote = async (noteIndex: number): Promise<void> => {
+      if (
+        debugAudioDemoRunRef.current !== runId ||
+        debugAudioDemoRequestRef.current !== requestId
+      ) {
+        return;
+      }
+
+      setDebugAudioDemoStatus({ phase: "playing", noteIndex });
+      const played = await playAtContact(
+        BASIC_RECORDER_DEMO_AUDIO_KEYS[noteIndex],
+        requestId,
+      );
+
+      if (
+        debugAudioDemoRunRef.current !== runId ||
+        debugAudioDemoRequestRef.current !== requestId
+      ) {
+        return;
+      }
+
+      if (!played) {
+        debugAudioDemoRequestRef.current = null;
+        setDebugAudioDemoStatus({ phase: "stopped" });
+        return;
+      }
+
+      debugAudioDemoTimerRef.current = window.setTimeout(() => {
+        debugAudioDemoTimerRef.current = null;
+        if (
+          debugAudioDemoRunRef.current !== runId ||
+          debugAudioDemoRequestRef.current !== requestId
+        ) {
+          return;
+        }
+
+        if (noteIndex === BASIC_RECORDER_DEMO_AUDIO_KEYS.length - 1) {
+          debugAudioDemoRequestRef.current = null;
+          setDebugAudioDemoStatus({ phase: "complete" });
+          return;
+        }
+
+        void playNote(noteIndex + 1);
+      }, DEBUG_ASCENDING_DEMO_INTERVAL_MS);
+    };
+
+    void playNote(0);
+  }, [
+    beginPlaybackRequest,
+    cancelDebugAudioDemo,
+    playAtContact,
+    preferences.isMuted,
+    setAudioMuted,
+    updatePreferences,
+  ]);
+
+  useEffect(
+    () => () => {
+      cancelDebugAudioDemo();
+    },
+    [cancelDebugAudioDemo],
+  );
 
   useEffect(() => {
     const stored = loadPreferences();
@@ -236,13 +353,6 @@ export function RecorderLearningApp() {
     (): readonly HoleId[] =>
       transitionOrigin?.closedHoles ?? getVisualClosedHoles(),
     [getVisualClosedHoles, transitionOrigin],
-  );
-
-  const updatePreferences = useCallback(
-    (patch: Partial<RecorderPreferences>) => {
-      setPreferences((current) => ({ ...current, ...patch }));
-    },
-    [],
   );
 
   const beginAudioRequest = useCallback(() => {
@@ -505,6 +615,15 @@ export function RecorderLearningApp() {
   );
 
   const liveMessage = `${withKoreanSubjectParticle(currentNote.solfegeKo)} 선택되었습니다. ${currentNote.noteName}. ${describeFingeringForLive(targetFingering)}`;
+  const debugAudioDemoPlaying = debugAudioDemoStatus.phase === "playing";
+  const debugAudioDemoStatusText =
+    debugAudioDemoStatus.phase === "playing"
+      ? `재생 중 ${debugAudioDemoStatus.noteIndex + 1}/${BASIC_RECORDER_DEMO_AUDIO_KEYS.length} · ${BASIC_RECORDER_DEMO_AUDIO_KEYS[debugAudioDemoStatus.noteIndex]}`
+      : debugAudioDemoStatus.phase === "complete"
+        ? "재생 완료"
+        : debugAudioDemoStatus.phase === "stopped"
+          ? "재생 중지"
+          : "대기";
 
   const toggleFullscreen = useCallback(async () => {
     try {
@@ -681,6 +800,32 @@ export function RecorderLearningApp() {
           <span>{selectedNote} / {system}</span>
           <span>{displayAnimation.phase}</span>
           <span>{displayAnimation.visualClosedHoles.join(" ")}</span>
+          <div className="debug-panel__audio-demo">
+            <span className="debug-panel__audio-demo-title">U2 합성음 점검</span>
+            <button
+              type="button"
+              className="debug-panel__audio-demo-button"
+              aria-describedby="debug-audio-demo-status"
+              onClick={
+                debugAudioDemoPlaying
+                  ? stopDebugAudioDemo
+                  : startDebugAudioDemo
+              }
+            >
+              {debugAudioDemoPlaying
+                ? "9음 상승 데모 중지"
+                : "9음 상승 데모 재생"}
+            </button>
+            <span
+              id="debug-audio-demo-status"
+              className="debug-panel__audio-demo-status"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {debugAudioDemoStatusText}
+            </span>
+          </div>
         </aside>
       ) : null}
     </div>

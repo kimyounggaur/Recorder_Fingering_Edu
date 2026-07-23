@@ -32,6 +32,7 @@ src/features/recorder/
     useFingeringAnimation.ts       # 취소 가능한 상태 머신
   audio/
     RecorderAudioEngine.ts         # 오디오 추상화
+    frequencies.ts                 # 17개 음높이와 audioKey 매핑
     WebAudioRecorderEngine.ts      # 합성 연습음 구현
     useRecorderAudio.ts            # unlock, 음소거, 요청 취소
   components/
@@ -140,7 +141,22 @@ highlight-release → releasing → highlight-press → pressing → contact →
 
 ## 오디오와 요청 ID
 
-브라우저 자동재생 정책 때문에 `AudioContext` 활성화는 지연된 contact가 아니라 사용자의 음 선택 제스처 안에서 시작합니다. 앱, `useRecorderAudio`, Web Audio 엔진이 각각 최신 요청 ID를 확인하며, 음소거·연타·언마운트에서는 보류 재생을 취소합니다. 합성 엔진 생성이나 재생이 실패해도 silent fallback을 사용하므로 시각 학습은 계속됩니다.
+오디오 pitch resolver는 화면과 같은 C4–G5의 17개 고유 음높이 매핑을 유지합니다. 현재 구현은 실제 리코더 녹음이나 샘플 엔진이 아니라 다음 node graph로 악기 음색을 근사하는 임시 Web Audio 합성 엔진입니다.
+
+```text
+3 sine partial oscillators ─┐
+                            ├─ voice gain(40ms attack, 200ms release) ─ destination
+noise source ─ band-pass ───┘
+              30ms chiff
+```
+
+세 sine oscillator는 기본음·2배음·3배음을 담당합니다. 선택 가능한 expression은 4.5Hz 변조로 진폭을 ±2% 범위에서만 움직입니다. 음 길이는 기본 700ms이며 반복 연습용 생성 옵션 `durationMs: 500`을 지원하고, 새 voice가 기존 voice를 대체할 때는 80ms 전환을 적용합니다.
+
+브라우저 자동재생 정책 때문에 `AudioContext` 활성화는 지연된 contact가 아니라 사용자의 음 선택 제스처 안에서 시작합니다. 앱, `useRecorderAudio`, Web Audio 엔진이 각각 최신 요청 ID를 확인하며, 음소거·연타·언마운트에서는 보류 재생을 취소합니다. voice가 끝나거나 중단되면 모든 oscillator와 noise source를 정지하고 filter·gain을 포함한 node를 연결 해제한 뒤 활성 집합에서 제거합니다. 엔진을 dispose할 때는 남은 voice를 즉시 정리하고 `AudioContext`를 닫습니다. 합성 엔진 생성이나 재생이 실패해도 silent fallback을 사용하므로 시각 학습은 계속됩니다.
+
+개발 환경에서 `/?debug=1`을 열면 DEBUG 패널의 `9음 상승 데모 재생`으로 `C → D → E → F → G → A → B → HIGH_C → D5`를 확인할 수 있습니다. 패널의 live 상태는 `재생 중 n/9 · KEY`와 `재생 완료`를 표시하고, 재생 중 버튼은 `9음 상승 데모 중지`로 바뀝니다. 음이 순서대로 상승하는지, chiff·envelope·80ms 전환에 클릭이나 잔향 겹침이 없는지 듣고, 중지·재시작·음소거 뒤 이전 voice가 남지 않는지 확인합니다.
+
+단위 테스트는 주파수와 node graph, 파라미터 스케줄, 요청 취소와 연결 해제 계약을 검증하지만 실제 청감 품질이나 장치별 출력은 검증하지 못합니다. 헤드폰과 대상 브라우저에서 별도 청감 검수를 하고, 반복 데모 전후의 활성 node·heap 증가 여부를 개발자 도구로 관찰해야 합니다. 짧은 수동 검수만으로 장시간 메모리 누수 부재를 보장하지는 않습니다.
 
 ## 접근성과 오류 경계
 
@@ -156,7 +172,7 @@ highlight-release → releasing → highlight-press → pressing → contact →
 - `domain.test.ts`: 17개 고유 음, 8/5/5 분류와 공유 C5, 모든 상태 지도, half/partial, 세 체계별 음, 20개 포즈의 경로·크기, diff와 안내 문구
 - `resolveNoteShortcut.test.ts`: 물리 `Digit` 매핑, 낮은/높은/반음 수정자, 빈 6–8 슬롯과 잘못된 수정자·IME·AltGraph 거부
 - `useFingeringAnimation.test.tsx`: 연타 취소, 단계별 보기, reduced motion, cleanup
-- `RecorderAudioEngine.test.ts`: C4–G5의 17개 주파수, 합성음과 오디오 요청 취소
+- `RecorderAudioEngine.test.ts`: C4–G5의 17개 주파수, 세 sine 배음과 30ms chiff, 40/200ms envelope, expression과 700/500ms 프리셋, 80ms 전환, 오디오 요청 취소와 node cleanup
 - `RecorderLearningApp.test.tsx`: 8/5/5 탭, 시스템별 높은 파, 분류 단축키, half/partial 지도와 포즈·문구 동기화
 - `recorder-learning.spec.ts`: 낮은 8음 전체, 파 체계 전환, `Shift+4` 높은 파의 half/체계별 포즈, `Alt+1` 도♯의 partial, `Ctrl+5` 낮은 솔, 연타와 반응형 화면
 
