@@ -1,0 +1,31 @@
+{
+  "id": "/",
+  "name": "리코더 운지법 배우기",
+  "short_name": "리코더 운지",
+  "description": "숫자 버튼과 손가락 애니메이션으로 리코더 운지법을 배우는 교육용 웹앱입니다.",
+  "lang": "ko-KR",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f6fb",
+  "theme_color": "#2858c7",
+  "categories": ["education", "music"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-remastered.png",
+      "sizes": "1730x909",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
+}

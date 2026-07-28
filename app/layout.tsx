@@ -1,10 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
+import { ServiceWorkerRegistration } from "@/src/features/recorder/components/ServiceWorkerRegistration";
 import "./globals.css";
 
 const title = "리코더 운지법 배우기";
 const description =
   "숫자 버튼과 실제 손 모양 애니메이션으로 소프라노 리코더의 기본 8음 운지를 배워요.";
+
+export const viewport: Viewport = {
+  themeColor: "#2858c7",
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
@@ -32,6 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     applicationName: title,
+    manifest: "/manifest.webmanifest",
     keywords: ["리코더", "운지법", "음악 교육", "바로크식", "독일식"],
     alternates: { canonical: "/" },
     icons: {
@@ -70,7 +76,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        {children}
+        <ServiceWorkerRegistration />
+      </body>
     </html>
   );
 }
