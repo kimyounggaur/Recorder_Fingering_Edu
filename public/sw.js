@@ -2,7 +2,13 @@
 
 const CACHE_PREFIX = "recorder-fingering";
 const CACHE_NAME = `${CACHE_PREFIX}-v1`;
-const PRECACHE_URLS = ["/", "/manifest.webmanifest", "/favicon.svg"];
+const PRECACHE_URLS = [
+  "/",
+  "/manifest.webmanifest",
+  "/favicon.svg",
+  "/icon-192.png",
+  "/icon-512.png",
+];
 const RUNTIME_CACHE_DESTINATIONS = new Set([
   "audio",
   "font",

@@ -118,6 +118,14 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
+function getRequestedBank(searchParams: URLSearchParams): NoteBank | null {
+  const bank = searchParams.get("bank");
+  if (bank === "low" || bank === "high" || bank === "chromatic") {
+    return bank;
+  }
+  return null;
+}
+
 export function RecorderLearningApp() {
   const [preferences, setPreferences] = useState<RecorderPreferences>(() => ({
     ...DEFAULT_PREFERENCES,
@@ -267,12 +275,18 @@ export function RecorderLearningApp() {
     let cancelled = false;
     queueMicrotask(() => {
       if (cancelled) return;
+      const searchParams = new URLSearchParams(window.location.search);
+      const requestedBank = getRequestedBank(searchParams);
+      if (requestedBank) {
+        setActiveBank(requestedBank);
+        setSelectedNote(NOTE_BANKS[requestedBank][0].note);
+      }
       setPreferences(stored);
       setAudioMuted(stored.isMuted);
       setPreferencesLoaded(true);
       setDebug(
         process.env.NODE_ENV !== "production" &&
-          new URLSearchParams(window.location.search).get("debug") === "1",
+          searchParams.get("debug") === "1",
       );
     });
     return () => {

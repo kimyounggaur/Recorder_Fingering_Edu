@@ -5,6 +5,7 @@ import { cleanup } from "@testing-library/react";
 afterEach(() => {
   cleanup();
   window.localStorage.clear();
+  window.history.pushState(null, "", "/");
 });
 
 Object.defineProperty(window, "matchMedia", {

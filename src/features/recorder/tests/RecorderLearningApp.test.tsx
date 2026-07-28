@@ -120,6 +120,20 @@ describe("RecorderLearningApp", () => {
     expect(fireEvent.dragStart(poseImage!)).toBe(false);
   });
 
+  it("opens manifest shortcuts on their requested note bank", async () => {
+    window.history.pushState(null, "", "/?bank=high");
+    await renderReadyApp();
+
+    expect(screen.getByTestId("note-bank-high")).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByTestId("note-button-high-1")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
   it("updates the polite live region for the selected note", async () => {
     await renderReadyApp();
 
