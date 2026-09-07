@@ -5,7 +5,7 @@ import "./globals.css";
 
 const title = "리코더 운지법 배우기";
 const description =
-  "숫자 버튼과 실제 손 모양 애니메이션으로 소프라노 리코더의 기본 8음 운지를 배워요.";
+  "낮은 계이름 8음, 높은 계이름 5음, 반음 5음(C4–G5)의 소프라노 리코더 운지를 실제 손 모양 포즈와 구멍 지도로 배우는 교육용 웹앱";
 
 export const viewport: Viewport = {
   themeColor: "#2858c7",
@@ -38,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     applicationName: title,
     manifest: "/manifest.webmanifest",
-    keywords: ["리코더", "운지법", "음악 교육", "바로크식", "독일식"],
+    keywords: ["리코더", "운지법", "음악 교육", "바로크식", "독일식", "소프라노 리코더", "반음", "높은 음", "PWA"],
     alternates: { canonical: "/" },
     icons: {
       icon: "/favicon.svg",
@@ -56,7 +56,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: socialImage,
           width: 1730,
           height: 909,
-          alt: "선화로 그린 리코더와 양손으로 운지법을 배우는 교육용 웹앱",
+          alt: "17음의 소프라노 리코더 운지를 손 모양 포즈와 구멍 지도로 배우는 웹앱",
         },
       ],
     },

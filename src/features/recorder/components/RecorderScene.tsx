@@ -4,7 +4,7 @@ import {
   FINGER_LABELS,
   HOLE_NUMBER_LABELS,
 } from "../data/fingerings";
-import { HOLE_IDS } from "../data/holeLayout";
+import { ALL_HOLES } from "../data/fingerings";
 import { getRecorderPoseSource } from "../data/poseAssets";
 import type {
   AnimationPhase,
@@ -67,7 +67,7 @@ function sameFingeringStates(
   first: Record<HoleId, HoleState>,
   second: Readonly<Record<HoleId, HoleState>>,
 ): boolean {
-  return HOLE_IDS.every((hole) => first[hole] === second[hole]);
+  return ALL_HOLES.every((hole) => first[hole] === second[hole]);
 }
 
 /**
@@ -101,17 +101,17 @@ export function RecorderScene({
   const titleId = `recorder-scene-title-${sceneId}`;
   const descriptionId = `recorder-scene-description-${sceneId}`;
   const closedSet = new Set(currentClosedHoles);
-  const normalizedStates = HOLE_IDS.reduce<Record<HoleId, HoleState>>(
+  const normalizedStates = ALL_HOLES.reduce<Record<HoleId, HoleState>>(
     (states, id) => {
       states[id] = holeStates[id] ?? (closedSet.has(id) ? "closed" : "open");
       return states;
     },
     {} as Record<HoleId, HoleState>,
   );
-  const actualClosed = HOLE_IDS.filter(
+  const actualClosed = ALL_HOLES.filter(
     (id) => normalizedStates[id] === "closed",
   );
-  const actualContacted = HOLE_IDS.filter(
+  const actualContacted = ALL_HOLES.filter(
     (id) => normalizedStates[id] !== "open",
   );
   const defaultDescription = actualContacted.length

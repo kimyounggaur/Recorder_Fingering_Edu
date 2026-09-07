@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "dist/**", ".vercel/**", ".vinext/**", ".wrangler/**",
+    "output/**", "tmp/**", ".playwright-cli/**", "**/*.tsbuildinfo",
+    "리코더 운지 - Google Play package/**",
   ]),
 ]);
 

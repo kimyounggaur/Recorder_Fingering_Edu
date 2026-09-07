@@ -100,22 +100,10 @@ h2 {
 }
 
 .recorder-app {
-  --recorder-finger-duration: 180ms;
   width: min(100%, 1660px);
   min-height: 100vh;
   margin: 0 auto;
   padding: 0 var(--page-gutter) max(32px, env(safe-area-inset-bottom));
-}
-
-.recorder-app[data-speed="slow"] {
-  --recorder-finger-duration: 400ms;
-}
-
-.recorder-app[data-animation-preparing="true"] .recorder-finger__pose,
-.recorder-app[data-animation-preparing="true"] .recorder-finger__pad,
-.recorder-app[data-animation-preparing="true"] .recorder-hole__touch-ring,
-.recorder-app[data-animation-preparing="true"] .recorder-hole-label__arrow {
-  transition-duration: 0ms !important;
 }
 
 .loading-shell {
@@ -917,46 +905,6 @@ h2 {
 
 .recorder-scene__background {
   fill: #f8fbff;
-}
-
-.recorder-body__tube,
-.recorder-body__mouthpiece,
-.recorder-body__foot-joint {
-  filter: drop-shadow(4px 7px 5px rgb(46 64 92 / 13%));
-}
-
-.recorder-finger__pose {
-  will-change: transform, opacity;
-}
-
-.recorder-finger[data-highlighted="true"] .recorder-finger__pad {
-  filter: drop-shadow(0 0 12px rgb(255 184 46 / 75%));
-}
-
-.recorder-finger[data-finger-transition="opening"][data-highlighted="true"] .recorder-finger__pad {
-  filter: drop-shadow(0 0 12px rgb(48 149 238 / 78%));
-}
-
-.recorder-hole__touch-ring,
-.recorder-finger__pad,
-.recorder-hole-label__arrow {
-  transition: opacity 160ms ease, stroke 160ms ease, filter 160ms ease;
-}
-
-.recorder-hole[data-highlighted="true"] .recorder-hole__touch-ring {
-  filter: drop-shadow(0 0 9px rgb(232 155 24 / 65%));
-}
-
-.recorder-hole[data-hole-transition="opening"][data-highlighted="true"] .recorder-hole__touch-ring {
-  filter: drop-shadow(0 0 9px rgb(31 112 193 / 65%));
-}
-
-.recorder-scene[data-phase="contact"] .recorder-hole[data-hole-transition="closing"] .recorder-hole__touch-ring {
-  animation: contact-ring 460ms ease-out 1;
-}
-
-.rear-thumb-inset__panel {
-  filter: drop-shadow(0 8px 12px rgb(36 55 91 / 13%));
 }
 
 .fingering-legend {

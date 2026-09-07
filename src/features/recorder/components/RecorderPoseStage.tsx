@@ -245,7 +245,7 @@ export function RecorderPoseStage({
     >
       <NextImage
         className="recorder-pose-stage__fallback"
-        src={source}
+        src={ready && renderedSource ? renderedSource : source}
         alt=""
         width={976}
         height={1360}

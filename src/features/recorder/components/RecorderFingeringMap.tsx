@@ -3,12 +3,12 @@ import {
   FINGER_LABELS,
   HOLE_NUMBER_LABELS,
 } from "../data/fingerings";
-import { HOLE_IDS } from "../data/holeLayout";
+import { ALL_HOLES } from "../data/fingerings";
 import type { AnimationPhase, HoleId, HoleState } from "../model/types";
 import {
   isHoleTransitionHighlighted,
   type HoleTransition,
-} from "./Hole";
+} from "../animation/holeTransition";
 
 interface MapHoleLayout {
   readonly x: number;
@@ -394,20 +394,20 @@ export function RecorderFingeringMap({
   const titleId = `fingering-map-title-${instanceId}`;
   const descriptionId = `fingering-map-description-${instanceId}`;
   const closedSet = new Set(currentClosedHoles);
-  const states = HOLE_IDS.reduce<Record<HoleId, HoleState>>(
+  const states = ALL_HOLES.reduce<Record<HoleId, HoleState>>(
     (result, id) => {
       result[id] = holeStates[id] ?? (closedSet.has(id) ? "closed" : "open");
       return result;
     },
     {} as Record<HoleId, HoleState>,
   );
-  const closedHoles = HOLE_IDS.filter((id) => states[id] === "closed");
-  const contactedHoles = HOLE_IDS.filter((id) => states[id] !== "open");
+  const closedHoles = ALL_HOLES.filter((id) => states[id] === "closed");
+  const contactedHoles = ALL_HOLES.filter((id) => states[id] !== "open");
   const defaultDescription = contactedHoles.length
     ? `${contactedHoles.map((id) => HOLE_NUMBER_LABELS[id]).join(", ")}번 구멍에 손가락이 닿은 운지입니다.`
     : "모든 구멍을 연 운지입니다.";
   const fingerDescription = showFingerNames
-    ? ` 담당 손가락은 ${HOLE_IDS.map(
+    ? ` 담당 손가락은 ${ALL_HOLES.map(
         (id) => `${HOLE_NUMBER_LABELS[id]}번 ${FINGER_LABELS[id]}`,
       ).join(", ")}입니다.`
     : "";
@@ -558,7 +558,7 @@ export function RecorderFingeringMap({
       </g>
 
       <g className="fingering-map__front-holes">
-        {HOLE_IDS.filter((id) => id !== "T0").map((id) => (
+        {ALL_HOLES.filter((id) => id !== "T0").map((id) => (
           <MapHole
             key={id}
             id={id}
