@@ -53,6 +53,12 @@ npx playwright install chromium
 
 ## 품질 검증 명령
 
+PWA 오프라인 검사는 HMR이 없는 프로덕션 미리보기(4174 포트)를 자동으로 빌드해 사용합니다. 개발 모드에서는 새 서비스 워커를 등록하지 않습니다. 실제 앱 설치는 HTTPS 배포본에서 합니다.
+
+Android TWA의 공개 연결 파일은 `public/.well-known/assetlinks.json`이며 두 배포 빌드 모두 같은 경로에 복사됩니다. 배포 뒤 `curl -sI https://recorder-fingering-edu.vercel.app/.well-known/assetlinks.json`으로 HTTP 200과 `application/json`을 확인하고 실제 Android 기기에서 주소창이 사라지는지 검수합니다. 서명 키는 저장소 밖 `_release-secrets/recorder-fingering/`에 보관합니다.
+
+첫 온라인 방문에 포즈 20장과 실행에 필요한 JS·CSS를 사전 캐시합니다. 빌드마다 서비스 워커 버전이 바뀌고, 새 버전은 "새 버전이 준비되었어요"의 새로 고침 버튼으로 적용합니다. 캐시 저장이 제한된 브라우저에서는 온라인 학습이 계속됩니다.
+
 | 목적 | 명령 |
 |---|---|
 | TypeScript 타입 검사 | `npm run typecheck` |

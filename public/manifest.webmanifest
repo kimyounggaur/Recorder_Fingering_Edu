@@ -8,6 +8,7 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
   "background_color": "#f3f6fb",
   "theme_color": "#2858c7",
@@ -77,6 +78,7 @@
     }
   ],
   "screenshots": [
+    { "src": "/screenshots/mobile.png", "sizes": "360x800", "type": "image/png", "form_factor": "narrow" },
     {
       "src": "/og-remastered.png",
       "sizes": "1730x909",

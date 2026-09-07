@@ -1,0 +1,24 @@
+import { expect, test } from "@playwright/test";
+import { NOTE_BANKS } from "../src/features/recorder/data/noteMeta";
+import { getRecorderPoseSource } from "../src/features/recorder/data/poseAssets";
+
+test("offline after first visit keeps all 17 poses", async ({ page, context, browserName }) => {
+  test.skip(browserName !== "chromium", "Service worker offline lifecycle is verified in Chromium.");
+  await page.goto("http://127.0.0.1:4174/");
+  await page.getByRole("button", { name: /^바로크식/ }).click();
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) await new Promise<void>(resolve => navigator.serviceWorker.addEventListener("controllerchange", () => resolve(), { once: true }));
+  });
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByTestId("recorder-scene")).toBeVisible();
+  for (const bank of ["low", "high", "chromatic"] as const) {
+    await page.getByTestId(`note-bank-${bank}`).click();
+    for (const { note, digit } of NOTE_BANKS[bank]) {
+      await page.getByTestId(bank === "low" ? `note-button-${digit}` : `note-button-${bank}-${digit}`).click();
+      await expect(page.locator(".recorder-pose-stage")).toHaveAttribute("data-rendered-source", getRecorderPoseSource(note, "baroque"));
+    }
+  }
+  await context.setOffline(false);
+});

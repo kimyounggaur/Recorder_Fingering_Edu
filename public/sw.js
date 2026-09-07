@@ -1,114 +1,102 @@
 /* global self, caches, URL, Response, fetch */
 
-const CACHE_PREFIX = "recorder-fingering";
-const CACHE_NAME = `${CACHE_PREFIX}-v1`;
+const CACHE_PREFIX = "recorder-fingering-";
+const CACHE_NAME = `${CACHE_PREFIX}1dd023e-1788770006670`;
 const PRECACHE_URLS = [
   "/",
-  "/manifest.webmanifest",
+  "/assets/RecorderErrorBoundary-CqS9YaUH.js",
+  "/assets/RecorderLearningApp-BXddeBN1.js",
+  "/assets/ServiceWorkerRegistration-MDSvop59.js",
+  "/assets/_vinext_fonts/geist-8ac0455e797f/geist-001175b1.woff2",
+  "/assets/_vinext_fonts/geist-8ac0455e797f/geist-52306abf.woff2",
+  "/assets/_vinext_fonts/geist-8ac0455e797f/geist-875ccdd4.woff2",
+  "/assets/_vinext_fonts/geist-8ac0455e797f/geist-98bbbccb.woff2",
+  "/assets/_vinext_fonts/geist-8ac0455e797f/geist-ff2310f5.woff2",
+  "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-013b2f2f.woff2",
+  "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-0638449e.woff2",
+  "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-44745446.woff2",
+  "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-44e03052.woff2",
+  "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-971fb274.woff2",
+  "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-f6b33328.woff2",
+  "/assets/createLucideIcon-DgMtuwtK.js",
+  "/assets/framework-CXnKph_e.js",
+  "/assets/index-BlUk0n0s.css",
+  "/assets/index-DDhqWNrm.js",
+  "/assets/layout-segment-context-HZMf0N_e.js",
+  "/assets/rolldown-runtime-S-ySWqyJ.js",
   "/favicon.svg",
+  "/fingering/poses/as4.png",
+  "/fingering/poses/cs4.png",
+  "/fingering/poses/d5.png",
+  "/fingering/poses/do.png",
+  "/fingering/poses/ds4.png",
+  "/fingering/poses/e5.png",
+  "/fingering/poses/f5-baroque.png",
+  "/fingering/poses/f5-german.png",
+  "/fingering/poses/fa-baroque.png",
+  "/fingering/poses/fa-german.png",
+  "/fingering/poses/fs4-baroque.png",
+  "/fingering/poses/fs4-german.png",
+  "/fingering/poses/g5.png",
+  "/fingering/poses/gs4.png",
+  "/fingering/poses/high-do.png",
+  "/fingering/poses/la.png",
+  "/fingering/poses/mi.png",
+  "/fingering/poses/re.png",
+  "/fingering/poses/si.png",
+  "/fingering/poses/sol.png",
   "/icon-192.png",
   "/icon-512.png",
+  "/manifest.webmanifest"
 ];
-const RUNTIME_CACHE_DESTINATIONS = new Set([
-  "audio",
-  "font",
-  "image",
-  "script",
-  "style",
-]);
-
-function isSameOrigin(request) {
-  return new URL(request.url).origin === self.location.origin;
-}
+const RUNTIME_DESTINATIONS = new Set(["audio", "font", "image", "script", "style"]);
 
 function isDevRuntimePath(pathname) {
-  return (
-    pathname.includes("__nextjs") ||
-    pathname.includes("webpack-hmr") ||
-    pathname.includes("@vite") ||
-    pathname === "/__vite_ping"
-  );
+  return ["__nextjs", "webpack-hmr", "@vite", "/@id/", "/@fs/", "/node_modules/", "/__vite_ping"].some((part) => pathname.includes(part));
 }
-
-function shouldRuntimeCache(request) {
-  if (request.method !== "GET" || !isSameOrigin(request)) return false;
-
-  const { pathname } = new URL(request.url);
-  if (isDevRuntimePath(pathname)) return false;
-
-  return (
-    RUNTIME_CACHE_DESTINATIONS.has(request.destination) ||
-    pathname.startsWith("/audio/") ||
-    pathname.startsWith("/fingering/poses/") ||
-    pathname === "/manifest.webmanifest"
-  );
-}
-
 async function cacheResponse(cache, request, response) {
-  if (!response || response.status !== 200) return;
-  await cache.put(request, response.clone());
+  if (response?.status === 200) {
+    try { await cache.put(request, response.clone()); } catch { /* A full cache must not block the network response. */ }
+  }
 }
-
 async function networkFirst(request) {
   const cache = await caches.open(CACHE_NAME);
-
   try {
     const response = await fetch(request);
     await cacheResponse(cache, request, response);
     return response;
   } catch {
-    return (
-      (await cache.match(request)) ||
-      (await cache.match("/")) ||
-      Response.error()
-    );
+    const path = new URL(request.url).pathname;
+    return (await cache.match(request)) || (await cache.match(path)) || (await cache.match("/")) || Response.error();
   }
 }
-
 async function cacheFirst(request) {
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
+  // Same-origin public assets are identical with or without a module Origin header.
+  const cached = await cache.match(request, { ignoreVary: true });
   if (cached) return cached;
-
   const response = await fetch(request);
   await cacheResponse(cache, request, response);
   return response;
 }
-
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting()),
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)));
 });
-
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") event.waitUntil(self.skipWaiting());
+});
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(
-          keys
-            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
-            .map((key) => caches.delete(key)),
-        ),
-      )
-      .then(() => self.clients.claim()),
-  );
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys
+    .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)
+    .map((key) => caches.delete(key)))).then(() => self.clients.claim()));
 });
-
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-  if (request.method !== "GET" || !isSameOrigin(request)) return;
-
+  const url = new URL(request.url);
+  if (request.method !== "GET" || url.origin !== self.location.origin || isDevRuntimePath(url.pathname)) return;
   if (request.mode === "navigate") {
     event.respondWith(networkFirst(request));
-    return;
-  }
-
-  if (shouldRuntimeCache(request)) {
+  } else if (RUNTIME_DESTINATIONS.has(request.destination) || url.pathname.startsWith("/fingering/poses/") || url.pathname === "/manifest.webmanifest") {
     event.respondWith(cacheFirst(request));
   }
 });

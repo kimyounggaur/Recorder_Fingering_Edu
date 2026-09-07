@@ -40,3 +40,11 @@ typecheck 통과 / lint 오류 0·경고 0 / unit 109 통과·0 실패 / build �
 - 데스크톱 오른쪽 위에 키패드를 배치했다. 1440×900의 장면 크기 622.5×806.6px는 기존과 같다. 1366×768에서 키패드 y=182.7, 높이=518.8, 하단=701.5px로 모든 음 버튼이 첫 화면 안에 있다.
 - typecheck 통과 / lint 오류 0·경고 0 / unit 120 통과·0 실패 / build 통과 / build:vercel 통과 / Chromium E2E 통과. 캡처 `output/screenshots/p2/`.
 - 해소: D-06~D-08(자동 연습은 안내 문구만), D-14, D-19, D-26.
+
+## P3 보고
+
+- 공개 Android 인증 지문을 원본 assetlinks에서 복사했다. Cloudflare `dist/client/.well-known/assetlinks.json`과 Nitro `.vercel/output/static/.well-known/assetlinks.json` 모두 생성된다.
+- 포즈 20장과 아이콘·매니페스트, 빌드된 JS·CSS·폰트를 사전 캐시한다. Git SHA+시각 버전, 사용자 선택 업데이트 토스트, narrow 스크린샷을 추가했다.
+- 첫 오프라인 검사에서 Cloudflare 정적 서버의 `Vary: Origin` 때문에 모듈 스크립트 캐시가 일치하지 않았다. 같은 출처의 공개 정적 파일에만 `ignoreVary`를 적용해 해결했다. 내비게이션 캐시 정책은 따로 유지한다.
+- typecheck 통과 / lint 오류 0·경고 0 / unit 122 통과·0 실패 / build 통과 / build:vercel 통과 / Chromium E2E 12 통과·0 실패. 오프라인 새로 고침 뒤 세 탭 18개 버튼을 실제 순회했다.
+- 해소: D-02(배포 산출물), D-13. 실제 배포 URL·Android 주소창 제거·iOS 실기기 검증은 P13에서 별도 기록한다.

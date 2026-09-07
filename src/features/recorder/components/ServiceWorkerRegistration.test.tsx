@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ServiceWorkerRegistration as ServiceWorkerRegistrationComponent } from "./ServiceWorkerRegistration";
@@ -47,6 +47,18 @@ afterEach(() => {
 });
 
 describe("ServiceWorkerRegistration", () => {
+  it("offers a waiting update without activating it until refresh is clicked", async () => {
+    const postMessage = vi.fn();
+    const register = vi.fn<ServiceWorkerContainer["register"]>(async () => ({ waiting: { postMessage } }) as unknown as globalThis.ServiceWorkerRegistration);
+    setSecureContext(true);
+    setServiceWorkerRegister(register);
+    render(<ServiceWorkerRegistrationComponent />);
+    window.dispatchEvent(new Event("load"));
+    await screen.findByText("새 버전이 준비되었어요");
+    expect(postMessage).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "새로 고침" }));
+    expect(postMessage).toHaveBeenCalledWith({ type: "SKIP_WAITING" });
+  });
   it("registers the app service worker with root scope", async () => {
     const register = vi.fn<ServiceWorkerContainer["register"]>(async () => {
       return {} as globalThis.ServiceWorkerRegistration;

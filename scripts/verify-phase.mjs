@@ -8,8 +8,8 @@ mkdirSync(directory, { recursive: true });
 const results = [];
 for (const script of ["typecheck", "lint", "test", "build", "build:vercel", "test:e2e"]) {
   const start = Date.now();
-  const result = spawnSync("npm", ["run", script], {
-    shell: process.platform === "win32",
+  const result = spawnSync(`npm run ${script}`, {
+    shell: true,
     encoding: "utf8",
     maxBuffer: 32 * 1024 * 1024,
     env: { ...process.env, FORCE_COLOR: "0" },

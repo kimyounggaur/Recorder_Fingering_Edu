@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { RECORDER_POSE_SOURCES } from "../data/poseAssets";
 
 const root = process.cwd();
 
@@ -14,6 +15,17 @@ function readPngSize(path: string): { width: number; height: number } {
 }
 
 describe("PWA assets", () => {
+  it("includes TWA asset links and every pose in the install cache", () => {
+    const links = JSON.parse(readFileSync(join(root, "public/.well-known/assetlinks.json"), "utf8"));
+    expect(links[0].target.package_name).toBe("app.vercel.recorder_fingering_edu.twa");
+    expect(links[0].target.sha256_cert_fingerprints[0]).toMatch(/^(?:[0-9A-F]{2}:){31}[0-9A-F]{2}$/);
+    const sw = readFileSync(join(root, "public/sw.js"), "utf8");
+    for (const source of RECORDER_POSE_SOURCES) expect(sw).toContain(source);
+    const manifest = JSON.parse(readFileSync(join(root, "public/manifest.webmanifest"), "utf8"));
+    expect(manifest.display_override).toEqual(["standalone", "minimal-ui"]);
+    expect(manifest.screenshots).toContainEqual(expect.objectContaining({ form_factor: "narrow", sizes: "360x800" }));
+    expect(readPngSize("public/screenshots/mobile.png")).toEqual({ width: 360, height: 800 });
+  });
   it("ships a valid web app manifest", () => {
     const manifest = JSON.parse(
       readFileSync(join(root, "public/manifest.webmanifest"), "utf8"),

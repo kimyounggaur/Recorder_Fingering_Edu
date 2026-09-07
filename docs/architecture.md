@@ -146,6 +146,8 @@ highlight-release → releasing → highlight-press → pressing → contact →
 
 ## 접근성과 오류 경계
 
+PWA의 `sw.template.js`를 `scripts/generate-sw.mjs`가 빌드 전후에 생성한다. 빌드 후 실제 JS·CSS·폰트 파일까지 추가해 첫 방문에 모든 실행 자산을 보관한다. `poseAssets.ts`는 TypeScript 컴파일러로 읽어 포즈 목록의 단일 출처를 유지한다. 대기 워커는 사용자 새로 고침으로만 `SKIP_WAITING`을 받고 교체되며, 개발 모드 등록은 생략한다. TWA 연결 파일은 Cloudflare와 Nitro의 정적 출력에 명시적으로 복사한다.
+
 - 선택 음과 닫힌 번호를 polite live region으로 알립니다.
 - 전체 장면은 음별 접근성 이름과 설명을 갖는 하나의 이미지로 노출됩니다.
 - 포즈와 내부 지도 장식은 보조 기술에서 중복 낭독되지 않습니다.

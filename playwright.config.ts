@@ -23,10 +23,15 @@ export default defineConfig({
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
-    : {
+    : [{
         command: "npm run dev -- --hostname 127.0.0.1 --port 4173",
         url: baseURL,
         reuseExistingServer: true,
         timeout: 120_000,
-      },
+      }, {
+        command: "npm run preview:e2e",
+        url: "http://127.0.0.1:4174/",
+        reuseExistingServer: false,
+        timeout: 120_000,
+      }],
 });
