@@ -15,7 +15,7 @@
 | UX | 숫자키 | 활성 탭 2/1, 고정 수정키 | 통과. resolver·컴포넌트·3브라우저 E2E |
 | UX | 설정 저장 | 새로 고침 유지·초기화 | 통과. 12개 허용 필드, 초기화는 온보딩만 보존 |
 | UX | 범례 | 한 곳 | 통과. 일반 학습 무대 하단 하나 |
-| PWA | assetlinks | 두 빌드 출력과 HTTP 200 | 출력 JSON 일치·Cloudflare 로컬 HTTP 200 통과. 공개 배포 결과는 릴리스 기록 참조 |
+| PWA | assetlinks | 두 빌드 출력과 HTTP 200 | 통과. 원본·두 출력 해시 일치, Cloudflare 로컬·공개 Vercel HTTP 200 JSON |
 | PWA | 오프라인 | 첫 방문 뒤 18버튼 포즈 | 통과. 프로덕션 SW 제어 후 오프라인 새로 고침·18버튼 순회, Chromium 2프로젝트 |
 | PWA | 업데이트 | 대기 토스트·선택 교체 | 통과. 등록/대기/메시지/요청한 reload 단위·브라우저 검사 |
 | 오디오 | 음색 | 17음 상승·치프·30연타 누수 0 | 통과. OfflineAudioContext 신호·기음·끝 무음·노드 정리. 스피커 청취는 미실시 |
@@ -28,7 +28,7 @@
 | 확장 | 새 음 | 두 출처·976×1360·계약 | 보류. 원본 11장 조사했지만 두 출처 본문 일치·엄지 상태 미확정. 신규 음 0개 |
 | 품질 | axe | serious/critical 0 | 통과. 7화면×2테마×3프로젝트=42회, 규칙 숨김/제외 없음 |
 | 품질 | 시각 회귀 | 포즈 20장 | 통과. Windows Chromium 1440×900, diff ≤1%, 프레임 크기 고정 |
-| 품질 | CI | 여섯 명령·E2E 녹색 | 로컬 통과. 원격 첫 설치 실패의 npm 10 잠금 파일 누락 수정, 재검사 결과 아래 기록 |
+| 품질 | CI | 여섯 명령·E2E 녹색 | 통과. 최종 앱 1e19dd2의 Quality 워크플로 success, unit 164·Chromium E2E 36 |
 | 문서 | README | 실행·데이터 수정 재현 | 설치/6명령/4경로/12설정/데이터 계약/포즈 갱신 문서화. 별도 제3자 사용성 검수는 미실시 |
 
 ## 수치와 검사 제외
@@ -68,6 +68,14 @@
 - 첫 원격 CI는 npm 10에서 lru-cache 잠금 항목 누락으로 설치에 실패했다. 같은 npm 10으로 재현하고 잠금 파일을 재생성해 dry-run 설치 통과 후 0d2037a로 반영했다.
 - P13 여섯 명령 전부 통과: unit 164, E2E 104 통과·4 제외·0 실패. logs: output/verification/p13/. 4화면 캡처에서 가로 넘침·빈 Canvas·콘솔 오류 0, JS gzip 133,428바이트.
 - 공개 Vercel /, /compare, /quiz, /basics, manifest, sw, icon-192, assetlinks HTTP 200 확인. Vercel의 0d2037a 배포 상태 success. 원격 CI·최종 배포 결과는 완료 후 이 절에 갱신한다.
+
+### 최종 확인
+
+- P13 앱 커밋: 1e19dd27b746db84a755c6616839ca9ee4fa6d71. [최종 Quality 검사](https://github.com/kimyounggaur/Recorder_Fingering_Edu/actions/runs/34114348455) success. npm ci, typecheck, lint, unit 164, Cloudflare/Vercel 빌드, Chromium E2E 36 모두 통과했다.
+- [공개 웹앱](https://recorder-fingering-edu.vercel.app)의 해당 커밋 Vercel 배포 success. 실제 배포 URL에서 기본 학습 E2E 11개, 코스/비교/퀴즈/기초/수업/오디오 제스처 8개, axe 14개, 시각 회귀 1개(20장) 모두 통과했다.
+- 공개 URL의 새 브라우저 컨텍스트에서 SW 제어를 기다린 뒤 네트워크를 끊고 새로 고쳤다. 18개 뱅크 버튼과 독일식 차이 3음, 총 21선택·20개 고유 포즈가 모두 표시됐다. 이 검사는 실제 Android TWA 재실행과 별개다.
+- [소유자 전용 Sites](https://recorder-fingering-lab.augustrushkim.chatgpt.site)도 같은 앱 소스로 게시 성공했다. 소유자만 접근하는 정책은 변경하지 않았다.
+- 배포 후 확인 기록만 추가하는 문서 커밋은 [skip ci]로 표시한다. 검증된 앱 소스는 위 P13 커밋이며, 문서 기록 추가는 실행 코드·잠금 파일·시각 기준선을 바꾸지 않는다.
 
 ## 남은 진단
 

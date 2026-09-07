@@ -130,3 +130,4 @@ typecheck 통과 / lint 오류 0·경고 0 / unit 109 통과·0 실패 / build �
 - typecheck 통과 / lint 오류 0·경고 0 / unit 164 통과 / build 통과 / build:vercel 통과 / E2E 104 통과·4 조건부 제외·실패 0. 별도 캡처 검사에서 가로 넘침·빈 Canvas·콘솔 오류 0, 수업 포즈 906px, 초기 JS gzip 133,428바이트를 확인했다.
 - 원격 npm 10의 clean install에서 lru-cache 잠금 항목 누락을 재현하고 동일 npm으로 lock을 재생성했다. dry-run 설치와 원격 npm ci/typecheck/lint/test/두 빌드가 통과했다. 원격 E2E·최종 배포 결과는 acceptance-v3.md의 릴리스 기록에 추가한다.
 - 공개 Vercel의 /, /compare, /quiz, /basics, manifest, sw, icon-192, assetlinks HTTP 200을 확인했다. 실제 Android TWA·iOS Safari·프로젝터/스피커 평가는 미실시로 기록했다. P11 확장은 보류, D-23 개발 경고는 미해소다.
+- 최종 P13 커밋 1e19dd2의 원격 Quality 검사도 통과했다(unit 164, Chromium E2E 36). 공개 Vercel에서 추가 E2E 19개·axe 14개·포즈 시각 회귀 20장과 오프라인 21선택/20포즈를 검증했다. 같은 앱 소스로 소유자 전용 Sites 게시도 성공했다. 링크와 검증 범위는 acceptance-v3.md에 기록했다.
