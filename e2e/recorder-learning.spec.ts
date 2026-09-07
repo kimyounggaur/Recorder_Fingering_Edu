@@ -339,6 +339,16 @@ test("844×390 landscape keeps the scene and note keypad in the first view", asy
   expect(browserErrors).toEqual([]);
 });
 
+test("1366×768 desktop keeps scene and keypad in first viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await openAppAndChoose(page, "baroque");
+  const scene = await page.locator(".scene-card").boundingBox();
+  const keypad = await page.locator(".keypad-card").boundingBox();
+  expect(scene!.y).toBeGreaterThanOrEqual(0);
+  expect(scene!.y).toBeLessThan(768);
+  expect(keypad!.y + keypad!.height).toBeLessThanOrEqual(768);
+});
+
 test("sequence starts at 도 and resumes from a paused note", async ({ page }) => {
   const browserErrors = watchForBrowserErrors(page);
   await openAppAndChoose(page, "baroque");

@@ -88,6 +88,27 @@ afterEach(() => {
 });
 
 describe("RecorderLearningApp", () => {
+  it("restores step mode and finger names, then resets without onboarding", async () => {
+    localStorage.setItem("recorder-learning.preferences.v1", JSON.stringify({ stepMode: true, showFingerNames: true, onboardingCompleted: true }));
+    await renderReadyApp();
+    expect(screen.getByTestId("step-mode-toggle")).toBeChecked();
+    expect(screen.getByRole("switch", { name: /손가락 이름/ })).toBeChecked();
+    expect(screen.getByTestId("recorder-scene")).toHaveAttribute("data-phase", "idle");
+    fireEvent.click(screen.getByRole("button", { name: "설정 초기화" }));
+    expect(screen.getByTestId("step-mode-toggle")).not.toBeChecked();
+    expect(screen.getByRole("status")).toHaveTextContent("설정을 처음 상태로 되돌렸어요");
+    expect(screen.queryByText("내 리코더의 운지 체계는 무엇인가요?")).not.toBeInTheDocument();
+  });
+
+  it("selects a high or chromatic note with an unmodified digit", async () => {
+    await renderReadyApp();
+    fireEvent.click(screen.getByTestId("note-bank-high"));
+    fireEvent.keyDown(window, { key: "2", code: "Digit2" });
+    expect(screen.getByTestId("note-button-high-2")).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByTestId("note-bank-chromatic"));
+    fireEvent.keyDown(window, { key: "1", code: "Digit1" });
+    expect(screen.getByTestId("note-button-chromatic-1")).toHaveAttribute("aria-pressed", "true");
+  });
   it("persists pitch mode and passes it to the audio hook", async () => {
     await renderReadyApp();
     fireEvent.click(screen.getByRole("radio", { name: "한 옥타브 낮게" }));

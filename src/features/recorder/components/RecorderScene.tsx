@@ -206,12 +206,6 @@ export function RecorderScene({
           title={`${title} 구멍 지도`}
           description={description ?? defaultDescription}
         />
-        <div className="fingering-map-panel__legend">
-          <span><i className="map-legend-dot map-legend-dot--closed" /> 막음</span>
-          <span><i className="map-legend-dot map-legend-dot--open" /> 열림</span>
-          <span><i className="map-legend-dot map-legend-dot--half" /> 반개방</span>
-          <span><i className="map-legend-dot map-legend-dot--partial" /> 한쪽만</span>
-        </div>
       </section>
 
       <div className="recorder-scene__changes" aria-hidden="true">

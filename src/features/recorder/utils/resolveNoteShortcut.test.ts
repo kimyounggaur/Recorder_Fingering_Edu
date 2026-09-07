@@ -22,6 +22,12 @@ function shortcutEvent(
 }
 
 describe("resolveNoteShortcut", () => {
+  it("uses the active bank for plain digits and fixed banks for modifiers", () => {
+    expect(resolveNoteShortcut(shortcutEvent({ code: "Digit2" }), "high")).toBe("highRe");
+    expect(resolveNoteShortcut(shortcutEvent({ code: "Digit7" }), "high")).toBeNull();
+    expect(resolveNoteShortcut(shortcutEvent(), "chromatic")).toBe("doSharp");
+    expect(resolveNoteShortcut(shortcutEvent({ code: "Digit2", ctrlKey: true }), "high")).toBe("re");
+  });
   it.each([
     ["plain", {}, "do"],
     ["plain eighth", { code: "Digit8" }, "highDo"],

@@ -341,7 +341,7 @@ describe("preference storage", () => {
     });
   });
 
-  it("persists only the six allowed preferences", () => {
+  it("persists only the eight allowed preferences", () => {
     const values = new Map<string, string>();
     const storage = {
       getItem: (key: string) => values.get(key) ?? null,
@@ -349,6 +349,8 @@ describe("preference storage", () => {
     };
     const preferences = {
       pitchMode: "written" as const,
+      stepMode: true,
+      showFingerNames: true,
       fingeringSystem: "german" as const,
       isMuted: true,
       speed: "slow" as const,

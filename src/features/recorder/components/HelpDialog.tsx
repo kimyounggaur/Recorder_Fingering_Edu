@@ -106,7 +106,7 @@ export function HelpDialog({ open, onClose }: HelpDialogProps) {
           <li><strong>소리 높이</strong>에서 실제 리코더 소리와 한 옥타브 낮은 소리를 고릅니다. 악보 위의 8은 실제 소리가 한 옥타브 높다는 뜻이에요.</li>
         </ol>
         <div className="keyboard-guide">
-          <span><kbd>1</kbd>–<kbd>8</kbd> 기본 음계</span>
+          <span><kbd>1</kbd>–<kbd>8</kbd> 지금 열린 탭의 음</span>
           <span><kbd>Ctrl</kbd>+<kbd>1–8</kbd> 낮은 계이름</span>
           <span><kbd>Shift</kbd>+<kbd>1–5</kbd> 높은 계이름</span>
           <span><kbd>Alt</kbd>+<kbd>1–5</kbd> 반음</span>

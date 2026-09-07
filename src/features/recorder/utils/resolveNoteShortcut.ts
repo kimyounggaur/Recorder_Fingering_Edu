@@ -21,7 +21,7 @@ function getDigit(code: string): UiButtonNumber | null {
   return match ? (Number(match[1]) as UiButtonNumber) : null;
 }
 
-function getBank(event: NoteShortcutEvent): NoteBank | null {
+function getBank(event: NoteShortcutEvent, activeBank: NoteBank): NoteBank | null {
   const modifierCount =
     Number(event.ctrlKey) + Number(event.shiftKey) + Number(event.altKey);
 
@@ -29,12 +29,13 @@ function getBank(event: NoteShortcutEvent): NoteBank | null {
   if (event.ctrlKey) return "low";
   if (event.shiftKey) return "high";
   if (event.altKey) return "chromatic";
-  return "low";
+  return activeBank;
 }
 
 /** Resolve a top-row number chord to the note assigned by the active bank. */
 export function resolveNoteShortcut(
   event: NoteShortcutEvent,
+  activeBank: NoteBank = "low",
 ): SolfegeId | null {
   if (
     event.metaKey ||
@@ -46,7 +47,7 @@ export function resolveNoteShortcut(
   }
 
   const digit = getDigit(event.code);
-  const bank = getBank(event);
+  const bank = getBank(event, activeBank);
   if (digit === null || bank === null) return null;
 
   return NOTE_BANKS[bank].find((entry) => entry.digit === digit)?.note ?? null;

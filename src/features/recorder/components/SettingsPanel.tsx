@@ -19,6 +19,7 @@ interface SettingsPanelProps {
   onShowHoleNumbersChange: (enabled: boolean) => void;
   onShowFingerNamesChange: (enabled: boolean) => void;
   onReplay: () => void;
+  onReset: () => void;
 }
 
 export function SettingsPanel(props: SettingsPanelProps) {
@@ -94,6 +95,7 @@ export function SettingsPanel(props: SettingsPanelProps) {
           onChange={props.onShowFingerNamesChange}
         />
       </div>
+      <button type="button" className="text-button" onClick={props.onReset}>설정 초기화</button>
     </section>
   );
 }

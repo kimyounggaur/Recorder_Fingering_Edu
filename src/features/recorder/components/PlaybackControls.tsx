@@ -41,9 +41,9 @@ export function PlaybackControls({
         <div>
           <p className="eyebrow">자동 순서 연습</p>
           <p>
-            도부터 높은 도까지 · {sequencePosition >= 0
-              ? `${sequencePosition + 1}/8`
-              : "기본 음계 8음"}
+            {sequencePosition >= 0
+              ? `도부터 높은 도까지 · ${sequencePosition + 1}/8`
+              : "낮은 계이름 8음 · 시작하면 도부터 진행해요"}
           </p>
         </div>
         <div className="sequence-buttons">

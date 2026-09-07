@@ -61,7 +61,7 @@ export function NoteKeypad({
           <p className="eyebrow">음 고르기</p>
           <h2 id="keypad-heading">음역을 고르고 숫자를 눌러 보세요</h2>
         </div>
-        <p className="keyboard-hint">기본 음계는 숫자 1–8만 눌러도 돼요.</p>
+        <p className="keyboard-hint">숫자 키는 지금 열린 탭의 음을 골라요. Ctrl·Shift·Alt로 탭을 건너뛸 수 있어요.</p>
       </div>
 
       <div className="note-bank-tabs" role="tablist" aria-label="계이름 음역 선택">

@@ -1,5 +1,7 @@
 "use client";
 
+import { CircleHelp, Maximize } from "lucide-react";
+
 import {
   useCallback,
   useEffect,
@@ -130,8 +132,11 @@ export function RecorderLearningApp() {
   const [animationRestart, setAnimationRestart] =
     useState<AnimationRestart | null>(null);
   const [playOnContact, setPlayOnContact] = useState(false);
-  const [showFingerNames, setShowFingerNames] = useState(false);
-  const [stepMode, setStepMode] = useState(false);
+  const stepMode = preferences.stepMode;
+  const showFingerNames = preferences.showFingerNames;
+  const setStepMode = useCallback((stepMode: boolean) => setPreferences(current => ({ ...current, stepMode })), []);
+  const setShowFingerNames = useCallback((showFingerNames: boolean) => setPreferences(current => ({ ...current, showFingerNames })), []);
+  const [statusMessage, setStatusMessage] = useState("");
   const [sequencePlaying, setSequencePlaying] = useState(false);
   const [sequencePaused, setSequencePaused] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -392,7 +397,7 @@ export function RecorderLearningApp() {
         requestAnimation();
       }
     },
-    [beginAudioRequest, getReplayStart, requestAnimation, stopAudio],
+    [beginAudioRequest, getReplayStart, requestAnimation, setStepMode, stopAudio],
   );
 
   const currentIndex = NOTE_ORDER.indexOf(selectedNote);
@@ -439,7 +444,7 @@ export function RecorderLearningApp() {
     selectNote("do", { stopSequence: false, play: true, bank: "low" });
     setSequencePaused(false);
     setSequencePlaying(true);
-  }, [selectNote, selectedNote, sequencePaused, sequencePlaying, stopAudio]);
+  }, [selectNote, selectedNote, sequencePaused, sequencePlaying, setStepMode, stopAudio]);
 
   const resetSequence = useCallback(() => {
     setSequencePlaying(false);
@@ -468,16 +473,16 @@ export function RecorderLearningApp() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (helpOpen) return;
+      if (helpOpen || event.defaultPrevented) return;
       if (isTypingTarget(event.target) || event.isComposing) return;
 
-      const shortcutNote = resolveNoteShortcut(event);
+      const shortcutNote = resolveNoteShortcut(event, activeBank);
       if (shortcutNote) {
         const bank: NoteBank = event.shiftKey
           ? "high"
           : event.altKey
             ? "chromatic"
-            : "low";
+            : event.ctrlKey ? "low" : activeBank;
         event.preventDefault();
         selectNote(shortcutNote, { bank });
         return;
@@ -498,7 +503,7 @@ export function RecorderLearningApp() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [goNext, goPrevious, helpOpen, playCurrentNote, selectNote]);
+  }, [activeBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote]);
 
   const instruction = useMemo(
     () =>
@@ -529,6 +534,19 @@ export function RecorderLearningApp() {
   }, []);
 
   const closeHelp = useCallback(() => setHelpOpen(false), []);
+
+  const resetPreferences = useCallback(() => {
+    stopAudio();
+    activeAudioRequestRef.current = null;
+    setPlayOnContact(false);
+    setSequencePlaying(false);
+    setSequencePaused(false);
+    setTransitionOrigin({ note: selectedNote, system, closedHoles: getVisualClosedHoles() });
+    setPreferences(current => ({ ...DEFAULT_PREFERENCES, onboardingCompleted: current.onboardingCompleted }));
+    setAudioMuted(DEFAULT_PREFERENCES.isMuted);
+    requestAnimation();
+    setStatusMessage("설정을 처음 상태로 되돌렸어요");
+  }, [getVisualClosedHoles, requestAnimation, selectedNote, setAudioMuted, stopAudio, system]);
 
   if (!preferencesLoaded) {
     return (
@@ -565,10 +583,10 @@ export function RecorderLearningApp() {
             aria-label="도움말"
             onClick={() => setHelpOpen(true)}
           >
-            ? 도움말
+            <CircleHelp size={20} aria-hidden="true" /><span className="button-label">도움말</span>
           </button>
-          <button type="button" className="secondary-button" onClick={toggleFullscreen}>
-            ⛶ 전체화면
+          <button type="button" className="secondary-button" onClick={toggleFullscreen} aria-label="전체화면" title="전체화면">
+            <Maximize size={20} aria-hidden="true" /><span className="button-label">전체화면</span>
           </button>
         </div>
       </header>
@@ -666,6 +684,7 @@ export function RecorderLearningApp() {
             onShowHoleNumbersChange={(showHoleNumbers) => updatePreferences({ showHoleNumbers })}
             onShowFingerNamesChange={setShowFingerNames}
             onReplay={replay}
+            onReset={resetPreferences}
           />
         </div>
       </main>
@@ -690,6 +709,7 @@ export function RecorderLearningApp() {
         {liveMessage}
       </p>
       <HelpDialog open={helpOpen} onClose={closeHelp} />
+      <p className="sr-only" role="status">{statusMessage}</p>
       {debug ? (
         <aside className="debug-panel" aria-label="개발용 상태 정보">
           <strong>DEBUG</strong>
