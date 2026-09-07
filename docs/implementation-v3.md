@@ -64,3 +64,10 @@ typecheck 통과 / lint 오류 0·경고 0 / unit 109 통과·0 실패 / build �
 - 임시 RecorderScene 래퍼로 도에서 솔 선택 시 렌더를 측정했다. 전후 모두 3회이며 측정 테스트는 제거했다.
 - typecheck 통과 / lint 오류 0·경고 0 / unit 127 통과 / build 통과 / build:vercel 통과 / Chromium E2E 13 통과.
 - PlaybackSpeed는 AnimationSpeed의 재내보내기로 통일했다. 애니메이션·캔버스·오디오의 독립 취소 규칙과 설정 복원 순서를 유지했다.
+
+## P6 보고
+
+- 여섯 연습 코스, 자동/수동 진행, 1.2~3.0초 간격, 완주 표시와 취소 가능한 3음 합성 효과를 구현했다. 직접 음 선택은 코스를 중지한다.
+- 6코스 × 2모드 완주와 타이머 정리를 모두 단위 테스트했다. 왼손 코스 수동 진행 E2E는 높은 도의 높은 음역 선택과 다시 시작 뒤 직접 선택 중지를 확인한다.
+- typecheck 통과 / lint 오류 0·경고 0 / unit 143 통과 / build 통과 / build:vercel 통과 / Chromium E2E 14 통과.
+- 360px 코스 화면의 가로 넘침이 없음을 확인했다. 캡처: output/screenshots/p6/. 설정은 허용된 11개 필드만 저장하며 점수/연습 이력은 저장하지 않는다.

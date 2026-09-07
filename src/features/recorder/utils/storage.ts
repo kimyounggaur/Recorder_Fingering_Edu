@@ -1,4 +1,5 @@
 import type { FingeringSystem, PlaybackSpeed } from "../model/types";
+import { isCourseId, type CourseId } from "../data/practiceCourses";
 
 export interface RecorderPreferences {
   fingeringSystem: FingeringSystem;
@@ -9,6 +10,9 @@ export interface RecorderPreferences {
   pitchMode: "sounding" | "written";
   stepMode: boolean;
   showFingerNames: boolean;
+  lastCourseId: CourseId;
+  courseIntervalMs: number;
+  courseMode: "auto" | "manual";
 }
 
 export interface ReadableStorage {
@@ -30,6 +34,9 @@ export const DEFAULT_PREFERENCES: Readonly<RecorderPreferences> = {
   pitchMode: "sounding",
   stepMode: false,
   showFingerNames: false,
+  lastCourseId: "lowScale",
+  courseIntervalMs: 1500,
+  courseMode: "auto",
 };
 
 function getBrowserStorage(): Storage | null {
@@ -54,6 +61,11 @@ export function parsePreferences(serialized: string | null): RecorderPreferences
     if (!isRecord(candidate)) return { ...DEFAULT_PREFERENCES };
 
     return {
+      lastCourseId: isCourseId(candidate.lastCourseId) ? candidate.lastCourseId : "lowScale",
+      courseMode: candidate.courseMode === "manual" ? "manual" : "auto",
+      courseIntervalMs: typeof candidate.courseIntervalMs === "number" && Number.isFinite(candidate.courseIntervalMs)
+        ? Math.round(Math.max(1200, Math.min(3000, candidate.courseIntervalMs)) / 100) * 100
+        : candidate.speed === "slow" ? 2000 : 1500,
       pitchMode: candidate.pitchMode === "written" ? "written" : "sounding",
       stepMode: typeof candidate.stepMode === "boolean" ? candidate.stepMode : false,
       showFingerNames: typeof candidate.showFingerNames === "boolean" ? candidate.showFingerNames : false,
@@ -103,6 +115,9 @@ export function savePreferences(
   if (!storage) return false;
 
   const persistedPreferences: RecorderPreferences = {
+    lastCourseId: preferences.lastCourseId,
+    courseMode: preferences.courseMode,
+    courseIntervalMs: preferences.courseIntervalMs,
     pitchMode: preferences.pitchMode,
     stepMode: preferences.stepMode,
     showFingerNames: preferences.showFingerNames,

@@ -1,4 +1,5 @@
 @import "tailwindcss/index.css";
+@import "./courses.css";
 
 :root {
   --color-bg: #f3f6fb;

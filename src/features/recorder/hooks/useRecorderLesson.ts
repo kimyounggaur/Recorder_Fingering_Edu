@@ -6,8 +6,7 @@ import {
 } from "react";
 import { useRecorderAudio } from "../audio/useRecorderAudio";
 import {
-  NOTE_BANKS,
-  NOTE_ORDER
+  NOTE_BANKS
 } from "../data/noteMeta";
 import {
   DEFAULT_PREFERENCES
@@ -17,6 +16,7 @@ import { useNoteSelection } from "./useNoteSelection";
 import { getRequestedBank, usePreferences } from "./usePreferences";
 import { useReducedMotion } from "./useReducedMotion";
 import { useSequencePractice } from "./useSequencePractice";
+import { useCompletionCue } from "./useCompletionCue";
 export function useRecorderLesson() {
   const { preferences, loaded: preferencesLoaded, update: updatePreferences, reset, restore } = usePreferences();
   const [statusMessage, setStatusMessage] = useState("");
@@ -33,7 +33,8 @@ export function useRecorderLesson() {
   const stopSequenceRef = useRef(() => { });
   const onStopSequence = useCallback(() => stopSequenceRef.current(), []);
   const selection = useNoteSelection({ preferences, updatePreferences, reducedMotion, audio, onStopSequence });
-  const sequence = useSequencePractice({ steps: NOTE_ORDER, intervalMs: preferences.speed === "slow" ? 2000 : 1500, selectedNote: selection.selectedNote, selectNote: selection.selectNote, setStepMode: selection.setStepMode, stopAudio: selection.cancelAudio });
+  const sequence = useSequencePractice({ preferences, update: updatePreferences, selectNote: selection.selectNote, setStepMode: selection.setStepMode, stopAudio: selection.cancelAudio });
+  useCompletionCue(sequence.completed, preferences.isMuted, audio);
   useEffect(() => { stopSequenceRef.current = sequence.stopSequence; }, [sequence.stopSequence]);
   const { setActiveBank, setSelectedNote } = selection;
   const { setMuted: setAudioMuted } = audio;
@@ -56,5 +57,5 @@ export function useRecorderLesson() {
   const closeHelp = useCallback(() => setHelpOpen(false), []);
   const resetPreferences = useCallback(() => { selection.prepareReset(); reset(); setStatusMessage("설정을 처음 상태로 되돌렸어요"); }, [selection, reset]);
   const setShowFingerNames = useCallback((showFingerNames: boolean) => updatePreferences({ showFingerNames }), [updatePreferences]);
-  return { ...selection, ...sequence, preferences, preferencesLoaded, updatePreferences, resetPreferences, reducedMotion, audio, statusMessage, helpOpen, setHelpOpen, closeHelp, debug, toggleFullscreen, stepMode: preferences.stepMode, showFingerNames: preferences.showFingerNames, setShowFingerNames };
+  return { ...selection, ...sequence, coursePractice: sequence, preferences, preferencesLoaded, updatePreferences, resetPreferences, reducedMotion, audio, statusMessage, helpOpen, setHelpOpen, closeHelp, debug, toggleFullscreen, stepMode: preferences.stepMode, showFingerNames: preferences.showFingerNames, setShowFingerNames };
 }

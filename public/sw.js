@@ -1,11 +1,11 @@
 /* global self, caches, URL, Response, fetch */
 
 const CACHE_PREFIX = "recorder-fingering-";
-const CACHE_NAME = `${CACHE_PREFIX}de713f4-1788771108275`;
+const CACHE_NAME = `${CACHE_PREFIX}dfead9d-1788771626618`;
 const PRECACHE_URLS = [
   "/",
   "/assets/RecorderErrorBoundary-CqS9YaUH.js",
-  "/assets/RecorderLearningApp-BBi3iXwd.js",
+  "/assets/RecorderLearningApp-BDQFTC6T.js",
   "/assets/ServiceWorkerRegistration-MDSvop59.js",
   "/assets/_vinext_fonts/geist-8ac0455e797f/geist-001175b1.woff2",
   "/assets/_vinext_fonts/geist-8ac0455e797f/geist-52306abf.woff2",
@@ -20,9 +20,9 @@ const PRECACHE_URLS = [
   "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-f6b33328.woff2",
   "/assets/createLucideIcon-DgMtuwtK.js",
   "/assets/framework-CXnKph_e.js",
-  "/assets/index-D7MRr1rT.js",
-  "/assets/index-DYZYuYPY.css",
-  "/assets/layout-segment-context-BYfimW8r.js",
+  "/assets/index-BMUiqOwv.js",
+  "/assets/index-WZX6aD_W.css",
+  "/assets/layout-segment-context-nuRrFSet.js",
   "/assets/rolldown-runtime-S-ySWqyJ.js",
   "/favicon.svg",
   "/fingering/poses/as4.png",

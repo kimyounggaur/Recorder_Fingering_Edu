@@ -8,11 +8,11 @@ import { InstructionPanel } from "./InstructionPanel";
 import { NoteCard } from "./NoteCard";
 import { NoteKeypad } from "./NoteKeypad";
 import { OnboardingBanner } from "./OnboardingBanner";
-import { PlaybackControls } from "./PlaybackControls";
+import { CoursePanel } from "./CoursePanel";
 import { RecorderScene } from "./RecorderScene";
 import { SettingsPanel } from "./SettingsPanel";
 export function RecorderLearningApp() {
-  const { preferences, preferencesLoaded, updatePreferences, resetPreferences, reducedMotion, audio, statusMessage, helpOpen, setHelpOpen, closeHelp, debug, toggleFullscreen, stepMode, showFingerNames, setShowFingerNames, selectedNote, activeBank, setActiveBank, transitionOrigin, animationKey, system, currentNote, currentShortcutLabel, displayAnimation, displayedHoleStates, selectNote, playCurrentNote, replay, changeSystem, chooseOnboardingSystem, changeMuted, changeStepMode, currentIndex, goPrevious, goNext, instruction, liveMessage, sequencePlaying, sequencePaused, toggleSequence, resetSequence } = useRecorderLesson();
+  const { preferences, preferencesLoaded, updatePreferences, resetPreferences, reducedMotion, audio, statusMessage, helpOpen, setHelpOpen, closeHelp, debug, toggleFullscreen, stepMode, showFingerNames, setShowFingerNames, selectedNote, activeBank, setActiveBank, transitionOrigin, animationKey, system, currentNote, currentShortcutLabel, displayAnimation, displayedHoleStates, selectNote, playCurrentNote, replay, changeSystem, chooseOnboardingSystem, changeMuted, changeStepMode, goPrevious, goNext, instruction, liveMessage, coursePractice } = useRecorderLesson();
   if (!preferencesLoaded) {
     return (
       <div className="recorder-app loading-shell" aria-busy="true" aria-live="polite">
@@ -110,6 +110,7 @@ export function RecorderLearningApp() {
 
         <div className="instruction-area">
           <InstructionPanel
+            handHint={coursePractice.sequencePlaying || coursePractice.sequencePaused ? coursePractice.course.handHint : undefined}
             text={instruction}
             phase={displayAnimation.phase}
             toOpen={displayAnimation.diff.toOpen}
@@ -143,7 +144,7 @@ export function RecorderLearningApp() {
             onSystemChange={changeSystem}
             pitchMode={preferences.pitchMode}
             onPitchModeChange={(pitchMode) => updatePreferences({ pitchMode })}
-            onSpeedChange={(speed) => updatePreferences({ speed })}
+            onSpeedChange={(speed) => updatePreferences({ speed, courseIntervalMs: speed === "slow" ? 2000 : 1500 })}
             onStepModeChange={changeStepMode}
             onMutedChange={changeMuted}
             onShowHoleNumbersChange={(showHoleNumbers) => updatePreferences({ showHoleNumbers })}
@@ -153,16 +154,15 @@ export function RecorderLearningApp() {
           />
         </div>
       </main>
-      <PlaybackControls
-        sequencePlaying={sequencePlaying}
-        sequencePaused={sequencePaused}
-        sequencePosition={currentIndex}
+      <CoursePanel
+        practice={coursePractice}
+        activeBank={activeBank}
+        reducedMotion={reducedMotion}
+        update={updatePreferences}
         onPrevious={goPrevious}
         onNext={goNext}
         onReplay={replay}
         onPlaySound={playCurrentNote}
-        onSequenceToggle={toggleSequence}
-        onSequenceReset={resetSequence}
       />
 
       <footer className="app-footer">

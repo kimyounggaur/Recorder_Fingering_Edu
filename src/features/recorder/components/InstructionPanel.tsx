@@ -2,6 +2,7 @@ import type { AnimationPhase, HoleId } from "../model/types";
 import { FINGER_LABELS, HOLE_NUMBER_LABELS } from "../data/fingerings";
 
 interface InstructionPanelProps {
+  handHint?: string;
   text: string;
   phase: AnimationPhase;
   toOpen: readonly HoleId[];
@@ -29,6 +30,7 @@ function FingerChips({ holes, kind }: { holes: readonly HoleId[]; kind: "open" |
 }
 
 export function InstructionPanel({
+  handHint,
   text,
   phase,
   toOpen,
@@ -51,6 +53,7 @@ export function InstructionPanel({
           {stepMode ? `${stepIndex + 1}/${stepCount}` : phase === "settled" ? "완성" : "움직이는 중"}
         </span>
       </div>
+      {handHint ? <p className="course-hand-hint">{handHint}</p> : null}
       <p className="instruction-copy">{text}</p>
       <div className="finger-chips" aria-label="이번에 움직일 손가락">
         <FingerChips holes={toOpen} kind="open" />
