@@ -5,7 +5,7 @@
 ## 런타임 경계
 
 - `app/page.tsx`는 서버 진입점이며 오류 경계 안에 클라이언트 앱을 렌더링합니다.
-- `RecorderLearningApp.tsx`는 선택 음, 활성 음역 분류, 운지 체계, 연습 모드, 애니메이션과 오디오 요청을 조정합니다.
+- `RecorderLearningApp.tsx`는 JSX를 담당하고 `useRecorderLesson`이 상태 훅을 조합합니다.
 - `NoteKeypad.tsx`는 낮은 계이름·높은 계이름·반음 탭과 8/5/5개의 화면 선택 위치를 제공합니다.
 - 17개 고유 음높이에 대응하는 20개의 정렬 PNG 포즈는 `public/fingering/poses/`에서 정적 제공됩니다.
 - `RecorderPoseStage.tsx`는 캔버스에서 현재 포즈와 목표 포즈를 교차 전환합니다.
@@ -35,17 +35,27 @@ src/features/recorder/
     WebAudioRecorderEngine.ts      # 합성 연습음 구현
     useRecorderAudio.ts            # unlock, 음소거, 요청 취소
   components/
-    RecorderLearningApp.tsx        # 상위 상태와 이벤트 조정
+    RecorderLearningApp.tsx        # 훅 조합 결과를 표시하는 JSX
     RecorderScene.tsx              # 포즈·지도·변경 칩 조합
     RecorderPoseStage.tsx          # 캔버스 포즈 전환
     RecorderFingeringMap.tsx       # 기능형 앞면/뒷면 구멍 지도
+  hooks/
+    useRecorderLesson.ts           # 훅 연결과 초기 복원 순서
+    usePreferences.ts              # loaded 이후 저장, 갱신, 초기화
+    useReducedMotion.ts            # 모션 감소 미디어 질의
+    useNoteSelection.ts            # 선택, 재시작, 취소 가능한 오디오 콜백
+    useSequencePractice.ts         # 주입된 steps/intervalMs로 순차 진행
+    useGlobalShortcuts.ts          # 입력/IME/도움말 가드를 가진 단축키
   utils/
     buildInstruction.ts            # 한국어 안내 생성
     resolveNoteShortcut.ts         # 물리 숫자 키와 음역 분류 해석
     storage.ts                     # 설정 직렬화
+    liveMessage.ts                 # 한국어 조사와 구멍 상태 안내
 ```
 
 ## 도메인 모델
+
+설정 복원은 오디오 훅 초기화 이후 실행됩니다. 선택 훅은 실제 표시 구멍을 전환 시작점으로 잡고 애니메이션 요청과 오디오 요청 번호를 각각 유지합니다. 순차 연습의 수동 선택 중지 콜백은 ref로 연결해 훅 의존성 순환을 피합니다. 프레임마다 바뀌는 상태 때문에 타이머나 전역 리스너를 추가 생성하지 않습니다.
 
 - `UiButtonNumber`: 음 선택 번호 `1 | ... | 8`
 - `NoteBank`: `low | high | chromatic`

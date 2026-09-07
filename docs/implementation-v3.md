@@ -56,3 +56,11 @@ typecheck 통과 / lint 오류 0·경고 0 / unit 109 통과·0 실패 / build �
 - typecheck 통과 / lint 오류 0·경고 0 / unit 124 통과·0 실패 / build 통과 / build:vercel 통과 / Chromium E2E 13 통과·0 실패.
 - 실제 Chromium OfflineAudioContext로 17음 모두를 렌더해 신호 RMS·기음 성분·종료 뒤 무음·노드 0을 확인했다. 스피커를 통한 주관적 청취 평가는 수행하지 않았다.
 - 해소: D-20 중 U2. 실제 녹음이 아니라 합성 연습음이라는 표기를 유지한다.
+
+## P5 보고
+
+- 다섯 상태 훅과 한국어 안내 유틸, 훅 연결 전용 useRecorderLesson을 분리했다. RecorderLearningApp은 189줄이며 기존 JSX 문구·DOM·data 속성을 유지했다.
+- 기존 단위 테스트 124개의 이름과 결과가 동일하다. 설계에서 요구한 liveMessage 테스트 3개만 추가하여 총 127개다. 비교 원본은 output/unit-before.json과 output/unit-after.json이다.
+- 임시 RecorderScene 래퍼로 도에서 솔 선택 시 렌더를 측정했다. 전후 모두 3회이며 측정 테스트는 제거했다.
+- typecheck 통과 / lint 오류 0·경고 0 / unit 127 통과 / build 통과 / build:vercel 통과 / Chromium E2E 13 통과.
+- PlaybackSpeed는 AnimationSpeed의 재내보내기로 통일했다. 애니메이션·캔버스·오디오의 독립 취소 규칙과 설정 복원 순서를 유지했다.

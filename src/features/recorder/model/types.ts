@@ -65,4 +65,4 @@ export type AnimationPhase =
   | "contact"
   | "settled";
 
-export type PlaybackSpeed = "normal" | "slow";
+export type { AnimationSpeed as PlaybackSpeed } from "../animation/motionTimings";
