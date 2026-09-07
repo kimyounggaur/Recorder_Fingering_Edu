@@ -149,34 +149,34 @@ PWA: manifest.webmanifest + sw.js(network-first 내비, cache-first 자산) + Se
 
 심각도: **높음** = 보안·배포·교육 정확성 / **중간** = 사용성·유지보수 / **낮음** = 정리·성능
 
-| ID | 심각도 | 위치 | 내용 | Phase |
-|---|---|---|---|---|
-| D-01 | 높음·보안 | `리코더 운지 - Google Play package/signing.keystore`, `signing-key-info.txt` | 앱 서명 키와 비밀번호 파일이 프로젝트 폴더 안에 있고 `.gitignore`에 없음. 저장소가 공개되면 Play 서명 키가 유출됨 | P0 |
-| D-02 | 높음·배포 | `public/.well-known/` 없음 | TWA(Play 패키지)가 요구하는 `assetlinks.json`이 서빙되지 않음. Android 앱에서 주소창이 사라지지 않는 원인 | P3 |
-| D-03 | 높음·도구 | `eslint.config.mjs`, `package.json` | `tmp/`, `output/`, `.vercel/`, `.playwright-cli/`가 린트 대상에 포함되어 `npm run lint`가 실패. README의 "lint 통과" 주장과 불일치 | P0 |
-| D-04 | 높음·음악 | `StaffNote.tsx` | 오선 맨 아래 줄을 C로 사용함(`noteY = 92 - step*7`, step 0이 92=첫째 줄). 높은음자리표에서 첫째 줄은 E이므로 모든 음이 두 칸 높게 그려짐. 음자리표와 옥타브 기호(8)도 없음 | P1 |
-| D-05 | 중간·음악 | `WebAudioRecorderEngine.ts` | 도 = 261.63 Hz(C4). 소프라노 리코더 실음은 C5 = 523.25 Hz. 실제 악기와 한 옥타브 차이가 나서 학생이 소리를 맞춰 볼 수 없음 | P1·P4 |
-| D-06 | 중간·UX | `resolveNoteShortcut.ts` | 수정자 없는 숫자키가 항상 낮은 계이름을 선택. 높은/반음 탭을 열고 `2`를 눌러도 낮은 레가 됨. 키패드 안내 문구 "기본 음계는 숫자 1–8만 눌러도 돼요"가 탭 상태와 어긋남 | P2 |
-| D-07 | 중간·UX | `PlaybackControls.tsx`, `RecorderLearningApp.tsx` | 자동 순서 연습이 낮은 8음 전용. 높은/반음 선택 중엔 `NOTE_ORDER.indexOf === -1`이라 "기본 음계 8음"만 표시 | P6 |
-| D-08 | 중간·상태 | `storage.ts` | 단계별 보기·손가락 이름 설정이 저장되지 않음(README 제약으로 기록됨) | P2 |
-| D-09 | 중간·메타 | `app/layout.tsx`, `manifest.webmanifest` | description이 "기본 8음 운지"로 남아 있음. 실제는 17음 3분류. OG alt·keywords도 갱신 필요 | P0 |
-| D-10 | 중간·위생 | `components/Finger.tsx`(237), `FingerLayer.tsx`(141), `RecorderBody.tsx`(126), `RearThumbInset.tsx`(104), `RecorderDebugOverlay.tsx`(160), `data/fingerPoses.ts`(402), `Hole.tsx`의 `Hole` 컴포넌트, `holeLayout.ts`의 `HOLE_LAYOUT` | PNG 포즈 무대로 바뀌기 전의 SVG 손가락 리그. 현재 어디서도 import되지 않음(`HOLE_IDS`, `isHoleTransitionHighlighted`, `HoleTransition`만 사용). 약 1,200줄의 죽은 코드와 대응 CSS | P0 |
-| D-11 | 중간·위생 | `app/chatgpt-auth.ts`, `worker/index.ts`, `.openai/hosting.json`, `build/sites-vite-plugin.ts`, 빈 폴더 `db/ drizzle/ examples/ tests/` | 스타터 템플릿 잔재. `chatgpt-auth.ts`는 미사용. `worker/index.ts`가 `env.ASSETS`·`env.IMAGES`를 가정하지만 바인딩이 없어 dev 로그(`.wrangler/codex-dev.err.log`)에 `Cannot read properties of undefined (reading 'fetch')` 기록 | P0 |
-| D-12 | 낮음·성능 | `public/og.png`(1.3MB, 미참조), `public/og-remastered.png`(1.3MB) | 소셜 미리보기 이미지가 과대. 미참조 파일 1개 | P0 |
-| D-13 | 중간·PWA | `public/sw.js` | 포즈 20장을 사전 캐시하지 않아 첫 방문 뒤 오프라인에서는 본 적 없는 음의 포즈가 없음. `CACHE_NAME` v1 고정으로 배포마다 갱신 전략 없음 | P3 |
-| D-14 | 낮음·UX | `RecorderScene.tsx`, `RecorderFingeringMap.tsx`, `FingeringLegend.tsx` | 같은 범례가 3곳(장면 하단, 지도 패널 하단, SVG 내부 y=578)에 표시됨 | P2 |
-| D-15 | 낮음·폰트 | `globals.css` `--font-sans` | Pretendard를 선언하지만 어디서도 로드하지 않아 항상 시스템 폰트로 폴백 | P12 |
-| D-16 | 중간·구조 | `RecorderLearningApp.tsx` 700줄 | 선택·전환·단축키·시퀀스·오디오·저장·전체화면이 한 컴포넌트에 있음. 기능 추가마다 비대해짐 | P5 |
-| D-17 | 낮음·타입 | `model/types.ts` `PlaybackSpeed`, `animation/motionTimings.ts` `AnimationSpeed` | 같은 유니언이 두 이름으로 존재 | P5 |
-| D-18 | 중간·테스트 | `playwright.config.ts`, `e2e/` | Chromium 단일 프로젝트. axe 접근성 자동 검사 없음. 포즈 정렬 시각 회귀 없음(문서가 수동 검수만 요구) | P12 |
-| D-19 | 낮음·접근성 | `globals.css` `@media (max-width: 760px) .header-actions .secondary-button` | `font-size: 0`과 `::after` 콘텍스트로 라벨을 숨기는 취약한 처리 | P2 |
-| D-20 | 중간·기능 | 전체 | v2 업그레이드팩 U2~U7(합성음 고품질, 기초 배우기, 비교 뷰, 퀴즈, 코스, 교사 모드) 미구현. U1은 17음 체계로 다른 형태로 달성됨 | P4, P6~P10 |
-| D-21 | 낮음·자산 | `02 Fingering/리코더_운지법(크몽)01, 05~14.png` | 원본 31장 중 11장 미사용. 높은 라·시·높은 도와 높은 반음 등 음역 확장 재료. 원본 `.ai` 파일 존재 | P11 |
-| D-22 | 낮음·도구 | 프로젝트 루트 | git 저장소가 아니어서 변경 추적·되돌리기 불가 | P0 |
-| D-23 | 낮음·dev | `.wrangler/codex-dev.err.log` | "Detected multiple renderers concurrently rendering the same context provider" 경고 반복(vinext RSC dev 노이즈로 추정). 원인 미확인 | P0(기록) |
-| D-24 | 낮음·테마 | `RecorderPoseStage.tsx` `fillStyle = "#ffffff"` | 캔버스 배경 색이 하드코딩되어 고대비·다크 테마 도입 시 이질적 | P10 |
-| D-25 | 낮음·성능 | `RecorderPoseStage.tsx` | 마운트 시 포즈 20장(약 1.5MB)을 한 번에 preload. 모바일 데이터에서 첫 로드 부담 | P12 |
-| D-26 | 낮음·UX | `learning-grid` 데스크톱 배치 | 1440×900 기준 키패드(주 조작)가 첫 화면 아래에 있음(전체 높이 약 1,580px). 가로 모드 규칙에는 키패드 상단 배치가 있으나 일반 데스크톱에는 없음 | P2(측정 후 결정) |
+| ID | 심각도 | 위치 | 내용 | Phase | 2026-09-07 결과 |
+|---|---|---|---|---|---|
+| D-01 | 높음·보안 | `리코더 운지 - Google Play package/signing.keystore`, `signing-key-info.txt` | 앱 서명 키와 비밀번호 파일이 프로젝트 폴더 안에 있고 `.gitignore`에 없음. 저장소가 공개되면 Play 서명 키가 유출됨 | P0 | ✓ P0: 외부 보관·Git 제외 |
+| D-02 | 높음·배포 | `public/.well-known/` 없음 | TWA(Play 패키지)가 요구하는 `assetlinks.json`이 서빙되지 않음. Android 앱에서 주소창이 사라지지 않는 원인 | P3 | △ P3: 두 출력 검증, 실기기 확인 필요 |
+| D-03 | 높음·도구 | `eslint.config.mjs`, `package.json` | `tmp/`, `output/`, `.vercel/`, `.playwright-cli/`가 린트 대상에 포함되어 `npm run lint`가 실패. README의 "lint 통과" 주장과 불일치 | P0 | ✓ P0: lint 오류·경고 0 |
+| D-04 | 높음·음악 | `StaffNote.tsx` | 오선 맨 아래 줄을 C로 사용함(`noteY = 92 - step*7`, step 0이 92=첫째 줄). 높은음자리표에서 첫째 줄은 E이므로 모든 음이 두 칸 높게 그려짐. 음자리표와 옥타브 기호(8)도 없음 | P1 | ✓ P1: 덧줄·음자리표·8 보정 |
+| D-05 | 중간·음악 | `WebAudioRecorderEngine.ts` | 도 = 261.63 Hz(C4). 소프라노 리코더 실음은 C5 = 523.25 Hz. 실제 악기와 한 옥타브 차이가 나서 학생이 소리를 맞춰 볼 수 없음 | P1·P4 | ✓ P1/P4: 기본 실음 C5–G6 |
+| D-06 | 중간·UX | `resolveNoteShortcut.ts` | 수정자 없는 숫자키가 항상 낮은 계이름을 선택. 높은/반음 탭을 열고 `2`를 눌러도 낮은 레가 됨. 키패드 안내 문구 "기본 음계는 숫자 1–8만 눌러도 돼요"가 탭 상태와 어긋남 | P2 | ✓ P2: 활성 탭·고정 수정키 |
+| D-07 | 중간·UX | `PlaybackControls.tsx`, `RecorderLearningApp.tsx` | 자동 순서 연습이 낮은 8음 전용. 높은/반음 선택 중엔 `NOTE_ORDER.indexOf === -1`이라 "기본 음계 8음"만 표시 | P6 | ✓ P6: 6코스 자동·수동 |
+| D-08 | 중간·상태 | `storage.ts` | 단계별 보기·손가락 이름 설정이 저장되지 않음(README 제약으로 기록됨) | P2 | ✓ P2/P10: 12개 설정 저장 |
+| D-09 | 중간·메타 | `app/layout.tsx`, `manifest.webmanifest` | description이 "기본 8음 운지"로 남아 있음. 실제는 17음 3분류. OG alt·keywords도 갱신 필요 | P0 | ✓ P0: 17음 메타데이터 |
+| D-10 | 중간·위생 | `components/Finger.tsx`(237), `FingerLayer.tsx`(141), `RecorderBody.tsx`(126), `RearThumbInset.tsx`(104), `RecorderDebugOverlay.tsx`(160), `data/fingerPoses.ts`(402), `Hole.tsx`의 `Hole` 컴포넌트, `holeLayout.ts`의 `HOLE_LAYOUT` | PNG 포즈 무대로 바뀌기 전의 SVG 손가락 리그. 현재 어디서도 import되지 않음(`HOLE_IDS`, `isHoleTransitionHighlighted`, `HoleTransition`만 사용). 약 1,200줄의 죽은 코드와 대응 CSS | P0 | ✓ P0: 미사용 리그 제거 |
+| D-11 | 중간·위생 | `app/chatgpt-auth.ts`, `worker/index.ts`, `.openai/hosting.json`, `build/sites-vite-plugin.ts`, 빈 폴더 `db/ drizzle/ examples/ tests/` | 스타터 템플릿 잔재. `chatgpt-auth.ts`는 미사용. `worker/index.ts`가 `env.ASSETS`·`env.IMAGES`를 가정하지만 바인딩이 없어 dev 로그(`.wrangler/codex-dev.err.log`)에 `Cannot read properties of undefined (reading 'fetch')` 기록 | P0 | ✓ P0: 미사용 인증 제거·바인딩 가드, 실제 배포 파일 유지 |
+| D-12 | 낮음·성능 | `public/og.png`(1.3MB, 미참조), `public/og-remastered.png`(1.3MB) | 소셜 미리보기 이미지가 과대. 미참조 파일 1개 | P0 | ✓ P0: 미참조 제거·137,680바이트 |
+| D-13 | 중간·PWA | `public/sw.js` | 포즈 20장을 사전 캐시하지 않아 첫 방문 뒤 오프라인에서는 본 적 없는 음의 포즈가 없음. `CACHE_NAME` v1 고정으로 배포마다 갱신 전략 없음 | P3 | ✓ P3: 포즈 캐시·업데이트·오프라인 검사 |
+| D-14 | 낮음·UX | `RecorderScene.tsx`, `RecorderFingeringMap.tsx`, `FingeringLegend.tsx` | 같은 범례가 3곳(장면 하단, 지도 패널 하단, SVG 내부 y=578)에 표시됨 | P2 | ✓ P2: 범례 한 곳 |
+| D-15 | 낮음·폰트 | `globals.css` `--font-sans` | Pretendard를 선언하지만 어디서도 로드하지 않아 항상 시스템 폰트로 폴백 | P12 | ✓ P12: 폰트 로드 실패 확인 후 시스템 폰트 명시 |
+| D-16 | 중간·구조 | `RecorderLearningApp.tsx` 700줄 | 선택·전환·단축키·시퀀스·오디오·저장·전체화면이 한 컴포넌트에 있음. 기능 추가마다 비대해짐 | P5 | ✓ P5: 208줄·훅 분리 |
+| D-17 | 낮음·타입 | `model/types.ts` `PlaybackSpeed`, `animation/motionTimings.ts` `AnimationSpeed` | 같은 유니언이 두 이름으로 존재 | P5 | ✓ P5: AnimationSpeed 별칭 통일 |
+| D-18 | 중간·테스트 | `playwright.config.ts`, `e2e/` | Chromium 단일 프로젝트. axe 접근성 자동 검사 없음. 포즈 정렬 시각 회귀 없음(문서가 수동 검수만 요구) | P12 | ✓ P12: 3프로젝트·axe 42회·포즈 20장 |
+| D-19 | 낮음·접근성 | `globals.css` `@media (max-width: 760px) .header-actions .secondary-button` | `font-size: 0`과 `::after` 콘텍스트로 라벨을 숨기는 취약한 처리 | P2 | ✓ P2: 아이콘·접근성 라벨 분리 |
+| D-20 | 중간·기능 | 전체 | v2 업그레이드팩 U2~U7(합성음 고품질, 기초 배우기, 비교 뷰, 퀴즈, 코스, 교사 모드) 미구현. U1은 17음 체계로 다른 형태로 달성됨 | P4, P6~P10 | ✓ P4/P6–P10: U2–U7 구현 |
+| D-21 | 낮음·자산 | `02 Fingering/리코더_운지법(크몽)01, 05~14.png` | 원본 31장 중 11장 미사용. 높은 라·시·높은 도와 높은 반음 등 음역 확장 재료. 원본 `.ai` 파일 존재 | P11 | △ P11: 원본 조사 완료, 두 출처 미확정으로 확장 보류 |
+| D-22 | 낮음·도구 | 프로젝트 루트 | git 저장소가 아니어서 변경 추적·되돌리기 불가 | P0 | ✓ P0: 기준선·단계 커밋 |
+| D-23 | 낮음·dev | `.wrangler/codex-dev.err.log` | "Detected multiple renderers concurrently rendering the same context provider" 경고 반복(vinext RSC dev 노이즈로 추정). 원인 미확인 | P0(기록) | 미해소: HMR multiple-renderers 경고 관측, 실행 오류와 별도 기록 |
+| D-24 | 낮음·테마 | `RecorderPoseStage.tsx` `fillStyle = "#ffffff"` | 캔버스 배경 색이 하드코딩되어 고대비·다크 테마 도입 시 이질적 | P10 | ✓ P10: 투명 캔버스·고대비 |
+| D-25 | 낮음·성능 | `RecorderPoseStage.tsx` | 마운트 시 포즈 20장(약 1.5MB)을 한 번에 preload. 모바일 데이터에서 첫 로드 부담 | P12 | ✓ P12: 활성 뱅크 우선·idle 나머지 |
+| D-26 | 낮음·UX | `learning-grid` 데스크톱 배치 | 1440×900 기준 키패드(주 조작)가 첫 화면 아래에 있음(전체 높이 약 1,580px). 가로 모드 규칙에는 키패드 상단 배치가 있으나 일반 데스크톱에는 없음 | P2(측정 후 결정) | ✓ P2: 데스크톱 키패드 첫 화면 |
 
 ## 1.5 v2 업그레이드팩 이행 현황
 
@@ -184,13 +184,13 @@ PWA: manifest.webmanifest + sw.js(network-first 내비, cache-first 자산) + Se
 |---|---|---|
 | U1 높은 레 | **달성(다른 형태)** | 버튼 9 대신 3분류 탭(8/5/5). 높은 레는 높은 계이름 2번 |
 | 정오표 회귀 테스트 | 달성 | `domain.test.ts`가 바로크 파·높은 레 검증 |
-| U2 합성음 고품질 | 미구현 | 여전히 triangle 단일 오실레이터. 옥타브도 낮음(D-05) |
-| U3 기초 배우기 | 미구현 | |
-| U4 비교 뷰 | 미구현 | 설정 라디오 전환만 있음 |
-| U5 퀴즈 | 미구현 | |
-| U6 연습 코스 | 미구현 | 낮은 8음 단일 시퀀스만(D-07) |
-| U7 교사 모드 | 부분 | 전체화면 버튼만. 고대비·확대 레이아웃·단축키 없음 |
-| U8 PWA | 부분 | manifest·SW·아이콘·shortcuts 있음. 포즈 사전 캐시·업데이트 UX·오프라인 E2E 없음(D-13). TWA 검증 파일 없음(D-02) |
+| U2 합성음 고품질 | 달성 P4 | 배음·치프·실음, 17음 DSP·연타 정리 검사 |
+| U3 기초 배우기 | 달성 P9 | 5카드·80bpm 텅잉 |
+| U4 비교 뷰 | 달성 P7 | 3차이 음·두 체계 비교 |
+| U5 퀴즈 | 달성 P8 | 2종·10문제·교차 체계·오답 복습 |
+| U6 연습 코스 | 달성 P6 | 6코스·자동/수동·일시정지·완주 |
+| U7 교사 모드 | 달성 P10 | 확대·고대비·단축키·복원, 실물 프로젝터 미검수 |
+| U8 PWA | 구현·로컬 검증 P3 | 포즈 캐시·업데이트·오프라인 E2E·assetlinks. Android TWA 실기기 확인 필요 |
 
 ## 1.6 자산·데이터 인벤토리
 

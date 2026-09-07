@@ -1902,8 +1902,27 @@ kbd {
     grid-template-columns: minmax(160px, 0.68fr) minmax(300px, 1.18fr) minmax(235px, 0.94fr);
     grid-template-areas:
       "note scene keypad"
-      "instruction scene settings";
+      "instruction settings settings";
     gap: 10px;
+  }
+
+  .note-card-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .note-card .staff-note {
+    min-width: 0;
+    max-width: 100%;
+    max-height: 110px;
+  }
+
+  .instruction-card h2 {
+    font-size: 1.15rem;
+  }
+
+  .settings-card > .text-link {
+    grid-column: 1 / -1;
+    margin-bottom: 12px;
   }
 
   .scene-card,

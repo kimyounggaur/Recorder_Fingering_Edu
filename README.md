@@ -1,229 +1,158 @@
 # 리코더 운지법 배우기
 
-숫자 버튼과 실제 손 모양 운지 애니메이션으로 소프라노 리코더의 교육 음역 17개 음높이(C4–G5)를 배우는 반응형 웹앱입니다. 낮은 자연음 C4–C5 8개, 기본 옥타브의 반음 5개, 높은 자연음 C5–G5 5개를 세 분류로 나눕니다. C5는 낮은 음역의 끝과 높은 음역의 시작에 함께 표시되므로 화면 선택 항목은 18개지만 고유 음높이는 17개입니다.
+소프라노 리코더의 **17개 고유 음높이**를 손 포즈 애니메이션과 구멍 지도로 배우는 한국어 웹앱입니다. 기보는 C4–G5, 기본 실음은 한 옥타브 높은 C5–G6입니다. 낮은 8음·높은 5음·반음 5음에 높은 도가 중복되어 선택 버튼은 18개입니다. 바로크식·독일식의 파, 파♯, 높은 파를 구분합니다.
 
-`02 Fingering` 원본에서 만든 정렬된 고해상도 포즈와 기능형 SVG 구멍 지도를 함께 보여 주며, 바로크식과 독일식의 파·파♯·높은 파 운지를 각각 지원합니다.
+## 기능과 화면
 
-주요 기능은 다음과 같습니다.
+| 경로 | 내용 |
+|---|---|
+| `/` | 20개 정렬 포즈, 8구멍 상태, 높은음자리표+8, 단계별 보기, 음 재생, 설정 |
+| `/compare` | 파·파♯·높은 파의 두 체계 비교와 선택한 체계로 학습 복귀 |
+| `/quiz` | 계이름 맞히기·구멍 막기 퀴즈, 10문제, 교차 체계 정답, 오답 복습 |
+| `/basics` | 자세·잡는 법·입 모양·텅잉·손가락 위치 5카드, 80bpm 텅잉 연습 |
 
-- 음이 바뀔 때 현재 화면에서 다음 완성 포즈로 부드럽게 전환
-- 앞면 1–7번과 뒷면 0번 엄지구멍을 기능형 SVG 지도에서 표시
-- 낮은 계이름·높은 계이름·반음 탭과 각 분류의 화면 버튼
-- 바로크식/독일식 파·파♯·높은 파 운지 분기
-- 높은 음의 엄지 반구멍과 반음의 이중 구멍 부분 막기를 별도 상태로 표시
-- 보통/느리게/단계별 애니메이션, 빠른 연속 입력 취소
-- 음 재생, 음소거, 이전/다음과 자동 순서 연습
-- 숫자 1–8, `Ctrl`·`Shift`·`Alt` 분류 단축키, 좌우 화살표, 스페이스바 지원
-- 스크린리더 라이브 영역과 `prefers-reduced-motion` 지원
-- 360px 모바일부터 태블릿·데스크톱까지 반응형 레이아웃
+- 왼손·오른손·낮은 계이름·높은 계이름·반음·한 옥타브 반의 6코스, 자동/수동, 일시정지와 완주.
+- 수업 모드 확대 화면과 원래 선택 복원, 고대비 테마, 모션 감소, 키보드·스크린리더 지원.
+- 기본 실음과 기보 높이 선택. 소리는 실제 녹음이 아닌 Web Audio **합성 연습음**입니다.
+- PWA 설치, 첫 온라인 방문 뒤 오프라인 학습, 사용자 선택 업데이트.
+- 이미지 우클릭·드래그 저장을 억제합니다. 개발자 도구·화면 캡처 등을 통한 복사까지 막는 DRM은 아닙니다.
 
-현재 재생되는 소리는 실제 리코더 녹음이 아니라 Web Audio로 만든 짧은 **합성 연습음**입니다. 샘플 교체 방법은 [오디오 안내](public/audio/recorder/README.md)를 참고하세요.
+## 실행
 
-## 기술 스택과 요구 사항
-
-- Node.js `>=22.13.0` (`package.json`의 `engines` 기준)
-- npm 10 이상 권장(Node.js 22에 포함된 npm 사용 권장)
-- Next.js App Router 16, React 19, TypeScript 5
-- vinext/Vite와 Cloudflare Workers 런타임
-- Vitest, Testing Library, Playwright
-
-의존성 버전 재현을 위해 `package-lock.json`과 `npm ci`를 사용합니다.
-
-## 설치와 실행
+Node.js **22.13.0 이상**, npm과 Git이 필요합니다. 앱 기능에는 데이터베이스나 비밀 환경 변수가 필요하지 않습니다.
 
 ```bash
 npm ci
 npm run dev
 ```
 
-터미널에 표시되는 로컬 주소를 엽니다. 기본 주소는 `http://localhost:3000`이며, 포트가 사용 중이면 3001처럼 다음 포트가 자동 선택될 수 있습니다.
-
-프로덕션 빌드를 로컬에서 확인하려면 다음 명령을 사용합니다.
+터미널에 표시된 로컬 주소를 엽니다. 지정 포트로 실행하려면 `npm run dev -- --hostname 127.0.0.1 --port 4173`을 사용합니다.
 
 ```bash
 npm run build
 npm run start
 ```
 
-처음 E2E 테스트를 실행하는 컴퓨터에서는 Chromium을 한 번 설치합니다.
+`build`는 vinext/Cloudflare, `build:vercel`은 Nitro/Vercel 산출물을 만듭니다. Next.js App Router 16, React 19, TypeScript 5, Vite 8 기반이며 설치 버전은 `package-lock.json`으로 고정합니다.
+
+## 검증
 
 ```bash
-npx playwright install chromium
-```
-
-## 품질 검증 명령
-
-PWA 오프라인 검사는 HMR이 없는 프로덕션 미리보기(4174 포트)를 자동으로 빌드해 사용합니다. 개발 모드에서는 새 서비스 워커를 등록하지 않습니다. 실제 앱 설치는 HTTPS 배포본에서 합니다.
-
-Android TWA의 공개 연결 파일은 `public/.well-known/assetlinks.json`이며 두 배포 빌드 모두 같은 경로에 복사됩니다. 배포 뒤 `curl -sI https://recorder-fingering-edu.vercel.app/.well-known/assetlinks.json`으로 HTTP 200과 `application/json`을 확인하고 실제 Android 기기에서 주소창이 사라지는지 검수합니다. 서명 키는 저장소 밖 `_release-secrets/recorder-fingering/`에 보관합니다.
-
-첫 온라인 방문에 포즈 20장과 실행에 필요한 JS·CSS를 사전 캐시합니다. 빌드마다 서비스 워커 버전이 바뀌고, 새 버전은 "새 버전이 준비되었어요"의 새로 고침 버튼으로 적용합니다. 캐시 저장이 제한된 브라우저에서는 온라인 학습이 계속됩니다.
-
-| 목적 | 명령 |
-|---|---|
-| TypeScript 타입 검사 | `npm run typecheck` |
-| ESLint | `npm run lint` |
-| Vitest 단위·컴포넌트 테스트 | `npm test` |
-| Vitest 감시 모드 | `npm run test:watch` |
-| 프로덕션 빌드 | `npm run build` |
-| Playwright Chromium E2E | `npm run test:e2e` |
-
-최종 제출 전에는 아래 순서로 모두 실행합니다.
-
-```bash
+npx playwright install chromium webkit
 npm run typecheck
 npm run lint
 npm test
 npm run build
-npm run test:e2e
-```
-
-E2E는 기본적으로 `http://127.0.0.1:4173`에 개발 서버를 자동으로 띄웁니다. 이미 실행 중인 서버를 검사하려면 `PLAYWRIGHT_BASE_URL`을 지정할 수 있습니다.
-
-```bash
-PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 npm run test:e2e
-```
-
-PowerShell에서는 `$env:PLAYWRIGHT_BASE_URL='http://127.0.0.1:3000'`을 먼저 실행합니다.
-
-## 사용 방법
-
-1. 처음 열었을 때 사용하는 리코더의 운지 체계를 선택합니다.
-2. `낮은 계이름`, `높은 계이름`, `반음` 탭 중 하나를 선택합니다.
-3. 분류 안의 숫자 버튼을 눌러 음을 선택합니다. 키보드 단축키도 사용할 수 있습니다.
-4. 실제 손 모양 포즈와 오른쪽 구멍 지도의 열기·막기·반구멍·부분 막기 변화를 함께 관찰합니다.
-5. 학습 설정에서 속도, 단계별 보기, 소리, 구멍 번호, 손가락 이름을 조절합니다.
-6. `이전`/`다음`, `다시 보기`, `음 재생`, `순서 연습 시작`으로 반복 연습합니다.
-
-키보드 단축키는 다음과 같습니다.
-
-| 키 | 동작 |
-|---|---|
-| `1`–`8` | 지금 열린 탭의 음 선택(높은/반음 탭은 1–5) |
-| `Ctrl+1`–`Ctrl+8` | 낮은 계이름 C4–C5 선택 |
-| `Shift+1`–`Shift+5` | 높은 계이름 C5–G5 선택 |
-| `Alt+1`–`Alt+5` | 반음 C♯4/D♭4–A♯4/B♭4 선택 |
-| `←` / `→` | 현재 분류의 이전/다음 음(끝에서 순환) |
-| `Space` | 현재 음 재생(일반 화면 포커스일 때) |
-| `Tab`, `Shift+Tab` | 모든 조작 요소 사이 이동 |
-| `Enter`, `Space` | 포커스된 버튼 또는 스위치 실행 |
-
-일부 브라우저는 `Ctrl+숫자`를 탭 전환으로 사용하고 운영체제는 `Alt+숫자`를 선점할 수 있습니다. 이때 앱이 키 입력을 받지 못하는 것은 오류가 아닙니다. 세 분류 탭과 모든 음 버튼은 수정키 단축키가 막힌 환경에서도 항상 사용할 수 있는 기본 조작 경로입니다.
-
-## 두 종류의 숫자
-
-이 앱에는 서로 다른 숫자 체계가 있으므로 데이터 수정 시 섞지 않아야 합니다.
-
-- **분류별 UI 숫자:** 낮은 계이름은 1–8, 높은 계이름과 반음은 1–5를 다시 사용합니다. 숫자 하나만으로 전체 17개 음을 식별하지 않습니다.
-- **물리 구멍 0–7:** `T0`, `L1`, `L2`, `L3`, `R4`, `R5`, `R6`, `R7`에 대응합니다. 0번은 뒷면 왼손 엄지구멍입니다.
-
-낮은 8번과 높은 1번은 모두 C5입니다. 같은 음높이를 두 분류에서 보여 주므로 선택 위치는 18개지만 오디오와 악보에서 사용하는 고유 음높이는 17개입니다.
-
-## 바로크식과 독일식 파·파♯·높은 파의 차이
-
-두 운지 체계는 대부분의 음을 공유하지만 파, 파♯, 높은 파에서 오른손 아래쪽 구멍 상태가 달라집니다. 높은 음의 0번은 완전히 막지 않고 반만 엽니다.
-
-| 음·체계 | 막는 구멍 | 여는 구멍 | 기억법 |
-|---|---|---|---|
-| 바로크식 파 | `T0 L1 L2 L3 R4 R6 R7` | `R5` | 5번만 엽니다. |
-| 독일식 파 | `T0 L1 L2 L3 R4` | `R5 R6 R7` | 4번까지 막습니다. |
-| 바로크식 파♯ | `T0 L1 L2 L3 R5 R6` | `R4 R7` | 4번과 7번을 엽니다. |
-| 독일식 파♯ | `T0 L1 L2 L3 R5 R6 R7` | `R4` | 4번만 엽니다. |
-| 바로크식 높은 파 | `T0(반개방) L1 L2 L3 R4 R6` | `R5 R7` | 6번을 함께 막습니다. |
-| 독일식 높은 파 | `T0(반개방) L1 L2 L3 R4` | `R5 R6 R7` | 4번까지만 막습니다. |
-
-바로크식 파에서 독일식 파로 전환하면 `R6`, `R7`이 추가로 열리고, 바로크식 파♯에서 독일식 파♯로 전환하면 `R7`이 닫힙니다. 높은 파에서는 독일식으로 바꿀 때 `R6`이 열립니다. 포즈 파일도 세 음에서 체계별로 분리되어 있습니다.
-
-## 운지와 문구 데이터 수정
-
-운지 배열을 컴포넌트 JSX에 직접 추가하지 않습니다. 데이터의 역할은 다음과 같이 나뉩니다.
-
-| 파일 | 역할 |
-|---|---|
-| `src/features/recorder/model/types.ts` | `SolfegeId`, `NoteBank`, `HoleId`, 운지 체계와 구멍 상태 타입 |
-| `src/features/recorder/data/fingerings.ts` | `FINGERING_STATES`: 음·체계별 `open`·`closed`·`half`·`partial` 상태의 단일 진실 공급원 |
-| `src/features/recorder/data/noteMeta.ts` | 17개 음 메타데이터와 낮은·높은·반음 분류, 숫자·수정키 표기 |
-| `src/features/recorder/data/poseAssets.ts` | 음·체계별 고해상도 손 포즈 파일 매핑 |
-| `src/features/recorder/utils/buildInstruction.ts` | 닫는 구멍·손가락과 이전 운지 차이를 조합한 한국어 안내 |
-
-`FINGERINGS`는 기존 접촉/해제 애니메이션을 위한 호환 보기이며, 반구멍과 부분 막기의 정확한 상태는 `FINGERING_STATES`를 기준으로 읽습니다. 새 음을 추가할 때는 타입, 음 분류, `NOTE_META`, 두 체계의 상태 지도, 포즈 PNG와 `poseAssets.ts`, 오디오 키, 단위/E2E 테스트를 함께 갱신해야 합니다. `ALL_HOLES`의 물리 순서는 애니메이션 diff와 읽기 순서에도 사용되므로 임의로 바꾸지 않습니다.
-
-## 손 포즈와 구멍 지도 조정
-
-- 웹용 포즈: `public/fingering/poses/*.png`
-- 음·체계별 매핑: `src/features/recorder/data/poseAssets.ts`
-- 포즈 전환: `src/features/recorder/components/RecorderPoseStage.tsx`
-- 기능형 구멍 지도: `src/features/recorder/components/RecorderFingeringMap.tsx`
-- 전체 장면 조합: `src/features/recorder/components/RecorderScene.tsx`
-
-17개 고유 음높이를 위해 20개의 정렬 포즈를 사용합니다. 파, 파♯, 높은 파가 바로크식·독일식 파일을 각각 가지므로 고유 음높이 수보다 포즈가 세 개 더 많습니다. 기본 자연음 포즈에 `cs4.png`, `ds4.png`, `fs4-baroque.png`, `fs4-german.png`, `gs4.png`, `as4.png`, `d5.png`, `e5.png`, `f5-baroque.png`, `f5-german.png`, `g5.png`가 추가되었습니다.
-
-모든 포즈는 같은 `976×1360` 프레임과 악기 위치를 사용해야 합니다. 그래야 음을 빠르게 바꿔도 악기가 튀지 않고 현재 화면의 혼합 프레임에서 자연스럽게 다음 포즈로 이어집니다. 높은 미·파·솔의 엄지 반구멍과 반음의 이중 구멍 부분 막기는 정면 포즈만으로 판독하기 어려울 수 있으므로, `half`는 반만 채운 원, `partial`은 부분 채움 기호로 표시하는 기능형 SVG 지도를 정확성 기준으로 함께 사용합니다. 전체 파일과 소스 매핑은 [포즈 자산 표](public/fingering/poses/README.md), 검수 절차는 [애니메이션 튜닝 가이드](docs/animation-tuning.md)를 참고하세요.
-
-## 오디오 조정과 샘플 교체
-
-현재 `src/features/recorder/audio/WebAudioRecorderEngine.ts`는 사용자 클릭으로 `AudioContext`를 연 뒤 기음·배음·짧은 숨소리 어택을 섞은 합성 연습음을 600–900ms 범위에서 재생합니다. `recorderTimbre.ts`에서 배음 비율 1/0.16/0.06, 35ms 어택, 30ms 치프, 4.5Hz·1.5% 진폭 변조를 조정합니다. 1000Hz 이상은 배음을 절반으로, 마스터 게인을 0.75배로 낮춥니다. `timbre: "triangle"`과 `vibrato: false` 옵션으로 비교할 수 있습니다. 새 음은 기존 음을 55ms 페이드하고 음소거·연타·언마운트 시 보류 재생을 취소합니다.
-
-합성음을 조정하려면 같은 파일의 주파수 표와 `durationMs`, `fadeOutMs`, `transitionFadeMs`, gain envelope를 수정합니다. 실제 샘플로 교체하려면 다음 작업이 모두 필요합니다.
-
-1. 라이선스가 확인된 파일을 `public/audio/recorder/`에 둡니다.
-2. `RecorderAudioEngine` 인터페이스를 구현하는 샘플 엔진을 작성합니다.
-3. `preload()`에서 파일을 가져와 디코딩하고, `play(noteKey)`에서 현재 음을 페이드아웃한 뒤 대응 샘플을 재생합니다.
-4. `useRecorderAudio.ts`의 기본 `engineFactory`를 샘플 엔진 팩토리로 바꾸거나 앱에서 주입합니다.
-5. 이 저장소의 [음원 라이선스 표](public/audio/recorder/README.md)를 실제 출처와 조건으로 채웁니다.
-
-**파일만 폴더에 복사해도 현재 구현은 자동으로 샘플을 사용하지 않습니다.** 오디오 실패가 운지 학습 화면을 중단하지 않도록 silent fallback과 취소 규약을 유지하세요.
-
-## 접근성
-
-- 문서 언어가 한국어(`lang="ko"`)로 지정되어 있습니다.
-- 학습 무대로 바로 이동하는 skip link와 명확한 제목 구조가 있습니다.
-- 음 버튼·운지 체계·토글은 기본 HTML 버튼/라디오 컨트롤을 사용합니다.
-- 선택 음과 막는 구멍을 `aria-live="polite"` 영역으로 알립니다.
-- 손 포즈·구멍 지도 장면은 음별 접근성 이름과 설명을 제공하고 장식 요소는 스크린리더에서 숨깁니다.
-- 모든 핵심 기능을 키보드로 조작할 수 있고 `:focus-visible` 표시가 있습니다.
-- 색상뿐 아니라 구멍 채움, 선, 번호, 문구로 상태를 함께 전달합니다.
-- 운영체제의 `prefers-reduced-motion: reduce`를 감지하면 목표 포즈를 즉시 반영하고 CSS 모션을 최소화합니다.
-- 모바일의 터치 영역과 safe-area를 고려한 레이아웃을 사용합니다.
-
-접근성 구현은 보조 기술·브라우저 조합에 따라 다르게 동작할 수 있으므로 배포 전 실제 키보드와 사용하는 스크린리더로도 점검하세요.
-
-## 배포
-
-GitHub `main` 브랜치는 연결된 Vercel 프로젝트에 자동 배포됩니다. 게시 전에 전체 검증과 Vercel용 빌드를 통과시킵니다.
-
-```bash
-npm ci
-npm run typecheck
-npm run lint
-npm test
 npm run build:vercel
 npm run test:e2e
 ```
 
-`npm run build`는 vinext/Cloudflare 호환 번들도 계속 검증합니다. 앱은 서버 데이터베이스나 비밀 환경 변수를 요구하지 않습니다. 배포 후에는 세 분류 탭과 단축키, 바로크↔독일식 파·파♯·높은 파 전환, 반구멍·부분 막기, 소리 버튼, 360px 화면과 브라우저 오류를 다시 확인합니다.
+`node scripts/verify-phase.mjs p13`으로 위 여섯 검증을 순서대로 실행하고 `output/verification/p13/`에 로그를 저장할 수도 있습니다. 테스트는 4173 개발 서버와 4174 프로덕션 미리보기를 자동으로 시작합니다. 4174 포트는 비워 두세요.
 
-## 설계 문서
+전체 E2E는 Desktop Chromium, iPhone 14 WebKit(390×844), Pixel 7 Chromium을 실행합니다. SW 오프라인 검사는 Chromium만, 20장 시각 기준선은 Windows Desktop Chromium만 검사합니다. Windows WebKit에는 AudioContext가 없어 오디오 오류 폴백만 검사하며 실제 iOS 음 재생 검사를 대신하지 않습니다.
 
-## 연습 코스
+외부 서버 기능 검사 예시(PowerShell):
 
-`/compare`에서 두 운지 체계를 비교하고, `/quiz`에서 계이름 맞히기 또는 구멍 막기 퀴즈를 할 수 있습니다. 퀴즈는 한 라운드 10문제이며 점수와 오답은 현재 화면의 메모리에만 둡니다. 브라우저 탭을 잠시 떠나도 유지되지만 새로 고침하면 초기화됩니다. 기기에 학습 기록을 남기지 않기 위한 동작입니다.
+```powershell
+$env:PLAYWRIGHT_BASE_URL='https://your-preview.example'
+npx playwright test e2e/recorder-learning.spec.ts --project=chromium
+Remove-Item Env:PLAYWRIGHT_BASE_URL
+```
 
-왼손·오른손·낮은 계이름·높은 계이름·반음·한 옥타브 반의 여섯 코스를 선택할 수 있습니다. 자동 진행은 1.2~3.0초 간격으로, 수동 진행은 "다 했어요! 다음"으로 이어 갑니다. 일시정지 뒤에는 같은 음에서 이어서 연습합니다. 숫자 버튼이나 단축키로 직접 음을 선택하면 코스가 중지됩니다. 왼손 코스의 높은 도는 높은 음역 1번으로 표시됩니다.
+이 설정은 자동 서버 시작을 끕니다. `offline.spec.ts`는 재현 가능한 로컬 4174를 사용하므로 외부 URL 검사 명령에 포함하지 않습니다. GitHub Actions는 main push/PR에서 Node 22, 두 빌드와 Chromium E2E를 검사합니다.
 
-완주 시 별 세 개와 짧은 합성음이 표시됩니다. 모션 감소와 음소거 설정을 따르며, 마지막 코스·간격·진행 방식만 기존 설정과 함께 현재 기기에 저장합니다. 점수나 연습 이력은 저장하지 않습니다.
+## 단축키
 
-- [아키텍처](docs/architecture.md): 데이터 → 앱 상태 → 포즈/구멍 지도/오디오 흐름과 취소 모델
-- [애니메이션 튜닝](docs/animation-tuning.md): 정렬된 포즈, 캔버스 전환과 구멍 지도 타이밍 조정 방법
-- [오디오 샘플과 라이선스](public/audio/recorder/README.md)
+| 키 | 동작 |
+|---|---|
+| `1`–`8` | 활성 탭의 음. 높은/반음 탭에서는 1–5만 사용 |
+| `Ctrl+1`–`Ctrl+8` | 활성 탭과 무관하게 낮은 계이름 |
+| `Shift+1`–`Shift+5` | 높은 계이름 |
+| `Alt+1`–`Alt+5` | 반음 |
+| `←` / `→` | 현재 음역의 이전/다음 |
+| `Space` | 현재 음 재생. 일반 화면의 버튼 포커스에서는 해당 버튼 실행 |
+| `T` | 수업 모드 진입/종료 |
+| `Esc` | 수업 모드 종료·원래 상태 복원, 또는 도움말 닫기 |
+| 수업 중 `S` / `M` / `C` | 속도 전환 / 음소거 / 코스 시작·중지 |
+| `Tab` / `Shift+Tab` | 포커스 이동. 도움말 안에서는 순환 |
+| 퀴즈 중 `1`–`4` | 계이름 맞히기 선택지 |
 
-## 알려진 제약
+입력 필드·IME 조합·도움말에서는 배경 단축키가 동작하지 않습니다. 운영체제/브라우저가 Ctrl/Alt 숫자키를 먼저 처리할 수 있으므로 화면 탭과 버튼을 항상 제공합니다.
 
-- 현재 교육 범위는 C4–G5의 17개 고유 음높이입니다. C5 위의 반음과 높은 라 이상은 아직 포함하지 않습니다.
-- 반구멍과 부분 막기는 기능형 지도에서 구분하지만, 정면 손 포즈만으로 뒷면 엄지나 이중 구멍의 세부 접촉 면을 모두 확인할 수는 없습니다.
-- 현재 오디오는 실제 리코더 샘플이 아닌 합성 연습음입니다. 기보는 `C4`–`G5`, 기본 실음은 한 옥타브 높은 `C5`–`G6`(도 523.25Hz)이며, 설정의 "한 옥타브 낮게"로 기보 높이를 들을 수 있습니다.
-- 브라우저 자동재생 정책 때문에 소리는 반드시 사용자 동작 뒤에 활성화됩니다. 오디오 장치·권한·임베디드 환경에 따라 소리가 나지 않아도 시각 학습은 계속됩니다.
-- 운지 체계·음소거·속도·구멍 번호·온보딩·소리 높이·단계별 보기·손가락 이름 8개 설정은 로그인 없이 현재 브라우저 `localStorage`에만 저장됩니다. 설정 초기화는 온보딩 완료 여부를 유지합니다.
-- 오프라인 PWA, 마이크 음정 인식, 계정 동기화는 구현되어 있지 않습니다.
-- 자동 E2E 프로젝트는 현재 Chromium 한 종류이며, 손 포즈의 시각적 품질은 실제 브라우저 검수가 필요합니다.
-- 전체화면은 브라우저 또는 임베디드 프레임 정책에 의해 거부될 수 있습니다.
+## 저장되는 설정
+
+현재 브라우저의 `recorder-learning.preferences.v1` 키에 허용된 **12개 필드만** 저장합니다. 퀴즈 점수·오답·연습 이력·계정 정보는 저장하지 않습니다.
+
+| 필드 | 기본값과 역할 |
+|---|---|
+| `fingeringSystem` | `baroque`, 바로크식/독일식 |
+| `isMuted` | `false`, 음소거 |
+| `speed` | `normal`, 보통/느리게 |
+| `showHoleNumbers` | `true`, 구멍 번호 |
+| `onboardingCompleted` | `false`, 첫 안내 완료 |
+| `pitchMode` | `sounding`, 실음/기보 높이 |
+| `stepMode` | `false`, 단계별 보기 |
+| `showFingerNames` | `false`, 손가락 이름 |
+| `lastCourseId` | `lowScale`, 마지막 코스 |
+| `courseIntervalMs` | `1500`, 1200–3000ms, 100ms 간격 |
+| `courseMode` | `auto`, 자동/수동 |
+| `theme` | `default`, 기본/고대비 |
+
+설정 초기화는 온보딩 완료 여부만 보존합니다. localStorage가 차단되어도 메모리 상태로 학습할 수 있습니다. 수업 종료는 음·음역·체계·속도·단계 상태·포커스를 복원하고 테마/음소거 변경은 유지합니다.
+
+## PWA 설치와 업데이트
+
+HTTPS 배포본에서 브라우저의 설치 메뉴를 사용합니다. iOS에서는 Safari 공유 메뉴의 홈 화면 추가를 사용합니다. 최초 온라인 방문에서 서비스 워커 준비와 자산 저장을 마친 뒤 오프라인으로 전환하세요.
+
+20개 포즈, 4개 경로, 아이콘·매니페스트와 실제 JS/CSS를 빌드 시 사전 캐시합니다. 새 워커는 바로 이전 화면을 강제 교체하지 않고 “새 버전이 준비되었어요”의 새로 고침 선택을 기다립니다. 개발 모드에서는 워커를 등록하지 않습니다. 브라우저의 저장 공간 정리·비공개 모드·인증 만료는 오프라인 사용을 제한할 수 있습니다.
+
+매니페스트에는 실제 192/512 PNG, 화면 이미지, 6개 바로가기가 있습니다. PWABuilder의 파일 처리·프로토콜 처리·위젯 등 보라색 항목은 선택 기능이므로 실제 기능 없이 선언만 추가하지 않습니다.
+
+## 배포와 Android TWA
+
+GitHub main에 연결된 Vercel 배포의 빌드 명령은 `npm run build:vercel`입니다. `.openai/hosting.json`의 Sites 배포는 Cloudflare 빌드를 사용합니다. 공개 Vercel과 소유자 전용 Sites는 접근 대상이 다르므로 배포 시 기존 접근 정책을 유지합니다.
+
+1. 전체 검증과 배포를 완료합니다.
+2. 배포 도메인의 `/.well-known/assetlinks.json`이 HTTP 200, JSON이며 로그인/리다이렉트 없이 응답하는지 확인합니다.
+3. `public/.well-known/assetlinks.json`의 패키지 `app.vercel.recorder_fingering_edu.twa`와 Play Console 앱 서명 인증서 SHA-256을 대조합니다. 업로드 키 지문과 Play 앱 서명 키 지문을 혼동하지 않습니다.
+4. 도메인·패키지를 실제 TWA 설정과 일치시키고 외부 보관 키로 패키지를 서명합니다. Play 내부 테스트에 배포해 실제 Android에서 주소창 제거와 오프라인 재실행을 확인합니다.
+5. 실제 iOS Safari에서도 최초 사용자 클릭 후 음 재생·다시 열기를 확인합니다.
+
+```bash
+curl -i https://recorder-fingering-edu.vercel.app/.well-known/assetlinks.json
+```
+
+공개 연결 JSON은 두 산출물 `dist/client/.well-known/`, `.vercel/output/static/.well-known/`에 복사됩니다. 키스토어·비밀번호·APK/AAB는 저장소에 넣지 않습니다. 이 작업 공간의 기존 서명 파일은 프로젝트 밖 `../_release-secrets/recorder-fingering/`에 보관합니다. 소유자 인증이 필요한 Sites 주소는 공개 TWA 검증 도메인으로 사용하지 않습니다.
+
+## 데이터와 자산 수정
+
+| 위치 | 책임 |
+|---|---|
+| `src/features/recorder/model/types.ts` | 음·음역·체계·8개 HoleId 타입 |
+| `data/noteMeta.ts` | 17개 ID, 8/5/5 탭, 기보/실음·오선 위치·라벨 |
+| `data/fingerings.ts` | 2체계 × 17음 × 8구멍의 정확한 상태 |
+| `data/poseAssets.ts` | 20개 포즈 파일 매핑 |
+| `data/practiceCourses.ts` | 6개 코스의 순서와 음역 |
+| `audio/WebAudioRecorderEngine.ts` | 두 피치 모드와 오디오 키 |
+| `audio/recorderTimbre.ts` | 배음·치프·어택·비브라토 |
+| `utils/buildInstruction.ts` | 데이터 기반 한국어 안내 |
+| `src/features/quiz/scoring.ts` | 선택지·문제 생성과 구멍별 채점 |
+| `src/features/basics/` | 기초 문구·그림·텅잉 |
+
+축약 경로는 `src/features/recorder/` 아래입니다. `FINGERING_STATES`의 `open/closed/half/partial`이 정답입니다. `FINGERINGS`는 열린 구멍을 제외한 접촉 애니메이션용 파생 배열이므로 half/partial 판정에 쓰지 않습니다.
+
+새 음은 [설계서 부록 A 계약](<리코더_웹앱_개선보완_바이브코딩_프롬프트_v3(Fable51).md#부록-a-새-음-추가-계약-체크리스트>) 전체를 같은 변경에서 충족해야 합니다. 출처 두 곳의 일치와 엄지 상태가 확인되기 전에는 추측한 음을 추가하지 않습니다. 이번 릴리스의 신규 음은 0개입니다.
+
+포즈는 모두 976×1360, 동일 크롭 창과 악기 위치를 유지합니다. [20개 자산 매핑](public/fingering/poses/README.md)과 [시각 회귀 갱신 절차](docs/animation-tuning.md)를 따르세요. 원본 `02 Fingering`을 콘텐츠 경계로 자동 크롭하지 않습니다. 오디오 샘플 교체는 [라이선스·엔진 계약](public/audio/recorder/README.md)을 확인하세요.
+
+## 결과와 제약
+
+- [구조와 취소 모델](docs/architecture.md)
+- [단계별 구현·검증 기록](docs/implementation-v3.md)
+- [v3 인수 결과와 4개 화면](docs/acceptance-v3.md)
+- [미사용 11개 자산 조사·음역 확장 보류](docs/range-investigation.md)
+- [변경 이력](CHANGELOG.md)
+
+기존 17음과 운지는 유지했습니다. 높은 라 이상·높은 반음 확장은 검증 자료 부족으로 보류했습니다. 실제 녹음·마이크 음정 인식·계정 동기화는 제공하지 않습니다. iOS Safari/Android TWA 실기기와 실물 프로젝터 검수는 자동 테스트와 구분해 인수 문서에 남깁니다. 전체화면 거절 시 동일한 수업 레이아웃을 제공합니다.
+
+next/font의 실제 로드가 vinext에서 확인되지 않아 한국어 시스템 폰트를 사용합니다. 개발 HMR의 multiple-renderers 경고와 개발 도구 의존성 보안 경고는 남아 있으며, 프로덕션 의존성 audit는 0건입니다. 수치는 검사 시점의 결과이며 [인수 문서](docs/acceptance-v3.md)에 범위를 기록합니다.

@@ -122,3 +122,11 @@ typecheck 통과 / lint 오류 0·경고 0 / unit 109 통과·0 실패 / build �
 - Node 22 Windows GitHub Actions 워크플로를 추가했다. 원격 CI 결과는 P13 릴리스 기록에서 확인한다. 개발 HMR의 multiple-renderers 경고는 여전히 관측되어 D-23을 미해소로 남긴다.
 - typecheck 통과 / lint 오류 0·경고 0 / unit 164 통과 / build 통과 / build:vercel 통과 / E2E 104 통과·4 조건부 제외·실패 0. 제외는 Windows WebKit 오디오 렌더링 1, WebKit SW 오프라인 1, 모바일 시각 기준선 2다. Windows WebKit은 AudioContext 자체를 제공하지 않아 제스처·오류 폴백 검증이며 실제 iOS 오디오 검증은 아니다.
 - 해소: D-15, D-18(로컬 자동화), D-25. 로그: output/verification/p12/.
+
+## P13 보고
+
+- README를 4경로·6코스·2퀴즈·5기초 카드·수업/고대비·실음·12설정·PWA/TWA·데이터 계약으로 다시 작성했다. 아키텍처·포즈 갱신 절차·CHANGELOG·24항목 인수 결과와 설계서 D-01~D-26 결과 열을 갱신했다. 버전은 0.2.0이다.
+- 프로덕션 360×800·844×390·1440×900·1920×1080 수업 캡처를 docs/screenshots/v3/에 저장했다. 가로 캡처에서 악보가 카드 밖으로 나오고 설정 라벨이 한 글자씩 줄바꿈되는 문제를 발견해 배치를 수정하고 기존 가로 E2E에 경계·너비 검사를 추가했다.
+- typecheck 통과 / lint 오류 0·경고 0 / unit 164 통과 / build 통과 / build:vercel 통과 / E2E 104 통과·4 조건부 제외·실패 0. 별도 캡처 검사에서 가로 넘침·빈 Canvas·콘솔 오류 0, 수업 포즈 906px, 초기 JS gzip 133,428바이트를 확인했다.
+- 원격 npm 10의 clean install에서 lru-cache 잠금 항목 누락을 재현하고 동일 npm으로 lock을 재생성했다. dry-run 설치와 원격 npm ci/typecheck/lint/test/두 빌드가 통과했다. 원격 E2E·최종 배포 결과는 acceptance-v3.md의 릴리스 기록에 추가한다.
+- 공개 Vercel의 /, /compare, /quiz, /basics, manifest, sw, icon-192, assetlinks HTTP 200을 확인했다. 실제 Android TWA·iOS Safari·프로젝터/스피커 평가는 미실시로 기록했다. P11 확장은 보류, D-23 개발 경고는 미해소다.

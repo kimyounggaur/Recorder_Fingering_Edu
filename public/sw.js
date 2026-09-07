@@ -1,7 +1,7 @@
 /* global self, caches, URL, Response, fetch */
 
 const CACHE_PREFIX = "recorder-fingering-";
-const CACHE_NAME = `${CACHE_PREFIX}cda72aa-1788777482292`;
+const CACHE_NAME = `${CACHE_PREFIX}0d2037a-1788778577478`;
 const PRECACHE_URLS = [
   "/",
   "/assets/BasicsApp-CPC-vrki.js",
@@ -15,8 +15,8 @@ const PRECACHE_URLS = [
   "/assets/buildInstruction-CM0DAuuu.js",
   "/assets/createLucideIcon-hgQxfVm2.js",
   "/assets/framework-C-kvl5Nm.js",
+  "/assets/index-Bjs9dHPH.css",
   "/assets/index-CP0GW27-.js",
-  "/assets/index-D4A7r_2L.css",
   "/assets/layout-segment-context-BaokGFF-.js",
   "/assets/pause-9hokipVR.js",
   "/assets/rolldown-runtime-hePW80VL.js",

@@ -1,187 +1,106 @@
 # 아키텍처
 
-이 앱의 핵심 원칙은 **운지 데이터는 한 곳에서 관리하고, 손 포즈·구멍 지도·안내 문구·오디오가 같은 상태에서 파생된다**는 것입니다. 화면은 사용자가 제공한 완성 운지 포즈를 주 시각 자료로 사용하되, 논리 상태와 자동 검증은 기능형 SVG 구멍 지도가 담당합니다.
+## 경계와 경로
 
-## 런타임 경계
+서버 데이터베이스 없이 운지 데이터를 읽고, 브라우저 메모리·localStorage·Web Audio·Canvas로 동작한다. Next App Router를 vinext/Vite로 실행하고 Cloudflare Worker 또는 Nitro/Vercel로 빌드한다.
 
-- `app/page.tsx`는 서버 진입점이며 오류 경계 안에 클라이언트 앱을 렌더링합니다.
-- `RecorderLearningApp.tsx`는 JSX를 담당하고 `useRecorderLesson`이 상태 훅을 조합합니다.
-- `NoteKeypad.tsx`는 낮은 계이름·높은 계이름·반음 탭과 8/5/5개의 화면 선택 위치를 제공합니다.
-- 17개 고유 음높이에 대응하는 20개의 정렬 PNG 포즈는 `public/fingering/poses/`에서 정적 제공됩니다.
-- `RecorderPoseStage.tsx`는 캔버스에서 현재 포즈와 목표 포즈를 교차 전환합니다.
-- `RecorderFingeringMap.tsx`는 현재 구멍 상태와 떼기·막기 강조를 SVG로 그립니다.
-- 서버 데이터베이스나 비밀 환경 변수는 필요하지 않으며 설정은 브라우저 `localStorage`에 저장됩니다.
+| 경로 | 클라이언트 책임 |
+|---|---|
+| `/` | RecorderLearningApp, useRecorderLesson, 선택·연습·수업 |
+| `/compare` | CompareApp, 동일 데이터의 두 체계 비교와 검증된 딥링크 |
+| `/quiz` | QuizApp/QuizRound, 세션 문제·채점·오답 |
+| `/basics` | BasicsApp, 5카드와 useTonguing |
 
-## 주요 디렉터리
+`app/page.tsx`의 오류 경계와 `app/layout.tsx`의 서비스 워커 등록은 학습 상태와 분리한다. 설정 복원이 끝나기 전에는 초기화가 필요한 조작을 비활성화한다. 미사용 인증 스타터는 제거했지만 Sites 빌드 플러그인과 Worker는 실제 배포에 필요하므로 유지한다. 이미지 최적화 바인딩이 없으면 일반 핸들러로 넘기고 포즈는 unoptimized로 제공한다.
 
-```text
-app/
-  page.tsx                         # 페이지 진입점
-  globals.css                      # 반응형 장면과 모션 스타일
-public/fingering/poses/
-  *.png                            # 같은 프레임으로 정렬된 완성 운지 포즈
-src/features/recorder/
-  model/types.ts                   # 도메인 타입
-  data/
-    fingerings.ts                  # 음·체계별 open/closed/half/partial 상태
-    noteMeta.ts                    # 음 메타데이터와 8/5/5 NOTE_BANKS
-    poseAssets.ts                  # 음·체계별 포즈 파일 매핑
-  animation/
-    getFingeringDiff.ts            # 현재/목표 운지 차이
-    motionTimings.ts               # 속도별 phase 시간
-    useFingeringAnimation.ts       # 취소 가능한 상태 머신
-  audio/
-    RecorderAudioEngine.ts         # 오디오 추상화
-    WebAudioRecorderEngine.ts      # 합성 연습음 구현
-    useRecorderAudio.ts            # unlock, 음소거, 요청 취소
-  components/
-    RecorderLearningApp.tsx        # 훅 조합 결과를 표시하는 JSX
-    RecorderScene.tsx              # 포즈·지도·변경 칩 조합
-    RecorderPoseStage.tsx          # 캔버스 포즈 전환
-    RecorderFingeringMap.tsx       # 기능형 앞면/뒷면 구멍 지도
-  hooks/
-    useRecorderLesson.ts           # 훅 연결과 초기 복원 순서
-    usePreferences.ts              # loaded 이후 저장, 갱신, 초기화
-    useReducedMotion.ts            # 모션 감소 미디어 질의
-    useNoteSelection.ts            # 선택, 재시작, 취소 가능한 오디오 콜백
-    useSequencePractice.ts         # 주입된 steps/intervalMs로 순차 진행
-    useGlobalShortcuts.ts          # 입력/IME/도움말 가드를 가진 단축키
-  utils/
-    buildInstruction.ts            # 한국어 안내 생성
-    resolveNoteShortcut.ts         # 물리 숫자 키와 음역 분류 해석
-    storage.ts                     # 설정 직렬화
-    liveMessage.ts                 # 한국어 조사와 구멍 상태 안내
-```
+## 데이터 계약
 
-## 도메인 모델
+`SolfegeId` 17개, `NOTE_BANKS` 8/5/5개, `highDo` 공유로 선택 위치는 18개다. 기보 C4–G5와 실음 C5–G6는 별도 필드이며, 주파수 옵션 변경이 운지나 악보 좌표를 바꾸지 않는다.
 
-### 연습 코스
+`FINGERING_STATES[system][note]`가 T0/L1/L2/L3/R4/R5/R6/R7의 open/closed/half/partial을 모두 갖는 정답이다. `FINGERINGS`는 open 이외 구멍을 모은 접촉 호환 보기다. fa/faSharp/highFa만 두 체계의 상태와 포즈가 다르고 나머지 14음은 공유한다. 신규 음은 두 출처 검증 조건이 충족되지 않아 추가하지 않았다.
 
-practiceCourses.ts가 여섯 코스의 순서와 선호 음역을 정의합니다. useSequencePractice는 index/playing/paused/completed를 소유하고 자동 모드에서만 단일 타이머를 생성합니다. 코스 변경·직접 선택·일시정지·언마운트에서 세대 번호를 증가시켜 오래된 콜백을 무효화합니다. 수동 모드는 advance 호출만으로 진행합니다. 완주 오디오는 별도 useCompletionCue가 자기 요청 번호만 취소하므로 뒤이어 누른 일반 음을 끊지 않습니다.
+악보는 `106 - staffStep * 7`, 높은음자리표와 옥타브 위 8 기호를 사용한다. C4는 첫째 줄 아래 덧줄, 높은 도 C5는 셋째 칸이다. PNG 그림으로 논리 운지를 역추정하지 않는다.
 
-### 퀴즈
+## 훅과 소유권
 
-src/features/quiz/scoring.ts의 순수 함수가 선택지와 구멍별 점수를 계산합니다. FINGERING_STATES의 네 상태를 정확히 비교하고 다른 체계와만 일치할 때 crossSystemMatch를 반환합니다. QuizRound는 라운드별 문제/점수/오답을 메모리로만 소유하며 동기식 잠금 ref로 중복 채점을 차단합니다. identify는 채점 1초 뒤, build는 다음 문제 버튼으로 진행합니다. useShortTone은 500ms 정답음이나 짧은 학습음의 타이머와 자기 오디오 요청만 정리합니다. 인터랙티브 지도의 SVG 버튼/피드백은 opt-in이며 기존 비인터랙티브 지도 속성은 유지됩니다.
+| 훅 | 소유하는 상태와 정리 책임 |
+|---|---|
+| useRecorderLesson | 훅 연결, 설정 복원 순서, 검증된 note/bank URL 복원 |
+| usePreferences | 12개 허용 필드, loaded 이후 저장, 초기화, theme 적용 |
+| useReducedMotion | 미디어 질의 구독/해제 |
+| useNoteSelection | 선택·음역·재시작, 실제 표시 상태 기반 전환, 오디오 요청 |
+| useSequencePractice | 코스 index/playing/paused/completed, 자동 진행 타이머 |
+| useGlobalShortcuts | 전역 리스너, 활성 탭 숫자키, IME/입력/도움말 가드 |
+| useClassroom | 진입 스냅샷·포커스, fullscreenchange, 종료 복원 |
+| usePosePreload | 활성 뱅크 즉시 로드, 나머지 idle 예약/취소 |
+| useCompletionCue / useShortTone | 자신의 효과음 요청과 타이머만 정리 |
+| useRecorderAudio | 사용자 제스처 unlock, 음소거, 피치 엔진 교체와 요청 취소 |
 
-설정 복원은 오디오 훅 초기화 이후 실행됩니다. 선택 훅은 실제 표시 구멍을 전환 시작점으로 잡고 애니메이션 요청과 오디오 요청 번호를 각각 유지합니다. 순차 연습의 수동 선택 중지 콜백은 ref로 연결해 훅 의존성 순환을 피합니다. 프레임마다 바뀌는 상태 때문에 타이머나 전역 리스너를 추가 생성하지 않습니다.
+RecorderLearningApp은 208줄의 화면 조합이다. P5에서 기존 단위 테스트 124개의 이름과 결과를 유지하고 liveMessage 3개를 추가했다. 이후 기능별 테스트가 늘어 현재 164개다.
 
-- `UiButtonNumber`: 음 선택 번호 `1 | ... | 8`
-- `NoteBank`: `low | high | chromatic`
-- `SolfegeId`: 낮은 자연음 8개, 반음 5개, 추가 높은 자연음 4개를 합친 17개 고유 ID
-- `HoleId`: `T0 | L1 | L2 | L3 | R4 | R5 | R6 | R7`
-- `FingeringSystem`: `baroque | german`
-- `HoleState`: `open | closed | half | partial`
-
-`ALL_NOTE_IDS`에는 C4–G5의 17개 고유 음높이가 한 번씩 들어갑니다. `NOTE_BANKS`는 이를 화면 선택 위치로 다시 구성합니다.
-
-- `low`: C4–C5, 숫자 1–8
-- `high`: C5–G5, 숫자 1–5
-- `chromatic`: C♯4/D♭4–A♯4/B♭4, 숫자 1–5
-
-C5의 `highDo`는 낮은 분류의 8번과 높은 분류의 1번에서 공유되므로 선택 위치는 18개지만 `SolfegeId`와 오디오 음높이는 17개입니다. 활성 탭은 `activeBank`로 관리하며, 탭만 이동할 때 현재 음을 강제로 바꾸지 않습니다.
-
-`FINGERING_STATES[system][note]`가 여덟 구멍 각각의 정확한 상태를 보존하는 단일 진실 공급원입니다. `half`는 높은 미·파·솔의 T0 엄지 반구멍, `partial`은 도♯·레♯·솔♯의 이중 구멍 부분 막기에 사용됩니다. `FINGERINGS[system][note]`는 상태가 `open`이 아닌 모든 구멍을 모은 접촉 배열로, 기존 떼기/누르기 상태 머신을 위한 호환 보기입니다. `ALL_HOLES`의 순서는 상태 지도, diff, 한국어 안내와 라이브 영역의 공통 읽기 순서입니다.
-
-두 운지 체계가 다른 음은 `fa`, `faSharp`, `highFa` 세 개뿐입니다. 이 세 음은 상태 지도와 포즈 파일이 모두 바로크식·독일식으로 분리되고, 나머지 14개 음은 같은 상태와 포즈를 공유합니다.
-
-## 음역 분류와 단축키 resolver
-
-`resolveNoteShortcut`은 `event.key`가 아니라 물리 키 위치인 `event.code`의 `Digit1`–`Digit8`만 해석합니다.
-
-- 수정자 없음: 활성 탭의 음(낮은 1–8, 높은/반음 1–5). `Ctrl`: 항상 낮은 계이름 1–8
-- `Shift`: 높은 계이름 1–5
-- `Alt`: 반음 1–5
-- `Shift`/`Alt`의 6–8, 숫자패드, 0·9와 문자 키: 미매핑
-- 복합 수정자, `Meta`, 키 반복, IME 조합 중 입력과 `AltGraph`: 거부
-
-해결된 단축키는 해당 음과 `activeBank`를 함께 바꿉니다. 도움말이나 입력 컨트롤이 키를 소유한 동안에는 전역 선택을 실행하지 않습니다. 브라우저가 `Ctrl+숫자` 또는 운영체제가 `Alt+숫자`를 먼저 처리할 수 있으므로, 접근 가능한 세 탭과 18개 화면 버튼이 항상 기본 폴백입니다.
+설정 복원은 오디오 훅 초기화 뒤 microtask에서 실행하고 언마운트된 복원은 취소한다. localStorage는 허용된 필드만 읽고 쓰며 잘못된 타입·범위는 기본값으로 정규화한다. 퀴즈 결과와 연습 이력은 저장하지 않는다.
 
 ## 데이터 흐름
 
 ```mermaid
 flowchart TD
-  A["음역 탭·화면 버튼·단축키·자동 연습"] --> B["RecorderLearningApp"]
-  B --> C["activeBank + selectedNote + system"]
-  C --> D["NOTE_BANKS + NOTE_META"]
-  C --> E["FINGERING_STATES"]
-  E --> F["FINGERINGS 접촉 호환 보기"]
-  C --> G["poseAssets"]
-  F --> H["useFingeringAnimation"]
-  H --> I["phase + contact diff"]
-  E --> J["정확한 half/partial holeStates"]
-  G --> K["RecorderPoseStage"]
-  I --> L["RecorderFingeringMap + 변경 칩"]
-  J --> L
-  D --> M["buildInstruction"]
-  H -->|"최신 contact"| N["useRecorderAudio"]
-  D -->|"audioKey"| N
+  Input["버튼 / 활성 탭 키 / 코스"] --> Lesson["useRecorderLesson"]
+  Storage["usePreferences: 12 fields"] --> Lesson
+  Lesson --> Selection["useNoteSelection: note + bank + system"]
+  Selection --> Meta["NOTE_META / NOTE_BANKS"]
+  Selection --> States["FINGERING_STATES"]
+  States --> Contacts["FINGERINGS"]
+  Contacts --> Motion["useFingeringAnimation / request ID"]
+  States --> Map["RecorderFingeringMap"]
+  Motion --> Map
+  Selection --> Poses["poseAssets / usePosePreload"]
+  Poses --> Canvas["RecorderPoseStage / generation + RAF"]
+  Meta --> Text["StaffNote / buildInstruction / liveMessage"]
+  Motion --> Contact["최신 contact만"]
+  Contact --> Audio["useRecorderAudio / engine request"]
+  States --> Compare["CompareApp"]
+  States --> Score["quiz/scoring pure functions"]
+  Lesson --> Classroom["useClassroom snapshot / restore"]
 ```
 
-상위 컴포넌트는 별도의 목표 구멍 사본을 저장하지 않고 선택 음과 체계에서 `targetFingering`, 접촉 호환 배열과 `poseSource`를 파생합니다. 상태 머신은 접촉 여부의 떼기/누르기를 진행하고, 현재 접촉 중인 구멍에는 목표의 `closed`·`half`·`partial` 값을 다시 합성합니다. 그 결과 음 카드, 포즈, 지도, 설명과 오디오가 같은 선택을 바라보면서도 반구멍 정보가 사라지지 않습니다.
+## 세 가지 취소 경계
 
-## 취소 가능한 운지 전환
+애니메이션은 과거 목표가 아닌 실제 표시된 `visualRef.current`에서 diff를 시작한다. 새 요청마다 request ID를 증가시키고 타이머를 해제한다. phase는 highlight-release, releasing, highlight-press, pressing, contact, settled이며 없는 단계는 건너뛴다. 단계별 보기에서는 사용자가 진행한다.
 
-`getFingeringDiff(previous, next)`는 `toOpen`, `toClose`, `stayClosed`, `stayOpen`을 만듭니다. `useFingeringAnimation`은 과거 목표가 아니라 현재 화면에 실제로 커밋된 `visualRef.current`를 새 diff의 시작점으로 사용합니다.
+Canvas는 현재 혼합 프레임을 스냅샷하고 목표로 easeOutQuint 교차 전환한다. 보통 260ms, 느리게 720ms, reduced motion 0ms다. generation과 RAF 취소는 논리 상태 머신과 독립적이다. 이미지가 늦게 도착해도 오래된 목표를 그리지 않는다. 준비된 캔버스 뒤의 next/image 폴백은 마지막 완료 소스를 유지해 연타 때 불필요한 요청 취소를 방지한다.
 
-기본 phase 흐름은 다음과 같습니다.
+오디오는 사용자 제스처 안에서 unlock을 시작하고 최신 contact에서만 재생한다. 피치 모드 교체·음소거·취소는 보류 unlock과 엔진 요청을 모두 무효화한다. UI·훅·엔진의 요청 번호를 하나로 합치지 않는다. 개별 효과음은 자신의 요청 번호를 전달해 나중에 선택한 일반 음을 중단하지 않는다.
 
-```text
-highlight-release → releasing → highlight-press → pressing → contact → settled
-```
+## 코스와 퀴즈
 
-없는 구간은 건너뛰며 단계별 보기에서는 사용자가 phase를 한 단계씩 진행합니다. 새 전환이 시작되면 기존 타이머를 모두 해제하고 단조 증가 request ID를 바꿉니다. 예약 콜백은 실행 직전에 ID를 다시 검사하므로 빠른 `1→8→4→5` 입력에서도 오래된 전환이 마지막 솔 상태나 오디오를 덮어쓰지 못합니다.
+`practiceCourses.ts`의 PRACTICE_COURSES는 6개의 steps/preferredBank를 선언한다. isCourseId/getCourse/getNoteBank는 부작용 없는 조회·검증 함수다. useSequencePractice는 자동 모드에서만 단일 타이머를 사용하며 일시정지·코스 변경·직접 선택·언마운트마다 세대를 바꾼다. 수동은 advance로만 진행하고 완주는 중복 실행되지 않는다.
 
-## 포즈 캔버스 전환
+`quiz/scoring.ts`의 pickDistractors는 구멍 상태 차이가 작은 오답을 고른다. scoreFingering은 8구멍의 네 상태를 비교하고 다른 체계에만 일치하면 crossSystemMatch를 반환한다. shuffle/createQuestions는 난수 함수를 주입할 수 있고 연속 중복 문제를 피한다. QuizRound의 동기 잠금 ref는 빠른 입력의 중복 채점을 막는다. identify는 1초 뒤, build는 다음 버튼으로 진행한다.
 
-`RecorderPoseStage`는 마운트 때 모든 포즈의 preload를 시작하고, 현재 목표가 준비되는 대로 다음 규칙으로 표시합니다.
+구멍 막기 지도는 opt-in interactive 모드로 각 구멍을 키보드 버튼으로 노출한다. T0의 half와 이중 구멍의 partial을 별도 상태로 순환한다. 일반 학습 지도는 기존 readonly 표현을 유지한다.
 
-1. 최초 포즈는 즉시 캔버스에 그립니다.
-2. 음이 바뀌면 현재 캔버스의 실제 혼합 프레임을 스냅샷합니다.
-3. 스냅샷과 목표 포즈를 `easeOutQuint`로 교차 전환합니다.
-4. 보통은 260ms, 느리게는 720ms를 사용합니다.
-5. 새 입력은 기존 `requestAnimationFrame`을 취소하고 사용자가 보고 있던 프레임에서 다시 시작합니다.
-6. reduced motion에서는 목표 포즈를 즉시 그립니다.
+## 기초와 수업 모드
 
-20개 포즈는 모두 동일한 `976×1360` 프레임에 정렬되어 있어야 합니다. `fa`, `faSharp`, `highFa`는 체계별 파일을 선택하고 나머지는 공유 파일을 사용합니다. 같은 음을 다시 볼 때는 직전 전환 원점 포즈를 먼저 복원한 뒤 목표 포즈로 재생합니다. 캔버스를 사용할 수 없는 환경에서는 최적화된 이미지가 폴백으로 남습니다.
+기초 5카드의 19개 문장은 설계서와 대조하는 고정 테스트로 보호한다. 자체 SVG 그림과 기존 구멍 지도를 사용한다. 텅잉은 80bpm(750ms 간격), 솔 120ms이며 음소거 시 시각 박자만 표시한다. 카드 변경·정지·언마운트에서 타이머와 자신의 소리를 정리한다.
 
-## 기능형 구멍 지도
+수업 진입은 음·음역·체계·속도·단계 모드·포커스를 스냅샷한다. Fullscreen 요청 거절 시 CSS 화면을 유지하고 T/Esc/브라우저 fullscreen 종료에서 복원한다. 테마/음소거는 일반 설정으로 유지한다.
 
-`RecorderScene`은 전달받은 상태를 여덟 `HoleId` 전체에 대해 정규화한 뒤 `RecorderFingeringMap`에 전달합니다. 지도는 다음을 보장합니다.
+## 레이아웃과 테마
 
-- T0은 별도의 뒤쪽 엄지 인셋으로 표시합니다.
-- R6/R7은 각각 두 개의 작은 구멍으로 그리지만 논리 상태는 하나씩입니다.
-- 열림/막힘/반구멍/부분 막힘을 한 `HoleState` 모델로 표현합니다.
-- `data-hole-id`, `data-hole-state`, `data-hole-transition`으로 상태를 검증할 수 있습니다.
-- phase에 맞춰 떼기는 파란 점선 링, 막기는 주황 실선 링으로 강조합니다.
+`app/globals.css`가 색·표면·텍스트·선·primary/accent·release/press 토큰을 정의한다. courses/lesson-pages/quiz/basics/classroom/high-contrast CSS는 기능별로 분리한다. 문서 루트 `data-theme="high-contrast"`가 흰 표면·검은 글자, 파랑 #0033cc 떼기, 주황 #b35c00 막기, 4px 포커스·3px 구멍 윤곽을 적용한다. Canvas 배경은 투명하다.
 
-완성 포즈는 실제 손 모양을 빠르게 이해시키고, 지도는 정확한 번호·접촉 상태와 전환 의미를 명시합니다. 접촉 diff는 `FINGERINGS`, 최종 상태 표현은 `FINGERING_STATES`, 포즈 파일은 `poseAssets.ts`가 담당합니다. 따라서 음을 추가하거나 운지를 바꿀 때는 정확한 상태 지도, 접촉 호환 보기, 포즈 PNG와 매핑을 함께 갱신해 수동 동기화 계약을 지켜야 합니다.
+360px 세로와 844px 가로 규칙, 1920px 수업 화면의 70:30 배치를 별도 검증한다. 변화 칩 행은 높이를 예약하고 넘침은 내부 스크롤로 처리해 포즈 크기가 바뀌지 않는다. 실제 로드되지 않는 Pretendard 선언을 제거하고 Apple SD Gothic Neo/Malgun Gothic/system-ui를 사용한다.
 
-## 오디오와 요청 ID
+## 로딩과 PWA
 
-`recorderTimbre.ts`는 세 sine 배음과 bandpass 치프, 선택적 진폭 비브라토 그래프를 만든다. 엔진은 소스·처리 노드 전체를 음성 단위로 소유하고 마지막 소스 종료 시 disconnect한다. 컨텍스트당 노이즈 버퍼 하나를 재사용하며 dispose에서 참조를 해제한다. 디버그 17음 데모도 자체 세대 번호와 오디오 요청 ID를 함께 사용한다.
+`poseLoader.ts`의 모듈 Map은 이미지 요청을 재사용하며 실패는 캐시에서 제거한다. `usePosePreload`는 현재 체계·뱅크를 먼저 읽고 나머지는 requestIdleCallback(최대 2초 대기), 미지원 시 1초 타이머로 예약한다. 탭 변경과 언마운트에서 과거 예약을 취소한다.
 
-`pitchMode`는 저장 설정에서 오디오 훅과 엔진 팩토리로 전달된다. 모드 변경은 기존 엔진과 보류 unlock 요청을 무효화하고 다음 사용자 제스처에서 새 엔진을 연다. 기본 `sounding`은 기보보다 한 옥타브 높고 `written`은 그 주파수의 절반이다. 음 카드에는 기보 이름과 실음 이름을 별도 요소로 표시한다.
+`scripts/generate-sw.mjs`는 TypeScript 컴파일러로 poseAssets를 읽고 sw.template.js에서 SHA+시각 버전의 SW를 생성한다. 두 빌드 후 실제 JS/CSS·4경로·20포즈·아이콘을 사전 캐시한다. 사용하지 않는 빌드 폰트 캐시는 제외한다. 내비게이션은 network-first, 공개 정적 파일은 cache-first다. Cloudflare Vary: Origin 대응 ignoreVary는 같은 출처 공개 정적 자산에만 사용한다.
 
-브라우저 자동재생 정책 때문에 `AudioContext` 활성화는 지연된 contact가 아니라 사용자의 음 선택 제스처 안에서 시작합니다. 앱, `useRecorderAudio`, Web Audio 엔진이 각각 최신 요청 ID를 확인하며, 음소거·연타·언마운트에서는 보류 재생을 취소합니다. 합성 엔진 생성이나 재생이 실패해도 silent fallback을 사용하므로 시각 학습은 계속됩니다.
+대기 워커에는 사용자가 업데이트 버튼을 눌렀을 때만 SKIP_WAITING을 보내고 요청한 controllerchange에서 새로 고친다. 개발 모드 등록은 생략한다. 공개 assetlinks는 두 정적 산출물에 복사한다. 인증이 필요한 Sites는 공개 TWA 도메인과 구분한다.
 
-## 접근성과 오류 경계
+## 검증 범위와 한계
 
-PWA의 `sw.template.js`를 `scripts/generate-sw.mjs`가 빌드 전후에 생성한다. 빌드 후 실제 JS·CSS·폰트 파일까지 추가해 첫 방문에 모든 실행 자산을 보관한다. `poseAssets.ts`는 TypeScript 컴파일러로 읽어 포즈 목록의 단일 출처를 유지한다. 대기 워커는 사용자 새로 고침으로만 `SKIP_WAITING`을 받고 교체되며, 개발 모드 등록은 생략한다. TWA 연결 파일은 Cloudflare와 Nitro의 정적 출력에 명시적으로 복사한다.
+Vitest 164개가 데이터 계약·애니메이션·30회 연타 오디오 정리·설정·코스·채점·기초·수업·preload를 검사한다. Playwright 3프로젝트의 104개 통과, 4개 명시적 제외가 현재 기준이다. axe 42회에서 serious/critical 0, Windows Chromium 포즈 기준선 20장을 비교한다. 물리 iOS/Android·스피커 청취·프로젝터 검수는 자동 결과에 포함하지 않는다.
 
-- 선택 음과 닫힌 번호를 polite live region으로 알립니다.
-- 전체 장면은 음별 접근성 이름과 설명을 갖는 하나의 이미지로 노출됩니다.
-- 포즈와 내부 지도 장식은 보조 기술에서 중복 낭독되지 않습니다.
-- 버튼·라디오·스위치는 기본 HTML 컨트롤이고 키보드로 조작할 수 있습니다.
-- reduced-motion 변경을 구독해 상태 머신, 캔버스와 CSS에 함께 반영합니다.
-- 저장소, 전체화면, Web Audio와 이미지 로드 실패가 앱 전체 오류로 전파되지 않습니다.
-
-## 테스트 경계
-
-- `domain.test.ts`: 17개 고유 음, 8/5/5 분류와 공유 C5, 모든 상태 지도, half/partial, 세 체계별 음, 20개 포즈의 경로·크기, diff와 안내 문구
-- `resolveNoteShortcut.test.ts`: 물리 `Digit` 매핑, 낮은/높은/반음 수정자, 빈 6–8 슬롯과 잘못된 수정자·IME·AltGraph 거부
-- `useFingeringAnimation.test.tsx`: 연타 취소, 단계별 보기, reduced motion, cleanup
-- `RecorderAudioEngine.test.ts`: C4–G5의 17개 주파수, 합성음과 오디오 요청 취소
-- `RecorderLearningApp.test.tsx`: 8/5/5 탭, 시스템별 높은 파, 분류 단축키, half/partial 지도와 포즈·문구 동기화
-- `recorder-learning.spec.ts`: 낮은 8음 전체, 파 체계 전환, `Shift+4` 높은 파의 half/체계별 포즈, `Alt+1` 도♯의 partial, `Ctrl+5` 낮은 솔, 연타와 반응형 화면
-
-자동 테스트와 함께 360×800, 844×390, 데스크톱에서 실제 포즈와 구멍 지도의 정렬·가독성을 확인합니다.
+P12 초기 JS gzip 합계는 133,419바이트로 250KiB 예산 이하다. Lighthouse CI는 선택 항목으로 실행하지 않았다. 개발 HMR multiple-renderers 경고와 개발 도구 보안 경고는 남아 있다. 정확한 인수·배포 결과는 [acceptance-v3.md](acceptance-v3.md)를 따른다.

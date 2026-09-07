@@ -337,6 +337,13 @@ test("844×390 landscape keeps the scene and note keypad in the first view", asy
   await expect(page.locator(".keypad-card")).toBeInViewport();
   await expect(page.getByTestId("note-button-8")).toBeInViewport();
 
+  const noteCard = await page.locator(".note-card").boundingBox();
+  const staff = await page.locator(".note-card .staff-note").boundingBox();
+  expect(staff!.x).toBeGreaterThanOrEqual(noteCard!.x);
+  expect(staff!.x + staff!.width).toBeLessThanOrEqual(noteCard!.x + noteCard!.width);
+  const systemOption = await page.getByRole("radio", { name: /^바로크식 파/ }).locator("..").boundingBox();
+  expect(systemOption!.width).toBeGreaterThanOrEqual(90);
+
   const dimensions = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,
