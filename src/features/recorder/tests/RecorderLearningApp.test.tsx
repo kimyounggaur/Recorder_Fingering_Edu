@@ -88,6 +88,31 @@ afterEach(() => {
 });
 
 describe("RecorderLearningApp", () => {
+  it("enters classroom with T and restores note, bank, speed and focus with Escape", async () => {
+    vi.useFakeTimers();
+    await renderReadyApp();
+    fireEvent.click(screen.getByTestId("step-mode-toggle"));
+    fireEvent.click(noteButton(2));
+    noteButton(2).focus();
+    await act(async () => { fireEvent.keyDown(window, { key: "t" }); await Promise.resolve(); });
+    expect(document.body).toHaveAttribute("data-classroom", "true");
+    expect(document.querySelector(".settings-area")).toHaveAttribute("hidden");
+    fireEvent.keyDown(window, { key: "5", code: "Digit5" });
+    fireEvent.keyDown(window, { key: "s" });
+    expect(document.querySelector(".classroom-solfege")).toHaveTextContent("솔");
+    await act(async () => { fireEvent.keyDown(window, { key: "Escape" }); await Promise.resolve(); });
+    expect(document.body).not.toHaveAttribute("data-classroom");
+    expect(noteButton(2)).toHaveAttribute("aria-pressed", "true");
+    expect(noteButton(2)).toHaveFocus();
+    expect(screen.getByRole("radio", { name: "보통" })).toBeChecked();
+    expect(screen.getByTestId("step-mode-toggle")).toBeChecked();
+  });
+  it("persists the high contrast theme and applies it to the document", async () => {
+    await renderReadyApp();
+    fireEvent.click(screen.getByRole("switch", { name: /고대비/ }));
+    expect(document.documentElement).toHaveAttribute("data-theme", "high-contrast");
+    expect(JSON.parse(localStorage.getItem("recorder-learning.preferences.v1")!)).toMatchObject({ theme: "high-contrast" });
+  });
   it("restores step mode and finger names, then resets without onboarding", async () => {
     localStorage.setItem("recorder-learning.preferences.v1", JSON.stringify({ stepMode: true, showFingerNames: true, onboardingCompleted: true }));
     await renderReadyApp();

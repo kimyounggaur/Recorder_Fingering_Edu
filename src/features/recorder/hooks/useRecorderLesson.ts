@@ -14,6 +14,7 @@ import { getRequestedSelection, usePreferences } from "./usePreferences";
 import { useReducedMotion } from "./useReducedMotion";
 import { useSequencePractice } from "./useSequencePractice";
 import { useCompletionCue } from "./useCompletionCue";
+import { useClassroom } from "./useClassroom";
 export function useRecorderLesson() {
   const { preferences, loaded: preferencesLoaded, update: updatePreferences, reset, restore } = usePreferences();
   const [statusMessage, setStatusMessage] = useState("");
@@ -41,18 +42,16 @@ export function useRecorderLesson() {
     setAudioMuted(stored.isMuted);
     setDebug(process.env.NODE_ENV !== "production" && searchParams.get("debug") === "1");
   }), [restore, setActiveBank, setSelectedNote, setAudioMuted]);
-  useGlobalShortcuts({ ...selection, helpOpen });
-  const toggleFullscreen = useCallback(async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else await document.documentElement.requestFullscreen();
-    } catch {
-      // Fullscreen is optional and may be blocked by an embedded browser.
-    }
-  }, []);
+  const { stopSequence } = sequence;
+  const { cancelAudio, changeMuted, setStepMode } = selection;
+  const stopClassroomPlayback = useCallback(() => { stopSequence(); cancelAudio(); setStepMode(false); }, [stopSequence, cancelAudio, setStepMode]);
+  const classroom = useClassroom({ note: selection.selectedNote, bank: selection.activeBank, system: selection.system, speed: preferences.speed, stepMode: preferences.stepMode }, selection.restoreSelection, stopClassroomPlayback);
+  const toggleSpeed = useCallback(() => updatePreferences({ speed: preferences.speed === "slow" ? "normal" : "slow" }), [preferences.speed, updatePreferences]);
+  const toggleMuted = useCallback(() => changeMuted(!preferences.isMuted), [changeMuted, preferences.isMuted]);
+  useGlobalShortcuts({ ...selection, helpOpen, classroom: classroom.active, toggleClassroom: classroom.toggle, exitClassroom: classroom.exit, toggleSpeed, toggleMuted, toggleCourse: sequence.toggleSequence });
 
   const closeHelp = useCallback(() => setHelpOpen(false), []);
   const resetPreferences = useCallback(() => { selection.prepareReset(); reset(); setStatusMessage("설정을 처음 상태로 되돌렸어요"); }, [selection, reset]);
   const setShowFingerNames = useCallback((showFingerNames: boolean) => updatePreferences({ showFingerNames }), [updatePreferences]);
-  return { ...selection, ...sequence, coursePractice: sequence, preferences, preferencesLoaded, updatePreferences, resetPreferences, reducedMotion, audio, statusMessage, helpOpen, setHelpOpen, closeHelp, debug, toggleFullscreen, stepMode: preferences.stepMode, showFingerNames: preferences.showFingerNames, setShowFingerNames };
+  return { ...selection, ...sequence, coursePractice: sequence, preferences, preferencesLoaded, updatePreferences, resetPreferences, reducedMotion, audio, statusMessage, helpOpen, setHelpOpen, closeHelp, debug, classroom, toggleSpeed, toggleMuted, stepMode: preferences.stepMode, showFingerNames: preferences.showFingerNames, setShowFingerNames };
 }

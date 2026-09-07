@@ -3,6 +3,8 @@
 @import "./lesson-pages.css";
 @import "./quiz.css";
 @import "./basics.css";
+@import "./classroom.css";
+@import "./high-contrast.css";
 
 :root {
   --color-bg: #f3f6fb;
@@ -1793,8 +1795,7 @@ kbd {
     gap: 8px;
   }
 
-  .brand-lockup .eyebrow,
-  .header-actions .secondary-button:last-child {
+  .brand-lockup .eyebrow {
     display: none;
   }
 
@@ -1882,7 +1883,6 @@ kbd {
 
   .brand-lockup .eyebrow,
   .brand-lockup p:last-child,
-  .header-actions .secondary-button:last-child,
   .scene-card .eyebrow,
   .keypad-card .eyebrow,
   .keyboard-hint,

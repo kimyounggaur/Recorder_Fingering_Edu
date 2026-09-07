@@ -1,5 +1,5 @@
 "use client";
-import { CircleHelp, Maximize } from "lucide-react";
+import { BookOpen, CircleHelp, ClipboardCheck, Maximize } from "lucide-react";
 import Link from "next/link";
 import { useRecorderLesson } from "../hooks/useRecorderLesson";
 import { AudioDebugDemo } from "./AudioDebugDemo";
@@ -12,8 +12,10 @@ import { OnboardingBanner } from "./OnboardingBanner";
 import { CoursePanel } from "./CoursePanel";
 import { RecorderScene } from "./RecorderScene";
 import { SettingsPanel } from "./SettingsPanel";
+import { ClassroomControls } from "./ClassroomControls";
 export function RecorderLearningApp() {
-  const { preferences, preferencesLoaded, updatePreferences, resetPreferences, reducedMotion, audio, statusMessage, helpOpen, setHelpOpen, closeHelp, debug, toggleFullscreen, stepMode, showFingerNames, setShowFingerNames, selectedNote, activeBank, setActiveBank, transitionOrigin, animationKey, system, currentNote, currentShortcutLabel, displayAnimation, displayedHoleStates, selectNote, playCurrentNote, replay, changeSystem, chooseOnboardingSystem, changeMuted, changeStepMode, goPrevious, goNext, instruction, liveMessage, coursePractice } = useRecorderLesson();
+  const lesson = useRecorderLesson();
+  const { preferences, preferencesLoaded, updatePreferences, resetPreferences, reducedMotion, audio, statusMessage, helpOpen, setHelpOpen, closeHelp, debug, classroom, stepMode, showFingerNames, setShowFingerNames, selectedNote, activeBank, setActiveBank, transitionOrigin, animationKey, system, currentNote, currentShortcutLabel, displayAnimation, displayedHoleStates, selectNote, playCurrentNote, replay, changeSystem, chooseOnboardingSystem, changeMuted, changeStepMode, goPrevious, goNext, instruction, liveMessage, coursePractice } = lesson;
   if (!preferencesLoaded) {
     return (
       <div className="recorder-app loading-shell" aria-busy="true" aria-live="polite">
@@ -26,6 +28,8 @@ export function RecorderLearningApp() {
   return (
     <div
       className="recorder-app"
+      data-classroom={classroom.active || undefined}
+      data-theme={preferences.theme}
       data-reduced-motion={reducedMotion}
       data-speed={preferences.speed}
       data-animation-preparing={displayAnimation.isPreparing}
@@ -33,7 +37,7 @@ export function RecorderLearningApp() {
       onDragStart={(event) => event.preventDefault()}
     >
       <a className="skip-link" href="#learning-stage">학습 무대로 건너뛰기</a>
-      <header className="app-header">
+      <header className="app-header" hidden={classroom.active}>
         <div className="brand-lockup">
           <span className="brand-mark" aria-hidden="true">♪</span>
           <div>
@@ -43,8 +47,8 @@ export function RecorderLearningApp() {
           </div>
         </div>
         <div className="header-actions">
-          <Link className="secondary-button" href="/quiz">퀴즈</Link>
-          <Link className="secondary-button" href="/basics">기초 배우기</Link>
+          <Link className="secondary-button" href="/quiz" aria-label="퀴즈" title="퀴즈"><ClipboardCheck size={20} aria-hidden="true" /><span className="button-label">퀴즈</span></Link>
+          <Link className="secondary-button" href="/basics" aria-label="기초 배우기" title="기초 배우기"><BookOpen size={20} aria-hidden="true" /><span className="button-label">기초 배우기</span></Link>
           <button
             type="button"
             className="secondary-button"
@@ -53,18 +57,18 @@ export function RecorderLearningApp() {
           >
             <CircleHelp size={20} aria-hidden="true" /><span className="button-label">도움말</span>
           </button>
-          <button type="button" className="secondary-button" onClick={toggleFullscreen} aria-label="전체화면" title="전체화면">
-            <Maximize size={20} aria-hidden="true" /><span className="button-label">전체화면</span>
+          <button type="button" className="secondary-button" onClick={classroom.toggle} aria-label="수업 모드" title="수업 모드">
+            <Maximize size={20} aria-hidden="true" /><span className="button-label">수업 모드</span>
           </button>
         </div>
       </header>
 
       {!preferences.onboardingCompleted ? (
-        <OnboardingBanner onChoose={chooseOnboardingSystem} />
+        <div hidden={classroom.active}><OnboardingBanner onChoose={chooseOnboardingSystem} /></div>
       ) : null}
 
       <main id="learning-stage" className="learning-grid">
-        <div className="note-area">
+        <div className="note-area" hidden={classroom.active}>
           <NoteCard
             note={currentNote}
             system={system}
@@ -75,7 +79,7 @@ export function RecorderLearningApp() {
         </div>
 
         <section className="card scene-card" aria-labelledby="scene-heading">
-          <div className="section-heading-row scene-heading">
+          <div className="section-heading-row scene-heading" hidden={classroom.active}>
             <div>
               <p className="eyebrow">앞면 1–7 · 뒷면 엄지 0</p>
               <h2 id="scene-heading">손가락 학습 무대</h2>
@@ -88,6 +92,8 @@ export function RecorderLearningApp() {
           <div className="recorder-stage-frame">
             <RecorderScene
               className="recorder-scene"
+              classroom={classroom.active}
+              compact={classroom.active}
               note={selectedNote}
               system={system}
               speed={preferences.speed}
@@ -100,18 +106,18 @@ export function RecorderLearningApp() {
               toOpen={displayAnimation.diff.toOpen}
               toClose={displayAnimation.diff.toClose}
               phase={displayAnimation.phase}
-              showHoleNumbers={preferences.showHoleNumbers}
-              showFingerNames={showFingerNames}
+              showHoleNumbers={classroom.active || preferences.showHoleNumbers}
+              showFingerNames={!classroom.active && showFingerNames}
               reducedMotion={reducedMotion}
               debug={debug}
               title={`${currentNote.solfegeKo}의 현재 리코더 운지`}
               description={liveMessage}
             />
           </div>
-          <FingeringLegend />
+          <div hidden={classroom.active}><FingeringLegend /></div>
         </section>
 
-        <div className="instruction-area">
+        <div className="instruction-area" hidden={classroom.active}>
           <InstructionPanel
             handHint={coursePractice.sequencePlaying || coursePractice.sequencePaused ? coursePractice.course.handHint : undefined}
             text={instruction}
@@ -127,7 +133,7 @@ export function RecorderLearningApp() {
           />
         </div>
 
-        <div className="keypad-area">
+        <div className="keypad-area" hidden={classroom.active}>
           <NoteKeypad
             selectedNote={selectedNote}
             activeBank={activeBank}
@@ -136,8 +142,10 @@ export function RecorderLearningApp() {
           />
         </div>
 
-        <div className="settings-area">
+        <div className="settings-area" hidden={classroom.active}>
           <SettingsPanel
+            theme={preferences.theme}
+            onThemeChange={(theme) => updatePreferences({ theme })}
             system={system}
             speed={preferences.speed}
             stepMode={stepMode}
@@ -156,7 +164,9 @@ export function RecorderLearningApp() {
             onReset={resetPreferences}
           />
         </div>
+        {classroom.active ? <ClassroomControls lesson={lesson} /> : null}
       </main>
+      <div hidden={classroom.active}>
       <CoursePanel
         practice={coursePractice}
         activeBank={activeBank}
@@ -167,11 +177,13 @@ export function RecorderLearningApp() {
         onReplay={replay}
         onPlaySound={playCurrentNote}
       />
+      </div>
 
-      <footer className="app-footer">
+      <footer className="app-footer" hidden={classroom.active}>
         <p>입술에는 힘을 빼고, 구멍은 손가락 끝의 넓은 부분으로 가볍게 막아요.</p>
         <p>합성 연습음 · 로그인 없이 이 기기에 설정만 저장됩니다.</p>
       </footer>
+      {classroom.active ? <p className="classroom-hints">1–8 음 · ←→ 이전/다음 · Space 소리 · S 느리게 · M 소리 켜기/끄기 · C 코스 · Esc 나가기</p> : null}
 
       <p className="sr-only" aria-live="polite" aria-atomic="true" data-testid="live-region">
         {liveMessage}

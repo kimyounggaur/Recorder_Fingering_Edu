@@ -42,6 +42,7 @@ export function usePreferences() {
     [],
   );
   useEffect(() => { if (preferencesLoaded) savePreferences(preferences); }, [preferences, preferencesLoaded]);
+  useEffect(() => { if (preferencesLoaded) document.documentElement.dataset.theme = preferences.theme; }, [preferencesLoaded, preferences.theme]);
   const restore = useCallback((onRestore: (stored: RecorderPreferences, search: URLSearchParams) => void) => {
     const stored = loadPreferences();
     let cancelled = false;

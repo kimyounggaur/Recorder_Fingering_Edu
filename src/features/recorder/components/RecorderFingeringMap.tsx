@@ -79,6 +79,7 @@ export interface RecorderFingeringMapProps
   feedback?: Partial<Record<HoleId, "correct" | "wrong">>;
   targetStates?: Partial<Record<HoleId, HoleState>>;
   handColors?: boolean;
+  classroom?: boolean;
 }
 
 export function nextHoleState(hole: HoleId, state: HoleState): HoleState {
@@ -433,6 +434,7 @@ export function RecorderFingeringMap({
   targetStates,
   handColors = false,
   className,
+  classroom = false,
   ...svgProps
 }: RecorderFingeringMapProps) {
   const [liveMessage, setLiveMessage] = useState("");
@@ -474,7 +476,8 @@ export function RecorderFingeringMap({
       ]
         .filter(Boolean)
         .join(" ")}
-      viewBox={interactive ? "0 0 400 610" : "0 0 400 560"}
+      viewBox={classroom ? "45 150 245 410" : interactive ? "0 0 400 610" : "0 0 400 560"}
+      data-classroom={classroom || undefined}
       preserveAspectRatio="xMidYMid meet"
       role={interactive ? "group" : "img"}
       aria-labelledby={`${titleId} ${descriptionId}`}

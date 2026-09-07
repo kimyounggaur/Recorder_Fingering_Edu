@@ -27,6 +27,7 @@ export function CompareApp() {
     queueMicrotask(() => {
       const requested = getRequestedSelection(new URLSearchParams(window.location.search));
       if (cancelled) return;
+      document.documentElement.dataset.theme = loadPreferences().theme;
       if (requested) setNote(requested.note);
       setReady(true);
     });

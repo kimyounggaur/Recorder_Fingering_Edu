@@ -1,0 +1,25 @@
+:root[data-theme="high-contrast"], [data-theme="high-contrast"] {
+  --color-bg: #ffffff; --color-bg-warm: #ffffff; --color-surface: #ffffff; --color-surface-soft: #ffffff;
+  --color-text: #000000; --color-text-muted: #000000; --color-line: #000000;
+  --color-primary: #000000; --color-primary-strong: #000000; --color-primary-soft: #ffffff;
+  --color-accent: #000000; --color-accent-strong: #000000; --color-accent-soft: #ffffff;
+  --color-success: #000000; --color-release: #0033cc; --color-release-soft: #ffffff;
+  --color-press: #b35c00; --color-press-soft: #ffffff;
+  color: #000000; background: #ffffff;
+}
+[data-theme="high-contrast"] body { background: #ffffff; }
+[data-theme="high-contrast"] :is(p, span, strong, small, a, h1, h2, h3, label, legend, li, button, input, select, output, kbd) { color: #000000 !important; letter-spacing: 0; }
+[data-theme="high-contrast"] :is(section, aside, button, input, select, label, kbd, .card, .recorder-stage-frame, .recorder-pose-stage, .segmented-control, .note-key, .note-bank-tabs, .note-bank-caption, .status-badge, .phase-badge, .finger-chip, .pose-change-chip, .note-short-instruction, .classroom-hints, .note-key-number, .note-key-mark, .scene-status, .help-dialog, .help-note, .brand-mark, .fingering-map-panel__system, .quiz-feedback) { background: #ffffff !important; background-image: none !important; box-shadow: none !important; border-color: #000000 !important; }
+[data-theme="high-contrast"] :is(.primary-button, .primary-button *, .brand-mark, .skip-link) { background: #000000 !important; color: #ffffff !important; }
+[data-theme="high-contrast"] :is(.course-progress > span, .scene-status-dot, .slide-dots [aria-current="step"] span) { background: #000000 !important; }
+[data-theme="high-contrast"] :focus-visible { outline: 4px solid #000000 !important; outline-offset: 4px; }
+[data-theme="high-contrast"] .fingering-map text { fill: #000000 !important; }
+[data-theme="high-contrast"] [data-hole-id="T0"] .fingering-map__hole-number { transform: translateX(32px); }
+[data-theme="high-contrast"] .fingering-map [fill="#24343c"] { fill: #000000; }
+[data-theme="high-contrast"] .fingering-map :is([fill="#fffdf7"], [fill="#f2e8d6"], [fill="#e4d4b7"], [fill="#f4f8f6"], [fill="#e9f1ef"]) { fill: #ffffff; }
+[data-theme="high-contrast"] .fingering-map__disc-outline { stroke: #000000; stroke-width: 3px; }
+[data-theme="high-contrast"] .fingering-map__change-ring--release { stroke: #0033cc; }
+[data-theme="high-contrast"] .fingering-map__change-ring--press { stroke: #b35c00; }
+[data-theme="high-contrast"] :is(.staff-line, .staff-stem) { stroke: #000000; }
+[data-theme="high-contrast"] :is(.staff-head, .staff-accidental) { fill: #000000; stroke: #000000; }
+[data-theme="high-contrast"] .tonguing-beats > span { opacity: 1 !important; }

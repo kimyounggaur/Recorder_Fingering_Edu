@@ -341,13 +341,14 @@ describe("preference storage", () => {
     });
   });
 
-  it("persists only the eleven allowed preferences", () => {
+  it("persists only the twelve allowed preferences", () => {
     const values = new Map<string, string>();
     const storage = {
       getItem: (key: string) => values.get(key) ?? null,
       setItem: (key: string, value: string) => values.set(key, value),
     };
     const preferences = {
+      theme: "high-contrast" as const,
       lastCourseId: "leftHand" as const,
       courseIntervalMs: 2000,
       courseMode: "manual" as const,

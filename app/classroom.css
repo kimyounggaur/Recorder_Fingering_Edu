@@ -1,0 +1,54 @@
+[hidden] { display: none !important; }
+.header-actions a { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.app-header .header-actions .secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+@media (max-width: 760px) {
+  .app-header { flex-wrap: wrap; }
+  .app-header .header-actions { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+}
+.classroom-controls { grid-area: classroom; min-width: 0; padding: 4px 12px; outline: none; overflow: auto; }
+.classroom-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.classroom-controls button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.classroom-solfege { font-size: 120px; line-height: 1.1; font-weight: 900; letter-spacing: 0; margin: 18px 0 10px; overflow-wrap: anywhere; }
+.classroom-note-name { font-size: 1.4rem; margin: 0; }
+.classroom-controls .staff-note { height: 220px; max-height: 24vh; min-width: 0; }
+.classroom-digits { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; margin: 16px 0; }
+.classroom-digits button { min-width: 0; height: 50px; padding: 0; border: 2px solid var(--color-line); border-radius: 6px; background: var(--color-surface); font-size: 1.3rem; font-weight: 800; }
+.classroom-digits [aria-pressed="true"] { border-color: var(--color-primary); outline: 2px solid var(--color-primary); }
+.classroom-actions, .classroom-course { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0; }
+.classroom-actions button { min-width: 56px; min-height: 52px; }
+.classroom-hints { position: fixed; inset: auto 0 0; min-height: 52px; margin: 0; padding: 12px 20px; text-align: center; font-size: 1.15rem; font-weight: 700; background: var(--color-surface); border-top: 1px solid var(--color-line); z-index: 20; }
+body[data-classroom="true"] { overflow: hidden; background: var(--color-surface); }
+.recorder-app[data-classroom="true"] { max-width: none; width: 100%; margin: 0; padding: 14px 16px 66px; min-height: 100dvh; }
+.recorder-app[data-classroom="true"] .learning-grid { height: calc(100dvh - 80px); display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 3fr); grid-template-areas: "scene classroom"; gap: 16px; align-items: stretch; }
+.recorder-app[data-classroom="true"] .scene-card { padding: 0; height: 100%; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.recorder-app[data-classroom="true"] .recorder-stage-frame { height: 100%; min-height: 0; max-height: none; border: 0; border-radius: 0; background: none; }
+.recorder-app[data-classroom="true"] .recorder-scene { height: 100%; max-height: none; padding: 0; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "pose map" "changes changes"; grid-template-rows: minmax(0, 1fr) auto; gap: 12px; }
+.recorder-app[data-classroom="true"] .recorder-pose-panel, .recorder-app[data-classroom="true"] .fingering-map-panel { border-radius: 8px; box-shadow: none; }
+.recorder-app[data-classroom="true"] .fingering-map-panel { padding: 8px; }
+.recorder-app[data-classroom="true"] .fingering-map-panel__heading { font-size: 1rem; }
+.recorder-app[data-classroom="true"] .fingering-map { height: 100%; min-height: 0; }
+.fingering-map[data-classroom="true"] [data-hole-id="T0"] .fingering-map__hole-number { transform: translateX(32px); }
+.recorder-app[data-classroom="true"] .fingering-map__hand-label, .recorder-app[data-classroom="true"] .fingering-map__view-label, .recorder-app[data-classroom="true"] .fingering-map__hand-guide { display: none; }
+.recorder-app[data-classroom="true"] .pose-change-list { font-size: 1rem; }
+.recorder-app[data-classroom="true"] :is(.pose-change-chip, .pose-change-chip strong, .pose-change-list__label, .pose-change-stable) { font-size: 1rem; line-height: 1.25; }
+.recorder-app[data-classroom="true"] .pose-change-chip { padding: 4px 6px; border-radius: 6px; }
+.recorder-app[data-classroom="true"] .recorder-scene__changes { grid-template-columns: minmax(0, 1fr); }
+.recorder-app[data-classroom="true"] .recorder-scene__changes { min-height: 0; }
+@media (max-width: 900px) {
+  .recorder-app[data-classroom="true"] { padding: 8px 8px 64px; }
+  .recorder-app[data-classroom="true"] .learning-grid { height: calc(100dvh - 76px); grid-template-columns: minmax(0, 1fr) minmax(230px, .8fr); gap: 8px; }
+  .classroom-controls { padding: 0; }
+  .classroom-solfege { font-size: 64px; }
+  .classroom-controls .staff-note { height: 90px; }
+  .classroom-note-name { font-size: .9rem; }
+  .classroom-hints { font-size: .8rem; }
+  .classroom-digits { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 540px) and (orientation: portrait) {
+  body[data-classroom="true"] { overflow: auto; }
+  .recorder-app[data-classroom="true"] .learning-grid { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-areas: "classroom" "scene"; }
+  .recorder-app[data-classroom="true"] .scene-card { height: 560px; }
+  .classroom-solfege { font-size: 72px; }
+  .classroom-controls .staff-note { display: none; }
+  .classroom-digits { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+}

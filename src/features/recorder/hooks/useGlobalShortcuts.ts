@@ -15,7 +15,10 @@ function isTypingTarget(target: EventTarget | null): boolean {
     target.tagName === "SELECT"
   );
 }
-export function useGlobalShortcuts({ activeBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote }: Pick<ReturnType<typeof useNoteSelection>, "activeBank" | "goNext" | "goPrevious" | "playCurrentNote" | "selectNote"> & { helpOpen: boolean }) {
+export function useGlobalShortcuts({ activeBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote, classroom, toggleClassroom, exitClassroom, toggleSpeed, toggleMuted, toggleCourse }: Pick<ReturnType<typeof useNoteSelection>, "activeBank" | "goNext" | "goPrevious" | "playCurrentNote" | "selectNote"> & {
+  helpOpen: boolean; classroom: boolean; toggleClassroom: () => void; exitClassroom: () => void;
+  toggleSpeed: () => void; toggleMuted: () => void; toggleCourse: () => void;
+}) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (helpOpen || event.defaultPrevented) return;
@@ -34,13 +37,19 @@ export function useGlobalShortcuts({ activeBank, goNext, goPrevious, helpOpen, p
       }
 
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      if (event.key === "ArrowLeft") {
+      const key = event.key.toLowerCase();
+      if (key === "t") { event.preventDefault(); toggleClassroom(); }
+      else if (classroom && key === "escape") { event.preventDefault(); exitClassroom(); }
+      else if (classroom && key === "s") { event.preventDefault(); toggleSpeed(); }
+      else if (classroom && key === "m") { event.preventDefault(); toggleMuted(); }
+      else if (classroom && key === "c") { event.preventDefault(); toggleCourse(); }
+      else if (event.key === "ArrowLeft") {
         event.preventDefault();
         goPrevious();
       } else if (event.key === "ArrowRight") {
         event.preventDefault();
         goNext();
-      } else if (event.key === " " && !(event.target instanceof HTMLButtonElement)) {
+      } else if (event.key === " " && (classroom || !(event.target instanceof HTMLButtonElement))) {
         event.preventDefault();
         playCurrentNote();
       }
@@ -48,5 +57,5 @@ export function useGlobalShortcuts({ activeBank, goNext, goPrevious, helpOpen, p
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote]);
+  }, [activeBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote, classroom, toggleClassroom, exitClassroom, toggleSpeed, toggleMuted, toggleCourse]);
 }

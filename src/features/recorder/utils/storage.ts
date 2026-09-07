@@ -13,6 +13,7 @@ export interface RecorderPreferences {
   lastCourseId: CourseId;
   courseIntervalMs: number;
   courseMode: "auto" | "manual";
+  theme: "default" | "high-contrast";
 }
 
 export interface ReadableStorage {
@@ -37,6 +38,7 @@ export const DEFAULT_PREFERENCES: Readonly<RecorderPreferences> = {
   lastCourseId: "lowScale",
   courseIntervalMs: 1500,
   courseMode: "auto",
+  theme: "default",
 };
 
 function getBrowserStorage(): Storage | null {
@@ -61,6 +63,7 @@ export function parsePreferences(serialized: string | null): RecorderPreferences
     if (!isRecord(candidate)) return { ...DEFAULT_PREFERENCES };
 
     return {
+      theme: candidate.theme === "high-contrast" ? "high-contrast" : "default",
       lastCourseId: isCourseId(candidate.lastCourseId) ? candidate.lastCourseId : "lowScale",
       courseMode: candidate.courseMode === "manual" ? "manual" : "auto",
       courseIntervalMs: typeof candidate.courseIntervalMs === "number" && Number.isFinite(candidate.courseIntervalMs)
@@ -115,6 +118,7 @@ export function savePreferences(
   if (!storage) return false;
 
   const persistedPreferences: RecorderPreferences = {
+    theme: preferences.theme,
     lastCourseId: preferences.lastCourseId,
     courseMode: preferences.courseMode,
     courseIntervalMs: preferences.courseIntervalMs,

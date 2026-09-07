@@ -68,8 +68,6 @@ function paintImage(canvas: HTMLCanvasElement, image: HTMLImageElement) {
   const context = canvas.getContext("2d");
   if (!context) return;
   context.clearRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, canvas.width, canvas.height);
   drawContained(context, image, image.naturalWidth, image.naturalHeight);
 }
 
@@ -190,8 +188,6 @@ export function RecorderPoseStage({
           const easedProgress = easeOutQuint(linearProgress);
 
           context.clearRect(0, 0, canvas.width, canvas.height);
-          context.fillStyle = "#ffffff";
-          context.fillRect(0, 0, canvas.width, canvas.height);
           drawContained(
             context,
             fromFrame,

@@ -5,6 +5,8 @@ import { ToggleRow } from "./ToggleRow";
 import Link from "next/link";
 
 interface SettingsPanelProps {
+  theme: "default" | "high-contrast";
+  onThemeChange: (theme: "default" | "high-contrast") => void;
   system: FingeringSystem;
   speed: AnimationSpeed;
   stepMode: boolean;
@@ -70,6 +72,7 @@ export function SettingsPanel(props: SettingsPanelProps) {
         ]}
       />
       <div className="toggle-list">
+        <ToggleRow label="고대비" description={props.theme === "high-contrast" ? "켜짐" : "꺼짐"} checked={props.theme === "high-contrast"} onChange={(checked) => props.onThemeChange(checked ? "high-contrast" : "default")} />
         <ToggleRow
           label="단계별 보기"
           description="다음 단계 버튼으로 천천히 살펴봐요."

@@ -39,6 +39,7 @@ export interface RecorderSceneProps
   description?: string;
   readonly?: boolean;
   compact?: boolean;
+  classroom?: boolean;
 }
 function ChangeList({
   holes,
@@ -98,6 +99,7 @@ export function RecorderScene({
   description,
   readonly = false,
   compact = false,
+  classroom = false,
   className,
   ...divProps
 }: RecorderSceneProps) {
@@ -200,6 +202,7 @@ export function RecorderScene({
           </span>
         </div>
         <RecorderFingeringMap
+          classroom={classroom}
           holeStates={normalizedStates}
           currentClosedHoles={actualClosed}
           toOpen={toOpen}

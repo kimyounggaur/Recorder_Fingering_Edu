@@ -5,6 +5,7 @@ import {
   useState
 } from "react";
 import { useFingeringAnimation } from "../animation/useFingeringAnimation";
+import type { ClassroomSnapshot } from "./useClassroom";
 import type { RecorderAudioRequestId, UseRecorderAudioResult } from "../audio/useRecorderAudio";
 import {
   ALL_HOLES,
@@ -328,5 +329,12 @@ export function useNoteSelection({ preferences, updatePreferences, reducedMotion
     setTransitionOrigin({ note: selectedNote, system, closedHoles: getVisualClosedHoles() });
     setAudioMuted(DEFAULT_PREFERENCES.isMuted); requestAnimation();
   }, [cancelAudio, onStopSequence, selectedNote, system, getVisualClosedHoles, setAudioMuted, requestAnimation]);
-  return { selectedNote, setSelectedNote, activeBank, setActiveBank, transitionOrigin, animationKey, system, currentNote, currentShortcutLabel, displayAnimation, displayedHoleStates, selectNote, playCurrentNote, replay, changeSystem, chooseOnboardingSystem, changeMuted, changeStepMode, currentIndex, goPrevious, goNext, instruction, liveMessage, cancelAudio, prepareReset, setStepMode };
+  const restoreSelection = useCallback((snapshot: ClassroomSnapshot) => {
+    cancelAudio(); onStopSequence();
+    setTransitionOrigin({ note: selectedNote, system, closedHoles: getVisualClosedHoles() });
+    setSelectedNote(snapshot.note); setActiveBank(snapshot.bank);
+    updatePreferences({ fingeringSystem: snapshot.system, speed: snapshot.speed, stepMode: snapshot.stepMode });
+    requestAnimation();
+  }, [cancelAudio, onStopSequence, selectedNote, system, getVisualClosedHoles, updatePreferences, requestAnimation]);
+  return { selectedNote, setSelectedNote, activeBank, setActiveBank, transitionOrigin, animationKey, system, currentNote, currentShortcutLabel, displayAnimation, displayedHoleStates, selectNote, playCurrentNote, replay, changeSystem, chooseOnboardingSystem, changeMuted, changeStepMode, currentIndex, goPrevious, goNext, instruction, liveMessage, cancelAudio, prepareReset, setStepMode, restoreSelection };
 }

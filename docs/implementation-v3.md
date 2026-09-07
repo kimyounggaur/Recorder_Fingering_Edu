@@ -95,3 +95,11 @@ typecheck 통과 / lint 오류 0·경고 0 / unit 109 통과·0 실패 / build �
 - 텅잉은 80bpm(750ms), 솔 120ms이며 음소거 시 시각 박자만 진행한다. 정지/카드 이탈/언마운트에서 타이머와 자신의 오디오 요청을 정리한다.
 - typecheck 통과 / lint 오류 0·경고 0 / unit 159 통과 / build 통과 / build:vercel 통과 / Chromium E2E 18 통과.
 - 5카드 × 360px/1440px에서 가로 넘침 없음. 캡처: output/screenshots/p9/.
+
+## P10 보고
+
+- 수업 모드는 진입 전 음·음역·체계·속도·단계 모드와 포커스를 복원한다. Fullscreen 거절 시 같은 CSS 화면을 제공하며 T/Esc/S/M/C 및 기존 숫자·방향·재생 키를 지원한다.
+- 1920×1080에서 70:30 배치, 900px 이상 포즈, 44px 이상 구멍, 120px 계이름을 E2E로 검사했다. 작은 화면에서 마지막 헤더 버튼이 숨겨지던 기존 CSS를 제거했다.
+- 고대비 설정을 12번째 저장 필드로 추가했다. 다섯 대표 화면의 실제 HTML 텍스트 색 조합은 최소 8.95:1이며, 추가 접근성 자동 검사는 P12에서 진행한다.
+- typecheck 통과 / lint 오류 0·경고 0 / unit 162 통과 / build 통과 / build:vercel 통과 / Chromium E2E 20 통과.
+- 캡처: output/screenshots/p10/. 실물 교실 프로젝터 검증은 수행하지 않았다.
