@@ -1,7 +1,7 @@
 /* global self, caches, URL, Response, fetch */
 
 const CACHE_PREFIX = "recorder-fingering-";
-const CACHE_NAME = `${CACHE_PREFIX}5d12666-1788774999004`;
+const CACHE_NAME = `${CACHE_PREFIX}f185ac4-1788775536826`;
 const PRECACHE_URLS = [
   "/",
   "/assets/BasicsApp-CgvSN5_W.js",

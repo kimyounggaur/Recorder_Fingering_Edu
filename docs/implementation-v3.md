@@ -103,3 +103,10 @@ typecheck 통과 / lint 오류 0·경고 0 / unit 109 통과·0 실패 / build �
 - 고대비 설정을 12번째 저장 필드로 추가했다. 다섯 대표 화면의 실제 HTML 텍스트 색 조합은 최소 8.95:1이며, 추가 접근성 자동 검사는 P12에서 진행한다.
 - typecheck 통과 / lint 오류 0·경고 0 / unit 162 통과 / build 통과 / build:vercel 통과 / Chromium E2E 20 통과.
 - 캡처: output/screenshots/p10/. 실물 교실 프로젝터 검증은 수행하지 않았다.
+
+## P11 보고
+
+- 원본 PNG 11장 및 AI 전체 페이지, Yamaha 두 체계 운지표를 시각 확인했다. 개별 접촉 후보와 보류 이유는 docs/range-investigation.md에 기록했다.
+- Mollenhauer 공식 목록은 열리지만 대상 PDF 본문은 검증 대기/다운로드 오류로 읽지 못했다. 설계의 두 출처 일치 조건과 엄지 상태 확정 조건을 충족하지 못해 신규 음 0개로 보류한다. 사용자 승인 질문은 하지 않았다.
+- 기존 17음·20포즈 데이터는 변경하지 않았다. D-21은 조사 완료, 확장 보류다.
+- typecheck / lint / unit 162 / build / build:vercel / Chromium E2E 20 모두 통과했다.
