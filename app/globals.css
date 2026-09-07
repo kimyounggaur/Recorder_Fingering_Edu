@@ -2,6 +2,7 @@
 @import "./courses.css";
 @import "./lesson-pages.css";
 @import "./quiz.css";
+@import "./basics.css";
 
 :root {
   --color-bg: #f3f6fb;

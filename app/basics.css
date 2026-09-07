@@ -1,0 +1,47 @@
+.basics-progress { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
+.slide-dots { display: flex; gap: 6px; }
+.slide-dots button { display: grid; place-items: center; width: 32px; height: 32px; border: 0; padding: 0; background: transparent; }
+.slide-dots button span { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--color-primary); }
+.slide-dots [aria-current="step"] span { background: var(--color-primary); }
+.basics-slide { min-height: 540px; padding-bottom: 24px; }
+.basics-slide > h2 { font-size: 1.7rem; margin-bottom: 20px; }
+.basics-slide > .setting-fieldset { max-width: 400px; }
+.basics-content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+.basics-illustration { width: 100%; max-height: 420px; }
+.basics-copy { padding-left: 24px; margin: 20px 0; font-size: 1.15rem; line-height: 1.9; }
+.basics-copy li { margin-bottom: 16px; padding-left: 6px; }
+.basics-emphasis { font-size: 1.6rem; font-weight: 800; color: var(--color-primary-strong); }
+.basics-grip-map { width: 100%; max-width: 330px; margin: 0 auto; }
+.basics-grip-map > .fingering-map { height: 400px; width: 100%; }
+.map-hand-ring--left { stroke: var(--color-primary); }
+.map-hand-ring--right { stroke: var(--color-success); }
+.hand-color-legend { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; font-size: .85rem; font-weight: 800; }
+.hand-color-legend span:first-child { color: var(--color-primary-strong); }
+.hand-color-legend span:last-child { color: #126344; }
+.mouth-examples { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.mouth-examples > div { border-bottom: 1px solid var(--color-line); padding-bottom: 20px; }
+.mouth-examples h3 { display: flex; align-items: center; gap: 8px; font-size: 1.15rem; }
+.mouth-examples p { font-size: .95rem; }
+.mouth-illustration { width: 100%; max-height: 280px; }
+.basics-navigation { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 16px 0; background: var(--color-surface); border-top: 1px solid var(--color-line); z-index: 2; }
+.basics-navigation button { display: grid; place-items: center; width: 56px; height: 48px; padding: 0; }
+.basics-slide > a, .tonguing-practice button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+.tonguing-practice { text-align: center; margin: 36px 0; }
+.tonguing-beats { display: flex; justify-content: center; gap: 12px; margin-bottom: 36px; font-size: 3rem; font-weight: 800; }
+.tonguing-beats > span { color: var(--color-text-muted); transition: color 100ms, transform 100ms; }
+.tonguing-beats > [data-active="true"] { color: var(--color-primary-strong); transform: translateY(-6px); text-decoration: underline; text-underline-offset: 10px; }
+.beat-dash { font-size: 1.2rem; }
+.tonguing-practice[data-reduced-motion="true"] .tonguing-beats > span { transform: none; transition: opacity 100ms; opacity: .55; }
+.tonguing-practice[data-reduced-motion="true"] .tonguing-beats > [data-active="true"] { opacity: 1; }
+@media (max-width: 640px) {
+  .basics-content { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .basics-slide { min-height: 0; }
+  .basics-slide > h2 { font-size: 1.4rem; }
+  .basics-illustration { height: 270px; }
+  .basics-copy { font-size: 1rem; line-height: 1.8; }
+  .basics-copy li { margin-bottom: 12px; }
+  .basics-emphasis { font-size: 1.35rem; }
+  .mouth-examples { gap: 12px; }
+  .mouth-examples h3 { font-size: .95rem; flex-wrap: wrap; }
+  .tonguing-beats { font-size: 2.25rem; gap: 8px; }
+}

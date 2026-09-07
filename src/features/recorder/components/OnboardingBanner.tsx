@@ -13,6 +13,7 @@ export function OnboardingBanner({ onChoose }: OnboardingBannerProps) {
         <h2 id="onboarding-heading">내 리코더의 운지 체계는 무엇인가요?</h2>
         <p>두 체계는 파·파♯·높은 파의 손가락 모양이 달라요. 나중에 설정에서 언제든 바꿀 수 있어요.</p>
         <Link className="text-link" href="/compare">잘 모르겠어요 → 비교해 보기</Link>
+        <Link className="text-link" href="/basics">리코더가 처음이라면 기초 배우기</Link>
       </div>
       <div className="onboarding-actions">
         <button type="button" className="choice-button" onClick={() => onChoose("baroque")}>

@@ -44,6 +44,7 @@ export function RecorderLearningApp() {
         </div>
         <div className="header-actions">
           <Link className="secondary-button" href="/quiz">퀴즈</Link>
+          <Link className="secondary-button" href="/basics">기초 배우기</Link>
           <button
             type="button"
             className="secondary-button"

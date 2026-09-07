@@ -78,6 +78,7 @@ export interface RecorderFingeringMapProps
   onHoleChange?: (hole: HoleId, state: HoleState) => void;
   feedback?: Partial<Record<HoleId, "correct" | "wrong">>;
   targetStates?: Partial<Record<HoleId, HoleState>>;
+  handColors?: boolean;
 }
 
 export function nextHoleState(hole: HoleId, state: HoleState): HoleState {
@@ -340,6 +341,7 @@ function MapHole({
   onActivate,
   feedback,
   targetState,
+  handColors = false,
 }: {
   id: HoleId;
   state: HoleState;
@@ -352,6 +354,7 @@ function MapHole({
   onActivate?: () => void;
   feedback?: "correct" | "wrong";
   targetState?: HoleState;
+  handColors?: boolean;
 }) {
   const highlighted = isHoleTransitionHighlighted(transition, phase);
   const pressed = state !== "open";
@@ -388,6 +391,7 @@ function MapHole({
       aria-label={`${HOLE_NUMBER_LABELS[id]}번 구멍, ${FINGER_LABELS[id]}, ${STATE_LABELS[state]}`}
     >
       <title>{`${FINGER_LABELS[id]}: ${STATE_LABELS[state]}`}</title>
+      {handColors ? <circle className={`map-hand-ring map-hand-ring--${id.startsWith("R") ? "right" : "left"}`} cx={MAP_HOLE_LAYOUT[id].x} cy={MAP_HOLE_LAYOUT[id].y} r={22} fill="none" strokeWidth={4} aria-hidden="true" /> : null}
       {interactive ? <circle className="map-hit-area" cx={MAP_HOLE_LAYOUT[id].x} cy={MAP_HOLE_LAYOUT[id].y} r={22} fill="transparent" /> : null}
       {feedback ? <g className={`map-feedback map-feedback--${feedback}`} aria-hidden="true">
         <circle cx={MAP_HOLE_LAYOUT[id].x} cy={MAP_HOLE_LAYOUT[id].y} r={22} fill="none" strokeWidth={3} />
@@ -427,6 +431,7 @@ export function RecorderFingeringMap({
   onHoleChange,
   feedback,
   targetStates,
+  handColors = false,
   className,
   ...svgProps
 }: RecorderFingeringMapProps) {
@@ -597,6 +602,7 @@ export function RecorderFingeringMap({
         />
         <MapHole
           id="T0"
+          handColors={handColors}
           interactive={interactive} locked={locked} onActivate={() => activate("T0")} feedback={feedback?.T0} targetState={targetStates?.T0}
           state={states.T0}
           transition={transitionFor("T0", toOpen, toClose)}
@@ -611,6 +617,7 @@ export function RecorderFingeringMap({
           <MapHole
             key={id}
             id={id}
+            handColors={handColors}
             interactive={interactive} locked={locked} onActivate={() => activate(id)} feedback={feedback?.[id]} targetState={targetStates?.[id]}
             state={states[id]}
             transition={transitionFor(id, toOpen, toClose)}
