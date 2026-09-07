@@ -10,6 +10,7 @@ interface SegmentedControlProps<T extends string> {
   options: readonly Segment<T>[];
   onChange: (value: T) => void;
   name: string;
+  disabled?: boolean;
 }
 
 export function SegmentedControl<T extends string>({
@@ -18,11 +19,12 @@ export function SegmentedControl<T extends string>({
   options,
   onChange,
   name,
+  disabled = false,
 }: SegmentedControlProps<T>) {
   return (
-    <fieldset className="setting-fieldset">
+    <fieldset className="setting-fieldset" disabled={disabled}>
       <legend>{legend}</legend>
-      <div className="segmented-control">
+      <div className="segmented-control" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
         {options.map((option) => (
           <label
             key={option.value}

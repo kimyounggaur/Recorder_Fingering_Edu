@@ -37,6 +37,8 @@ export interface RecorderSceneProps
   debug?: boolean;
   title?: string;
   description?: string;
+  readonly?: boolean;
+  compact?: boolean;
 }
 function ChangeList({
   holes,
@@ -94,6 +96,8 @@ export function RecorderScene({
   debug = false,
   title = "현재 리코더 운지",
   description,
+  readonly = false,
+  compact = false,
   className,
   ...divProps
 }: RecorderSceneProps) {
@@ -166,12 +170,12 @@ export function RecorderScene({
       </span>
 
       <section className="recorder-pose-panel" aria-hidden="true">
-        <div className="recorder-pose-panel__topline">
+        {!compact ? <div className="recorder-pose-panel__topline">
           <span className="recorder-pose-panel__kicker">실제 손 모양</span>
           <span className="recorder-pose-panel__open-key">
             <i aria-hidden="true" /> 회색 손가락은 떼어요
           </span>
-        </div>
+        </div> : null}
         <RecorderPoseStage
           source={poseSource}
           replaySource={replaySource}
@@ -179,10 +183,10 @@ export function RecorderScene({
           duration={poseDuration}
           reducedMotion={reducedMotion}
         />
-        <div className="recorder-pose-panel__hand-guide">
+        {!compact ? <div className="recorder-pose-panel__hand-guide">
           <span><b>왼손</b> 화면 오른쪽 · 위쪽 구멍</span>
           <span><b>오른손</b> 화면 왼쪽 · 아래쪽 구멍</span>
-        </div>
+        </div> : null}
       </section>
 
       <section className="fingering-map-panel" aria-hidden="true">
@@ -208,13 +212,13 @@ export function RecorderScene({
         />
       </section>
 
-      <div className="recorder-scene__changes" aria-hidden="true">
+      {!readonly ? <div className="recorder-scene__changes" aria-hidden="true">
         <ChangeList holes={toOpen} kind="release" />
         <ChangeList holes={toClose} kind="press" />
         {!toOpen.length && !toClose.length ? (
           <p className="pose-change-stable">손 모양과 구멍 지도가 일치했어요.</p>
         ) : null}
-      </div>
+      </div> : null}
 
       {debug ? (
         <div className="recorder-scene__debug-readout" aria-hidden="true">

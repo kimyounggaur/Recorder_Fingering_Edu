@@ -70,6 +70,7 @@ describe("PWA assets", () => {
         expect.objectContaining({ url: "/?bank=low" }),
         expect.objectContaining({ url: "/?bank=high" }),
         expect.objectContaining({ url: "/?bank=chromatic" }),
+        expect.objectContaining({ url: "/compare" }),
       ]),
     );
   });

@@ -2,6 +2,7 @@ import type { FingeringSystem } from "../model/types";
 import type { AnimationSpeed } from "../animation/motionTimings";
 import { SegmentedControl } from "./SegmentedControl";
 import { ToggleRow } from "./ToggleRow";
+import Link from "next/link";
 
 interface SettingsPanelProps {
   system: FingeringSystem;
@@ -35,6 +36,7 @@ export function SettingsPanel(props: SettingsPanelProps) {
         </button>
       </div>
 
+      <Link className="text-link" href="/compare">비교해 보기</Link>
       <SegmentedControl
         legend="운지 체계"
         name="fingering-system"

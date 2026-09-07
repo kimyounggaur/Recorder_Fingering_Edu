@@ -1,12 +1,13 @@
 /* global self, caches, URL, Response, fetch */
 
 const CACHE_PREFIX = "recorder-fingering-";
-const CACHE_NAME = `${CACHE_PREFIX}dfead9d-1788771626618`;
+const CACHE_NAME = `${CACHE_PREFIX}096ddcd-1788772283540`;
 const PRECACHE_URLS = [
   "/",
-  "/assets/RecorderErrorBoundary-CqS9YaUH.js",
-  "/assets/RecorderLearningApp-BDQFTC6T.js",
-  "/assets/ServiceWorkerRegistration-MDSvop59.js",
+  "/assets/CompareApp-BKYfG86d.js",
+  "/assets/RecorderErrorBoundary-KGmheTGm.js",
+  "/assets/RecorderLearningApp-BETp1ZUf.js",
+  "/assets/ServiceWorkerRegistration-2gmLFnAD.js",
   "/assets/_vinext_fonts/geist-8ac0455e797f/geist-001175b1.woff2",
   "/assets/_vinext_fonts/geist-8ac0455e797f/geist-52306abf.woff2",
   "/assets/_vinext_fonts/geist-8ac0455e797f/geist-875ccdd4.woff2",
@@ -18,12 +19,15 @@ const PRECACHE_URLS = [
   "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-44e03052.woff2",
   "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-971fb274.woff2",
   "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-f6b33328.woff2",
-  "/assets/createLucideIcon-DgMtuwtK.js",
+  "/assets/buildInstruction-CYFpvQUw.js",
+  "/assets/createLucideIcon-crHV4QEh.js",
   "/assets/framework-CXnKph_e.js",
-  "/assets/index-BMUiqOwv.js",
-  "/assets/index-WZX6aD_W.css",
-  "/assets/layout-segment-context-nuRrFSet.js",
+  "/assets/index-8QSAfko1.css",
+  "/assets/index-skrmm4DN.js",
+  "/assets/layout-segment-context-DeMsWEX6.js",
   "/assets/rolldown-runtime-S-ySWqyJ.js",
+  "/assets/router-CZn5QpsL.js",
+  "/compare",
   "/favicon.svg",
   "/fingering/poses/as4.png",
   "/fingering/poses/cs4.png",

@@ -6,14 +6,11 @@ import {
 } from "react";
 import { useRecorderAudio } from "../audio/useRecorderAudio";
 import {
-  NOTE_BANKS
-} from "../data/noteMeta";
-import {
   DEFAULT_PREFERENCES
 } from "../utils/storage";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
 import { useNoteSelection } from "./useNoteSelection";
-import { getRequestedBank, usePreferences } from "./usePreferences";
+import { getRequestedSelection, usePreferences } from "./usePreferences";
 import { useReducedMotion } from "./useReducedMotion";
 import { useSequencePractice } from "./useSequencePractice";
 import { useCompletionCue } from "./useCompletionCue";
@@ -39,8 +36,8 @@ export function useRecorderLesson() {
   const { setActiveBank, setSelectedNote } = selection;
   const { setMuted: setAudioMuted } = audio;
   useEffect(() => restore((stored, searchParams) => {
-    const requestedBank = getRequestedBank(searchParams);
-    if (requestedBank) { setActiveBank(requestedBank); setSelectedNote(NOTE_BANKS[requestedBank][0].note); }
+    const requested = getRequestedSelection(searchParams);
+    if (requested) { setActiveBank(requested.bank); setSelectedNote(requested.note); }
     setAudioMuted(stored.isMuted);
     setDebug(process.env.NODE_ENV !== "production" && searchParams.get("debug") === "1");
   }), [restore, setActiveBank, setSelectedNote, setAudioMuted]);

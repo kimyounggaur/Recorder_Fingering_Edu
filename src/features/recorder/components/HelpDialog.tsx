@@ -99,6 +99,7 @@ export function HelpDialog({ open, onClose }: HelpDialogProps) {
             ×
           </button>
         </div>
+        <a className="text-link" href="/compare">운지 체계 비교</a>
         <ol className="help-steps">
           <li><strong>낮은 계이름·높은 계이름·반음</strong> 탭에서 배울 음을 고릅니다.</li>
           <li><strong>파란 ↑</strong> 손가락을 먼저 떼고, <strong>노란 ↓</strong> 손가락을 구멍에 붙입니다.</li>

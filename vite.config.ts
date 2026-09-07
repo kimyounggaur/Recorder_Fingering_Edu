@@ -60,9 +60,13 @@ export default defineConfig(async () => {
   }
 
   return {
-    server: isCodexSeatbeltSandbox
-      ? { watch: { useFsEvents: false, usePolling: true } }
-      : undefined,
+    server: {
+      watch: {
+        ignored: ["**/output/**", "**/tmp/**", "**/.vercel/**", "**/.wrangler/**", "**/.vinext/**", "**/dist/**"],
+        ...(isCodexSeatbeltSandbox ? { useFsEvents: false, usePolling: true } : {}),
+      },
+    },
+    optimizeDeps: { exclude: ["next/link", "next/navigation"] },
     plugins,
   };
 });

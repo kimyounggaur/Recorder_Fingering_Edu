@@ -64,7 +64,7 @@ function directionParticle(value: string): "으로" | "로" {
   return finalIndex === 0 || finalIndex === 8 ? "로" : "으로";
 }
 
-function formatFingerNames(holeIds: readonly HoleId[]): string {
+export function formatFingerNames(holeIds: readonly HoleId[]): string {
   const handGroups = [
     { prefix: "왼손", holes: ALL_HOLES.slice(0, 4) },
     { prefix: "오른손", holes: ALL_HOLES.slice(4) },

@@ -71,3 +71,11 @@ typecheck 통과 / lint 오류 0·경고 0 / unit 109 통과·0 실패 / build �
 - 6코스 × 2모드 완주와 타이머 정리를 모두 단위 테스트했다. 왼손 코스 수동 진행 E2E는 높은 도의 높은 음역 선택과 다시 시작 뒤 직접 선택 중지를 확인한다.
 - typecheck 통과 / lint 오류 0·경고 0 / unit 143 통과 / build 통과 / build:vercel 통과 / Chromium E2E 14 통과.
 - 360px 코스 화면의 가로 넘침이 없음을 확인했다. 캡처: output/screenshots/p6/. 설정은 허용된 11개 필드만 저장하며 점수/연습 이력은 저장하지 않는다.
+
+## P7 보고
+
+- /compare에서 운지 데이터의 세 차이 음을 자동 추출해 독일식/바로크식 두 장면으로 비교한다. 공유 음은 한 장면만 표시하며 설정 선택은 검증된 note/bank 딥링크로 이어진다.
+- 3음 × 2체계 × 8구멍을 검증했다. readonly/compact 기본값은 기존 장면과 동일하고 온보딩의 잘못된 "파만 다름" 문구를 세 음으로 수정했다.
+- 초기 SSR 버튼 클릭이 hydration 이전에 유실될 수 있어 초기화 완료 후 활성화한다. Vinext 개발 의존성 사전 번들에서 next/link와 next/navigation을 제외해 React 중복 로드를 방지했다. Windows에서 출력 추적 파일 감시가 EBUSY로 개발 서버를 종료시켜 산출물 디렉터리를 감시 대상에서 제외했다.
+- 도움말의 새 비교 링크에 맞춰 E2E 포커스 순환을 갱신했다. typecheck 통과 / lint 오류 0·경고 0 / unit 146 통과 / build 통과 / build:vercel 통과 / Chromium E2E 15 통과.
+- 360×800·844×390·1440×900 가로 넘침 없음. 캡처: output/screenshots/p7/.

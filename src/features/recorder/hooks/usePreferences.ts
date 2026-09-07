@@ -12,9 +12,20 @@ import {
   savePreferences,
   type RecorderPreferences,
 } from "../utils/storage";
+import { ALL_NOTE_IDS, NOTE_BANKS } from "../data/noteMeta";
+import { getNoteBank } from "../data/practiceCourses";
+import type { SolfegeId } from "../model/types";
+
 export function getRequestedBank(searchParams: URLSearchParams): NoteBank | null {
   const bank = searchParams.get("bank");
   if (bank === "low" || bank === "high" || bank === "chromatic") return bank;
+  return null;
+}
+export function getRequestedSelection(searchParams: URLSearchParams): { note: SolfegeId; bank: NoteBank } | null {
+  const bank = getRequestedBank(searchParams);
+  const note = ALL_NOTE_IDS.find(id => id === searchParams.get("note"));
+  if (note) return { note, bank: getNoteBank(note, bank ?? undefined) };
+  if (bank) return { note: NOTE_BANKS[bank][0].note, bank };
   return null;
 }
 export function usePreferences() {
