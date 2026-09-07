@@ -1,5 +1,6 @@
 "use client";
 import { CircleHelp, Maximize } from "lucide-react";
+import Link from "next/link";
 import { useRecorderLesson } from "../hooks/useRecorderLesson";
 import { AudioDebugDemo } from "./AudioDebugDemo";
 import { FingeringLegend } from "./FingeringLegend";
@@ -42,6 +43,7 @@ export function RecorderLearningApp() {
           </div>
         </div>
         <div className="header-actions">
+          <Link className="secondary-button" href="/quiz">퀴즈</Link>
           <button
             type="button"
             className="secondary-button"

@@ -1,13 +1,15 @@
 /* global self, caches, URL, Response, fetch */
 
 const CACHE_PREFIX = "recorder-fingering-";
-const CACHE_NAME = `${CACHE_PREFIX}096ddcd-1788772283540`;
+const CACHE_NAME = `${CACHE_PREFIX}cf8ac77-1788773097400`;
 const PRECACHE_URLS = [
   "/",
-  "/assets/CompareApp-BKYfG86d.js",
-  "/assets/RecorderErrorBoundary-KGmheTGm.js",
-  "/assets/RecorderLearningApp-BETp1ZUf.js",
-  "/assets/ServiceWorkerRegistration-2gmLFnAD.js",
+  "/assets/CompareApp-Sj7zQYjn.js",
+  "/assets/LessonPageShell-B8WjZAas.js",
+  "/assets/QuizApp-STsrv6k7.js",
+  "/assets/RecorderErrorBoundary-C4NI2U1t.js",
+  "/assets/RecorderLearningApp-aLXz7TAy.js",
+  "/assets/ServiceWorkerRegistration-LEALT-T4.js",
   "/assets/_vinext_fonts/geist-8ac0455e797f/geist-001175b1.woff2",
   "/assets/_vinext_fonts/geist-8ac0455e797f/geist-52306abf.woff2",
   "/assets/_vinext_fonts/geist-8ac0455e797f/geist-875ccdd4.woff2",
@@ -19,14 +21,16 @@ const PRECACHE_URLS = [
   "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-44e03052.woff2",
   "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-971fb274.woff2",
   "/assets/_vinext_fonts/geist-mono-00e989178794/geist-mono-f6b33328.woff2",
-  "/assets/buildInstruction-CYFpvQUw.js",
+  "/assets/buildInstruction-Cb12G3aF.js",
   "/assets/createLucideIcon-crHV4QEh.js",
   "/assets/framework-CXnKph_e.js",
-  "/assets/index-8QSAfko1.css",
-  "/assets/index-skrmm4DN.js",
-  "/assets/layout-segment-context-DeMsWEX6.js",
+  "/assets/index-BKGcMqPO.css",
+  "/assets/index-l-HTI9Bn.js",
+  "/assets/layout-segment-context-DFPXcaTW.js",
   "/assets/rolldown-runtime-S-ySWqyJ.js",
-  "/assets/router-CZn5QpsL.js",
+  "/assets/router-pGLsc7t9.js",
+  "/assets/useCompletionCue-CJQVhajN.js",
+  "/assets/usePreferences-e10rdrfK.js",
   "/compare",
   "/favicon.svg",
   "/fingering/poses/as4.png",
@@ -51,7 +55,8 @@ const PRECACHE_URLS = [
   "/fingering/poses/sol.png",
   "/icon-192.png",
   "/icon-512.png",
-  "/manifest.webmanifest"
+  "/manifest.webmanifest",
+  "/quiz"
 ];
 const RUNTIME_DESTINATIONS = new Set(["audio", "font", "image", "script", "style"]);
 

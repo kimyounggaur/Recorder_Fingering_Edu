@@ -1,4 +1,4 @@
-import { useId, type ReactNode, type SVGProps } from "react";
+import { useId, useState, type ReactNode, type SVGProps } from "react";
 import {
   FINGER_LABELS,
   HOLE_NUMBER_LABELS,
@@ -73,6 +73,16 @@ export interface RecorderFingeringMapProps
   showFingerNames?: boolean;
   title?: string;
   description?: string;
+  interactive?: boolean;
+  locked?: boolean;
+  onHoleChange?: (hole: HoleId, state: HoleState) => void;
+  feedback?: Partial<Record<HoleId, "correct" | "wrong">>;
+  targetStates?: Partial<Record<HoleId, HoleState>>;
+}
+
+export function nextHoleState(hole: HoleId, state: HoleState): HoleState {
+  const cycle: HoleState[] = hole === "T0" ? ["open", "closed", "half"] : hole === "R6" || hole === "R7" ? ["open", "closed", "partial"] : ["open", "closed"];
+  return cycle[(cycle.indexOf(state) + 1) % cycle.length];
 }
 
 function transitionFor(
@@ -325,6 +335,11 @@ function MapHole({
   phase,
   showHoleNumbers,
   showFingerNames,
+  interactive = false,
+  locked = false,
+  onActivate,
+  feedback,
+  targetState,
 }: {
   id: HoleId;
   state: HoleState;
@@ -332,6 +347,11 @@ function MapHole({
   phase: AnimationPhase;
   showHoleNumbers: boolean;
   showFingerNames: boolean;
+  interactive?: boolean;
+  locked?: boolean;
+  onActivate?: () => void;
+  feedback?: "correct" | "wrong";
+  targetState?: HoleState;
 }) {
   const highlighted = isHoleTransitionHighlighted(transition, phase);
   const pressed = state !== "open";
@@ -354,10 +374,25 @@ function MapHole({
       data-finger={id}
       data-finger-state={state}
       data-highlighted={highlighted ? "true" : "false"}
-      role="group"
+      role={interactive ? "button" : "group"}
+      tabIndex={interactive && !locked ? 0 : undefined}
+      aria-pressed={interactive ? pressed : undefined}
+      aria-disabled={interactive ? locked : undefined}
+      onClick={interactive && !locked ? onActivate : undefined}
+      onKeyDown={interactive ? event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault(); event.stopPropagation();
+          if (!locked) onActivate?.();
+        }
+      } : undefined}
       aria-label={`${HOLE_NUMBER_LABELS[id]}번 구멍, ${FINGER_LABELS[id]}, ${STATE_LABELS[state]}`}
     >
       <title>{`${FINGER_LABELS[id]}: ${STATE_LABELS[state]}`}</title>
+      {interactive ? <circle className="map-hit-area" cx={MAP_HOLE_LAYOUT[id].x} cy={MAP_HOLE_LAYOUT[id].y} r={22} fill="transparent" /> : null}
+      {feedback ? <g className={`map-feedback map-feedback--${feedback}`} aria-hidden="true">
+        <circle cx={MAP_HOLE_LAYOUT[id].x} cy={MAP_HOLE_LAYOUT[id].y} r={22} fill="none" strokeWidth={3} />
+        <text x={MAP_HOLE_LAYOUT[id].x + 56} y={MAP_HOLE_LAYOUT[id].y + 5}>{feedback === "correct" ? "✓" : `! ${STATE_LABELS[targetState ?? "open"]}`}</text>
+      </g> : null}
       {transition !== "steady" ? (
         <ChangeRing
           id={id}
@@ -387,9 +422,15 @@ export function RecorderFingeringMap({
   showFingerNames = false,
   title = "현재 리코더 운지 도식",
   description,
+  interactive = false,
+  locked = false,
+  onHoleChange,
+  feedback,
+  targetStates,
   className,
   ...svgProps
 }: RecorderFingeringMapProps) {
+  const [liveMessage, setLiveMessage] = useState("");
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const titleId = `fingering-map-title-${instanceId}`;
   const descriptionId = `fingering-map-description-${instanceId}`;
@@ -412,7 +453,13 @@ export function RecorderFingeringMap({
       ).join(", ")}입니다.`
     : "";
 
-  return (
+  const activate = (id: HoleId) => {
+    if (locked) return;
+    const next = nextHoleState(id, states[id]);
+    onHoleChange?.(id, next);
+    setLiveMessage(`${HOLE_NUMBER_LABELS[id]}번 구멍 ${STATE_LABELS[next]}`);
+  };
+  const map = (
     <svg
       {...svgProps}
       className={[
@@ -422,11 +469,12 @@ export function RecorderFingeringMap({
       ]
         .filter(Boolean)
         .join(" ")}
-      viewBox="0 0 400 560"
+      viewBox={interactive ? "0 0 400 610" : "0 0 400 560"}
       preserveAspectRatio="xMidYMid meet"
-      role="img"
+      role={interactive ? "group" : "img"}
       aria-labelledby={`${titleId} ${descriptionId}`}
-      focusable="false"
+      focusable={interactive ? undefined : "false"}
+      data-interactive={interactive || undefined}
       data-testid="recorder-fingering-map"
       data-phase={phase}
       data-closed-holes={closedHoles.join(" ")}
@@ -549,6 +597,7 @@ export function RecorderFingeringMap({
         />
         <MapHole
           id="T0"
+          interactive={interactive} locked={locked} onActivate={() => activate("T0")} feedback={feedback?.T0} targetState={targetStates?.T0}
           state={states.T0}
           transition={transitionFor("T0", toOpen, toClose)}
           phase={phase}
@@ -562,6 +611,7 @@ export function RecorderFingeringMap({
           <MapHole
             key={id}
             id={id}
+            interactive={interactive} locked={locked} onActivate={() => activate(id)} feedback={feedback?.[id]} targetState={targetStates?.[id]}
             state={states[id]}
             transition={transitionFor(id, toOpen, toClose)}
             phase={phase}
@@ -573,4 +623,5 @@ export function RecorderFingeringMap({
 
     </svg>
   );
+  return interactive ? <div className="interactive-map">{map}<p className="sr-only" aria-live="polite">{liveMessage}</p></div> : map;
 }

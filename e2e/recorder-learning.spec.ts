@@ -292,6 +292,8 @@ test("help dialog traps focus and blocks background shortcuts", async ({ page })
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "운지 체계 비교", exact: true })).toBeFocused();
   await page.keyboard.press("Tab");
+  await expect(page.getByRole("dialog").getByRole("link", { name: "퀴즈", exact: true })).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(close).toBeFocused();
 
   await page.keyboard.press("Escape");

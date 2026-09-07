@@ -59,6 +59,10 @@ src/features/recorder/
 
 practiceCourses.ts가 여섯 코스의 순서와 선호 음역을 정의합니다. useSequencePractice는 index/playing/paused/completed를 소유하고 자동 모드에서만 단일 타이머를 생성합니다. 코스 변경·직접 선택·일시정지·언마운트에서 세대 번호를 증가시켜 오래된 콜백을 무효화합니다. 수동 모드는 advance 호출만으로 진행합니다. 완주 오디오는 별도 useCompletionCue가 자기 요청 번호만 취소하므로 뒤이어 누른 일반 음을 끊지 않습니다.
 
+### 퀴즈
+
+src/features/quiz/scoring.ts의 순수 함수가 선택지와 구멍별 점수를 계산합니다. FINGERING_STATES의 네 상태를 정확히 비교하고 다른 체계와만 일치할 때 crossSystemMatch를 반환합니다. QuizRound는 라운드별 문제/점수/오답을 메모리로만 소유하며 동기식 잠금 ref로 중복 채점을 차단합니다. identify는 채점 1초 뒤, build는 다음 문제 버튼으로 진행합니다. useShortTone은 500ms 정답음이나 짧은 학습음의 타이머와 자기 오디오 요청만 정리합니다. 인터랙티브 지도의 SVG 버튼/피드백은 opt-in이며 기존 비인터랙티브 지도 속성은 유지됩니다.
+
 설정 복원은 오디오 훅 초기화 이후 실행됩니다. 선택 훅은 실제 표시 구멍을 전환 시작점으로 잡고 애니메이션 요청과 오디오 요청 번호를 각각 유지합니다. 순차 연습의 수동 선택 중지 콜백은 ref로 연결해 훅 의존성 순환을 피합니다. 프레임마다 바뀌는 상태 때문에 타이머나 전역 리스너를 추가 생성하지 않습니다.
 
 - `UiButtonNumber`: 음 선택 번호 `1 | ... | 8`

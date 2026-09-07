@@ -37,6 +37,7 @@
     }
   ],
   "shortcuts": [
+    { "name": "운지 퀴즈", "url": "/quiz", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
     { "name": "운지 체계 비교", "url": "/compare", "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
     {
       "name": "낮은 계이름 연습",

@@ -9,7 +9,7 @@
 .comparison-grid[data-same="true"] { grid-template-columns: minmax(0, 650px); justify-content: center; }
 .comparison-column { min-width: 0; }
 .comparison-column > h2 { font-size: 1.25rem; margin-bottom: 12px; }
-.comparison-column .recorder-scene { min-height: 0; height: 470px; padding: 0; grid-template-columns: minmax(0, 1fr) minmax(145px, .55fr); }
+.comparison-column .recorder-scene { min-height: 0; height: 470px; padding: 0; grid-template-columns: minmax(0, 1fr) minmax(145px, .55fr); grid-template-areas: "pose map"; grid-template-rows: minmax(0, 1fr); }
 .comparison-column .recorder-pose-panel, .comparison-column .fingering-map-panel { border-radius: 8px; box-shadow: none; }
 .comparison-column .fingering-map-panel__heading { flex-wrap: wrap; }
 .comparison-holes { font-size: .95rem; margin: 16px 0; line-height: 1.8; }
