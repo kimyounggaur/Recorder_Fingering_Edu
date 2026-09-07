@@ -48,3 +48,11 @@ typecheck 통과 / lint 오류 0·경고 0 / unit 109 통과·0 실패 / build �
 - 첫 오프라인 검사에서 Cloudflare 정적 서버의 `Vary: Origin` 때문에 모듈 스크립트 캐시가 일치하지 않았다. 같은 출처의 공개 정적 파일에만 `ignoreVary`를 적용해 해결했다. 내비게이션 캐시 정책은 따로 유지한다.
 - typecheck 통과 / lint 오류 0·경고 0 / unit 122 통과·0 실패 / build 통과 / build:vercel 통과 / Chromium E2E 12 통과·0 실패. 오프라인 새로 고침 뒤 세 탭 18개 버튼을 실제 순회했다.
 - 해소: D-02(배포 산출물), D-13. 실제 배포 URL·Android 주소창 제거·iOS 실기기 검증은 P13에서 별도 기록한다.
+
+## P4 보고
+
+- 세 sine 배음, 50ms 재사용 노이즈·30ms bandpass 치프, 35ms 어택·0.8 sustain, 4.5Hz·1.5% 진폭 변조를 추가했다. triangle 회귀 옵션과 고음 보호를 유지했다.
+- 모든 source/node를 음성 단위로 정리하고, 30회 연타 종료 뒤 activeVoiceCount=0과 전 노드 disconnect를 검사했다. 개발 모드 데모는 실제 주파수 오름차순으로 진행한다.
+- typecheck 통과 / lint 오류 0·경고 0 / unit 124 통과·0 실패 / build 통과 / build:vercel 통과 / Chromium E2E 13 통과·0 실패.
+- 실제 Chromium OfflineAudioContext로 17음 모두를 렌더해 신호 RMS·기음 성분·종료 뒤 무음·노드 0을 확인했다. 스피커를 통한 주관적 청취 평가는 수행하지 않았다.
+- 해소: D-20 중 U2. 실제 녹음이 아니라 합성 연습음이라는 표기를 유지한다.

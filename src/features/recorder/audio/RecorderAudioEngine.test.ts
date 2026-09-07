@@ -53,9 +53,9 @@ class FakeOscillator {
 
   public readonly stops: Array<number | undefined> = [];
 
-  public connect(): void {}
+  public connect<T>(node: T): T { return node; }
 
-  public disconnect(): void {}
+  public readonly disconnect = vi.fn();
 
   public start(time?: number): void {
     this.starts.push(time ?? 0);
@@ -69,12 +69,37 @@ class FakeOscillator {
 class FakeGain {
   public readonly gain = new FakeAudioParam();
 
-  public connect(): void {}
+  public connect<T>(node: T): T { return node; }
 
-  public disconnect(): void {}
+  public readonly disconnect = vi.fn();
+}
+
+class FakeBufferSource extends FakeOscillator { public buffer: AudioBuffer | null = null; }
+class FakeFilter extends FakeGain {
+  public type: BiquadFilterType = "lowpass";
+  public readonly frequency = new FakeAudioParam();
+  public readonly Q = new FakeAudioParam();
 }
 
 class FakeAudioContext {
+  public readonly sampleRate = 48000;
+  public readonly buffers: FakeBufferSource[] = [];
+  public readonly filters: FakeFilter[] = [];
+  public bufferCreations = 0;
+  public createBuffer(_channels: number, length: number, sampleRate: number): AudioBuffer {
+    this.bufferCreations += 1;
+    return { getChannelData: () => new Float32Array(length), length, sampleRate } as unknown as AudioBuffer;
+  }
+  public createBufferSource(): FakeBufferSource {
+    const source = new FakeBufferSource();
+    this.buffers.push(source);
+    return source;
+  }
+  public createBiquadFilter(): FakeFilter {
+    const filter = new FakeFilter();
+    this.filters.push(filter);
+    return filter;
+  }
   public currentTime = 10;
 
   public state: AudioContextState = "suspended";
@@ -205,10 +230,42 @@ describe("recorder audio pitch mapping", () => {
 });
 
 describe("WebAudioRecorderEngine", () => {
+  it("mixes three sine harmonics, a chiff, and optional vibrato and releases 30 rapid voices", async () => {
+    const context = new FakeAudioContext();
+    const engine = new WebAudioRecorderEngine({ contextFactory: () => context.asAudioContext(), vibrato: false });
+    await engine.unlock();
+    await engine.play("C");
+    expect(context.oscillators).toHaveLength(3);
+    expect(context.oscillators.map(osc => osc.frequency.value)).toEqual([523.25, 1046.5, 1569.75]);
+    expect(context.buffers).toHaveLength(1);
+    expect(context.filters).toHaveLength(1);
+    expect(context.filters[0].type).toBe("bandpass");
+    expect(context.filters[0].Q.value).toBe(6);
+    expect(context.gains[0].gain.events).toContainEqual({ kind: "linear", value: 0.18, time: 10.035 });
+    for (let index = 1; index < 30; index += 1) await engine.play("G5");
+    expect(context.bufferCreations).toBe(1);
+    engine.stop();
+    for (const source of [...context.oscillators, ...context.buffers]) source.onended?.();
+    expect(engine.activeVoiceCount).toBe(0);
+    for (const node of [...context.oscillators, ...context.buffers, ...context.gains, ...context.filters]) expect(node.disconnect).toHaveBeenCalled();
+    engine.dispose();
+  });
+
+  it("enables 4.5Hz modulation by default and attenuates high sounding notes", async () => {
+    const context = new FakeAudioContext();
+    const engine = new WebAudioRecorderEngine({ contextFactory: () => context.asAudioContext() });
+    await engine.unlock();
+    await engine.play("G5");
+    expect(context.oscillators).toHaveLength(4);
+    expect(context.oscillators.at(-1)!.frequency.value).toBe(4.5);
+    expect(context.gains[0].gain.events).toContainEqual({ kind: "linear", value: 0.135, time: 10.035 });
+    engine.dispose();
+    expect(engine.activeVoiceCount).toBe(0);
+  });
   it("waits for unlock, shapes a 780ms note, fades replacements, and cleans up", async () => {
     const context = new FakeAudioContext();
     const contextFactory = vi.fn(() => context.asAudioContext());
-    const engine = new WebAudioRecorderEngine({ contextFactory });
+    const engine = new WebAudioRecorderEngine({ contextFactory, timbre: "triangle" });
 
     await engine.preload();
     await engine.play("C");

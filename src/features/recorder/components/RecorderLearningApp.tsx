@@ -49,6 +49,7 @@ import { PlaybackControls } from "./PlaybackControls";
 import { OnboardingBanner } from "./OnboardingBanner";
 import { HelpDialog } from "./HelpDialog";
 import { RecorderScene } from "./RecorderScene";
+import { AudioDebugDemo } from "./AudioDebugDemo";
 
 interface TransitionOrigin {
   note: SolfegeId;
@@ -713,6 +714,7 @@ export function RecorderLearningApp() {
       {debug ? (
         <aside className="debug-panel" aria-label="개발용 상태 정보">
           <strong>DEBUG</strong>
+          <AudioDebugDemo key={animationKey} audio={audio} />
           <span>{selectedNote} / {system}</span>
           <span>{displayAnimation.phase}</span>
           <span>{displayAnimation.visualClosedHoles.join(" ")}</span>

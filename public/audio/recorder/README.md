@@ -1,6 +1,16 @@
 # 리코더 오디오 샘플과 라이선스
 
-이 디렉터리는 향후 로컬 리코더 샘플을 둘 자리입니다. **현재 저장소에는 녹음 샘플이 없으며 이 README 외의 오디오 파일을 사용하지 않습니다.** 앱의 기본 소리는 `src/features/recorder/audio/WebAudioRecorderEngine.ts`가 브라우저에서 실시간으로 만드는 triangle oscillator 합성음입니다. 따라서 현재 오디오 자산에 별도 제3자 음원 라이선스나 저작자 표시는 없습니다.
+이 디렉터리는 향후 로컬 리코더 샘플을 둘 자리입니다. **현재 저장소에는 녹음 샘플이 없으며 이 README 외의 오디오 파일을 사용하지 않습니다.** 기본은 `WebAudioRecorderEngine.ts`와 `recorderTimbre.ts`가 만드는 합성 연습음이며 실제 녹음이 아닙니다. 제3자 음원 라이선스나 저작자 표시는 없습니다.
+
+| 파라미터 | 값 |
+|---|---|
+| 기음·2배음·3배음 | sine, 1.00 / 0.16 / 0.06 (1000Hz 이상 배음 0.08 / 0.03) |
+| 치프 | 컨텍스트당 재사용 50ms 노이즈, bandpass 2f·Q6, gain 0.10에서 30ms에 0.0001 |
+| 마스터 | attack 35ms, sustain peak의 0.8, release 기본 125ms |
+| 진폭 비브라토 | 4.5Hz, 깊이 1.5%, 옵션으로 해제 |
+| 고음 보호 | 실음 1000Hz 이상 master 0.75배 |
+| 교체 페이드·길이 | 55ms / 600–900ms clamp |
+| 회귀 옵션 | timbre triangle, vibrato false |
 
 ## 현재 오디오 키
 

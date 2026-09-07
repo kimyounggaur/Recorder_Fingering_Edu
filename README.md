@@ -162,7 +162,7 @@ PowerShell에서는 `$env:PLAYWRIGHT_BASE_URL='http://127.0.0.1:3000'`을 먼저
 
 ## 오디오 조정과 샘플 교체
 
-현재 `src/features/recorder/audio/WebAudioRecorderEngine.ts`는 사용자 클릭으로 `AudioContext`를 연 뒤 triangle oscillator를 600–900ms 범위에서 재생합니다. 새 음이 시작되면 이전 음을 짧게 페이드아웃하며, 음소거·연타·언마운트 시 보류된 재생을 취소합니다.
+현재 `src/features/recorder/audio/WebAudioRecorderEngine.ts`는 사용자 클릭으로 `AudioContext`를 연 뒤 기음·배음·짧은 숨소리 어택을 섞은 합성 연습음을 600–900ms 범위에서 재생합니다. `recorderTimbre.ts`에서 배음 비율 1/0.16/0.06, 35ms 어택, 30ms 치프, 4.5Hz·1.5% 진폭 변조를 조정합니다. 1000Hz 이상은 배음을 절반으로, 마스터 게인을 0.75배로 낮춥니다. `timbre: "triangle"`과 `vibrato: false` 옵션으로 비교할 수 있습니다. 새 음은 기존 음을 55ms 페이드하고 음소거·연타·언마운트 시 보류 재생을 취소합니다.
 
 합성음을 조정하려면 같은 파일의 주파수 표와 `durationMs`, `fadeOutMs`, `transitionFadeMs`, gain envelope를 수정합니다. 실제 샘플로 교체하려면 다음 작업이 모두 필요합니다.
 

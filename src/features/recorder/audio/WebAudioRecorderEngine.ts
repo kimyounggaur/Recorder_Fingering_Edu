@@ -1,4 +1,5 @@
 import type { RecorderAudioEngine } from "./RecorderAudioEngine";
+import { createChiffBuffer, createRecorderTimbre } from "./recorderTimbre";
 
 export const RECORDER_NOTE_FREQUENCIES_HZ = {
   C4: 523.25,
@@ -70,6 +71,8 @@ export function getRecorderNoteFrequency(noteKey: string, pitchMode: PitchMode =
 
 export interface WebAudioRecorderEngineOptions {
   pitchMode?: PitchMode;
+  timbre?: "recorder" | "triangle";
+  vibrato?: boolean;
   /** Dependency seam for deterministic unit tests. */
   contextFactory?: () => AudioContext | null;
   /** Clamped to the product requirement of 600–900 ms. */
@@ -81,7 +84,8 @@ export interface WebAudioRecorderEngineOptions {
 }
 
 interface ActiveVoice {
-  oscillator: OscillatorNode;
+  sources: AudioScheduledSourceNode[];
+  nodes: AudioNode[];
   gainNode: GainNode;
   stopAt: number;
   ended: boolean;
@@ -127,6 +131,9 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
 
   private readonly transitionFadeMs: number;
   private readonly pitchMode: PitchMode;
+  private readonly timbre: "recorder" | "triangle";
+  private readonly vibrato: boolean;
+  private noiseBuffer: AudioBuffer | null = null;
 
   private context: AudioContext | null = null;
 
@@ -144,6 +151,8 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
 
   public constructor(options: WebAudioRecorderEngineOptions = {}) {
     this.pitchMode = options.pitchMode ?? "sounding";
+    this.timbre = options.timbre ?? "recorder";
+    this.vibrato = options.vibrato ?? true;
     this.contextFactory = options.contextFactory ?? createBrowserAudioContext;
     this.durationMs = clamp(
       finiteOr(options.durationMs, DEFAULT_DURATION_MS),
@@ -256,6 +265,7 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
 
     const context = this.context;
     this.context = null;
+    this.noiseBuffer = null;
 
     if (context !== null && context.state !== "closed") {
       void context.close().catch(() => undefined);
@@ -276,69 +286,65 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
     return this.context;
   }
 
+  public get activeVoiceCount(): number { return this.voices.size; }
+
   private startVoice(context: AudioContext, frequency: number): void {
-    let oscillator: OscillatorNode | null = null;
+    let sources: AudioScheduledSourceNode[] = [];
+    let nodes: AudioNode[] = [];
     let gainNode: GainNode | null = null;
 
     try {
       const now = context.currentTime;
-      const attackSeconds = 0.018;
+      const attackSeconds = this.timbre === "recorder" ? 0.035 : 0.018;
       const endAt = now + this.durationMs / 1_000;
       const releaseAt = endAt - this.fadeOutMs / 1_000;
       const highNoteGain = this.pitchMode === "sounding" && frequency >= 1000 ? 0.75 : 1;
 
-      oscillator = context.createOscillator();
       gainNode = context.createGain();
-
-      // A triangle wave is intentionally a neutral temporary timbre, not a
-      // claim that this is a sampled acoustic recorder.
-      oscillator.type = "triangle";
-      oscillator.frequency.setValueAtTime(frequency, now);
+      if (this.timbre === "triangle") {
+        const oscillator = context.createOscillator();
+        sources.push(oscillator);
+        oscillator.type = "triangle";
+        oscillator.frequency.setValueAtTime(frequency, now);
+        oscillator.connect(gainNode);
+      } else {
+        this.noiseBuffer ??= createChiffBuffer(context);
+        ({ sources, nodes } = createRecorderTimbre(context, frequency, gainNode, this.noiseBuffer, this.vibrato));
+      }
+      nodes.push(gainNode);
 
       gainNode.gain.cancelScheduledValues(now);
       gainNode.gain.setValueAtTime(MIN_GAIN, now);
       gainNode.gain.linearRampToValueAtTime(PEAK_GAIN * highNoteGain, now + attackSeconds);
-      gainNode.gain.linearRampToValueAtTime(SUSTAIN_GAIN * highNoteGain, releaseAt);
+      gainNode.gain.linearRampToValueAtTime((this.timbre === "recorder" ? PEAK_GAIN * 0.8 : SUSTAIN_GAIN) * highNoteGain, releaseAt);
       gainNode.gain.exponentialRampToValueAtTime(MIN_GAIN, endAt);
 
-      oscillator.connect(gainNode);
       gainNode.connect(context.destination);
 
       const voice: ActiveVoice = {
-        oscillator,
+        sources,
+        nodes,
         gainNode,
         stopAt: endAt + 0.02,
         ended: false,
       };
 
-      oscillator.onended = () => this.releaseVoice(voice);
-      oscillator.start(now);
-      oscillator.stop(voice.stopAt);
-
       this.voices.add(voice);
       this.activeVoice = voice;
+      let remaining = sources.length;
+      for (const source of sources) {
+        source.onended = () => { if (--remaining === 0) this.releaseVoice(voice); };
+        source.start(now);
+        source.stop(voice.stopAt);
+      }
     } catch {
-      if (oscillator !== null) {
-        try {
-          oscillator.stop();
-        } catch {
-          // It may not have started yet.
-        }
-
-        try {
-          oscillator.disconnect();
-        } catch {
-          // Already disconnected.
-        }
+      for (const source of sources) {
+        try { source.stop(); } catch { /* May not have started yet. */ }
+        source.disconnect();
       }
-
-      if (gainNode !== null) {
-        try {
-          gainNode.disconnect();
-        } catch {
-          // Already disconnected.
-        }
-      }
+      nodes.forEach(node => node.disconnect());
+      gainNode?.disconnect();
+      for (const voice of this.voices) if (voice.gainNode === gainNode) this.releaseVoice(voice);
     }
   }
 
@@ -382,7 +388,9 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
 
       if (stopAt < voice.stopAt) {
         voice.stopAt = stopAt;
-        voice.oscillator.stop(stopAt + 0.005);
+        for (const source of voice.sources) {
+          try { source.stop(stopAt + 0.005); } catch { /* A short chiff may already have ended. */ }
+        }
       }
     } catch {
       this.releaseVoice(voice);
@@ -398,9 +406,9 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
         if (now !== undefined) {
           voice.gainNode.gain.cancelScheduledValues(now);
           voice.gainNode.gain.setValueAtTime(MIN_GAIN, now);
-          voice.oscillator.stop(now);
+          voice.sources.forEach(source => { try { source.stop(now); } catch { /* Already ended. */ } });
         } else {
-          voice.oscillator.stop();
+          voice.sources.forEach(source => { try { source.stop(); } catch { /* Already ended. */ } });
         }
       } catch {
         // The source may already have ended.
@@ -423,17 +431,12 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
       this.activeVoice = null;
     }
 
-    try {
-      voice.oscillator.disconnect();
-    } catch {
-      // Already disconnected.
+    for (const source of voice.sources) {
+      source.onended = null;
+      try { source.stop(); } catch { /* Already ended. */ }
+      source.disconnect();
     }
-
-    try {
-      voice.gainNode.disconnect();
-    } catch {
-      // Already disconnected.
-    }
+    voice.nodes.forEach(node => node.disconnect());
   }
 }
 
