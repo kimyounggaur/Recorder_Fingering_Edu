@@ -53,7 +53,10 @@ export function RecorderLearningApp() {
             type="button"
             className="secondary-button"
             aria-label="도움말"
-            onClick={() => setHelpOpen(true)}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              setHelpOpen(true);
+            }}
           >
             <CircleHelp size={20} aria-hidden="true" /><span className="button-label">도움말</span>
           </button>
@@ -91,6 +94,7 @@ export function RecorderLearningApp() {
           </div>
           <div className="recorder-stage-frame">
             <RecorderScene
+              bank={activeBank}
               className="recorder-scene"
               classroom={classroom.active}
               compact={classroom.active}

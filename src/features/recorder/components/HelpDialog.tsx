@@ -50,16 +50,11 @@ export function HelpDialog({ open, onClose }: HelpDialogProps) {
         return;
       }
 
-      const first = focusable[0];
-      const last = focusable.at(-1)!;
-      if (
-        focusable.length === 1 ||
-        (!event.shiftKey && document.activeElement === last) ||
-        (event.shiftKey && document.activeElement === first)
-      ) {
-        event.preventDefault();
-        (event.shiftKey ? last : first).focus();
-      }
+      // Safari's default tab policy can skip links. Keep the modal order explicit.
+      event.preventDefault();
+      const current = focusable.indexOf(document.activeElement as HTMLElement);
+      const next = current < 0 ? 0 : (current + (event.shiftKey ? -1 : 1) + focusable.length) % focusable.length;
+      focusable[next].focus();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {

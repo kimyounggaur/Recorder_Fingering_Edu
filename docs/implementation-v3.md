@@ -110,3 +110,15 @@ typecheck 통과 / lint 오류 0·경고 0 / unit 109 통과·0 실패 / build �
 - Mollenhauer 공식 목록은 열리지만 대상 PDF 본문은 검증 대기/다운로드 오류로 읽지 못했다. 설계의 두 출처 일치 조건과 엄지 상태 확정 조건을 충족하지 못해 신규 음 0개로 보류한다. 사용자 승인 질문은 하지 않았다.
 - 기존 17음·20포즈 데이터는 변경하지 않았다. D-21은 조사 완료, 확장 보류다.
 - typecheck / lint / unit 162 / build / build:vercel / Chromium E2E 20 모두 통과했다.
+
+## P12 보고
+
+- Chromium 데스크톱, WebKit iPhone 14, Chromium Pixel 7의 3개 프로젝트를 구성했다. 7화면 상태 × 기본/고대비 × 3프로젝트의 axe 42회 검사에서 serious/critical 위반 0이다. 모바일 탭 보조 글자 대비와 Safari 도움말 포커스 순환·복원을 수정했다.
+- 20개 포즈의 Windows Chromium 시각 기준선을 e2e/__screenshots__/에 추가했다. 변화 안내 줄 높이를 고정해 구멍 설명이 줄바꿈되어도 포즈 크기가 바뀌지 않는다.
+- 활성 뱅크만 즉시 미리 읽고 나머지는 idle(미지원 시 1초 타이머)에 읽는다. 캐시 재사용·실패 재시도·언마운트 취소를 단위 테스트했다.
+- Noto Sans KR next/font 빌드는 성공했지만 실제 페이지의 FontFace 등록·로드는 0이었다. 설계의 대안대로 거짓 Pretendard/Noto 선언을 제거하고 한국어 시스템 폰트를 명시했다. 사용하지 않는 생성 폰트는 SW 사전 캐시에서 제외한다.
+- 초기 프로덕션 JS 14개 응답의 gzip 합계는 133,419바이트로 250KiB 예산을 통과한다. 선택 항목인 Lighthouse CI 점수는 측정하지 않았다.
+- Next 16.3.4, React/RSC 19.2.8, Vite 8.2.2와 호환 패치 의존성을 적용했다. npm audit --omit=dev는 0건, 전체 개발 도구 트리는 11건(낮음 1·중간 4·높음 6)이 남는다. 강제 메이저 업데이트는 하지 않았다.
+- Node 22 Windows GitHub Actions 워크플로를 추가했다. 원격 CI 결과는 P13 릴리스 기록에서 확인한다. 개발 HMR의 multiple-renderers 경고는 여전히 관측되어 D-23을 미해소로 남긴다.
+- typecheck 통과 / lint 오류 0·경고 0 / unit 164 통과 / build 통과 / build:vercel 통과 / E2E 104 통과·4 조건부 제외·실패 0. 제외는 Windows WebKit 오디오 렌더링 1, WebKit SW 오프라인 1, 모바일 시각 기준선 2다. Windows WebKit은 AudioContext 자체를 제공하지 않아 제스처·오류 폴백 검증이며 실제 iOS 오디오 검증은 아니다.
+- 해소: D-15, D-18(로컬 자동화), D-25. 로그: output/verification/p12/.

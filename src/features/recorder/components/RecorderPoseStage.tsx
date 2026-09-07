@@ -2,29 +2,11 @@
 
 import NextImage from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { RECORDER_POSE_SOURCES } from "../data/poseAssets";
+import { usePosePreload } from "../hooks/usePosePreload";
+import type { FingeringSystem, NoteBank } from "../model/types";
+import { loadPose } from "../utils/poseLoader";
 
-const imageCache = new Map<string, Promise<HTMLImageElement>>();
 const MAX_DEVICE_PIXEL_RATIO = 2;
-
-function loadPose(source: string): Promise<HTMLImageElement> {
-  const cached = imageCache.get(source);
-  if (cached) return cached;
-
-  const pending = new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.decoding = "async";
-    image.onload = () => resolve(image);
-    image.onerror = () => {
-      imageCache.delete(source);
-      reject(new Error(`Unable to load recorder pose: ${source}`));
-    };
-    image.src = source;
-  });
-
-  imageCache.set(source, pending);
-  return pending;
-}
 
 function canRenderCanvas(): boolean {
   return (
@@ -90,6 +72,8 @@ export interface RecorderPoseStageProps {
   duration: number;
   reducedMotion?: boolean;
   className?: string;
+  bank?: NoteBank;
+  system?: FingeringSystem;
 }
 
 /**
@@ -104,7 +88,10 @@ export function RecorderPoseStage({
   duration,
   reducedMotion = false,
   className,
+  bank = "low",
+  system = "baroque",
 }: RecorderPoseStageProps) {
+  usePosePreload(bank, system);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const generationRef = useRef(0);
   const animationFrameRef = useRef<number | null>(null);
@@ -112,13 +99,6 @@ export function RecorderPoseStage({
   const displayedSourceRef = useRef<string | null>(null);
   const [ready, setReady] = useState(false);
   const [renderedSource, setRenderedSource] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!canRenderCanvas()) return;
-    for (const poseSource of RECORDER_POSE_SOURCES) {
-      void loadPose(poseSource).catch(() => undefined);
-    }
-  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;

@@ -6,6 +6,7 @@ import {
 } from "../data/fingerings";
 import { ALL_HOLES } from "../data/fingerings";
 import { getRecorderPoseSource } from "../data/poseAssets";
+import { getNoteBank } from "../data/practiceCourses";
 import type {
   AnimationPhase,
   FingeringSystem,
@@ -13,6 +14,7 @@ import type {
   HoleState,
   PlaybackSpeed,
   SolfegeId,
+  NoteBank,
 } from "../model/types";
 import { RecorderFingeringMap } from "./RecorderFingeringMap";
 import { RecorderPoseStage } from "./RecorderPoseStage";
@@ -40,6 +42,7 @@ export interface RecorderSceneProps
   readonly?: boolean;
   compact?: boolean;
   classroom?: boolean;
+  bank?: NoteBank;
 }
 function ChangeList({
   holes,
@@ -100,6 +103,7 @@ export function RecorderScene({
   readonly = false,
   compact = false,
   classroom = false,
+  bank = getNoteBank(note),
   className,
   ...divProps
 }: RecorderSceneProps) {
@@ -179,6 +183,8 @@ export function RecorderScene({
           </span>
         </div> : null}
         <RecorderPoseStage
+          bank={bank}
+          system={system}
           source={poseSource}
           replaySource={replaySource}
           transitionKey={`${transitionKey}:${poseSource}`}

@@ -458,8 +458,14 @@ describe("RecorderLearningApp", () => {
     });
     expect(document.getElementById("current-note-heading")).toHaveTextContent("도");
 
+    for (const name of ["운지 체계 비교", "퀴즈", "기초 배우기"]) {
+      fireEvent.keyDown(window, { key: "Tab" });
+      expect(screen.getByRole("dialog").querySelector(`a[href="${name === "퀴즈" ? "/quiz" : name === "기초 배우기" ? "/basics" : "/compare"}"]`)).toHaveFocus();
+    }
     fireEvent.keyDown(window, { key: "Tab" });
     expect(close).toHaveFocus();
+    fireEvent.keyDown(window, { key: "Tab", shiftKey: true });
+    expect(screen.getByRole("dialog").querySelector('a[href="/basics"]')).toHaveFocus();
     fireEvent.keyDown(window, { key: "Escape" });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(opener).toHaveFocus();

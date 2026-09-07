@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 test("browser renders all 17 synth pitches and releases their audio nodes", async ({ page }) => {
   await page.goto("/");
+  test.skip(!await page.evaluate(() => typeof OfflineAudioContext === "function"), "This WebKit build has no OfflineAudioContext; gesture/error handling is tested separately.");
   const rendered = await page.evaluate(async () => {
     // Vite serves the actual engine; OfflineAudioContext exercises browser DSP without speakers.
     const path = "/src/features/recorder/audio/WebAudioRecorderEngine.ts";

@@ -15,7 +15,8 @@ async function collectAssets(directory, prefix = "") {
   for (const item of await readdir(directory, { withFileTypes: true })) {
     const relative = `${prefix}/${item.name}`;
     if (item.isDirectory()) await collectAssets(join(directory, item.name), relative);
-    else if (/\.(?:js|css|woff2)$/.test(item.name) && !/^\/sw(?:\.template)?\.js$/.test(relative)) urls.add(relative);
+    // The app uses system fonts. Vinext may emit stale, unused font-cache files.
+    else if (/\.(?:js|css)$/.test(item.name) && !/^\/sw(?:\.template)?\.js$/.test(relative)) urls.add(relative);
   }
 }
 if (output) await collectAssets(output);

@@ -32,7 +32,7 @@
   --shadow-card: 0 14px 38px rgb(37 54 91 / 10%);
   --shadow-raised: 0 9px 20px rgb(40 73 145 / 18%);
   --page-gutter: clamp(16px, 3vw, 42px);
-  --font-sans: "Pretendard Variable", Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-sans: "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 }
 
 * {
@@ -97,12 +97,12 @@ p {
 h1,
 h2 {
   line-height: 1.22;
-  letter-spacing: -0.035em;
+  letter-spacing: 0;
 }
 
 h2 {
   margin-bottom: 0;
-  font-size: clamp(1.25rem, 2vw, 1.6rem);
+  font-size: 1.6rem;
 }
 
 .recorder-app {
@@ -188,14 +188,14 @@ h2 {
 
 .brand-lockup h1 {
   margin: 2px 0 5px;
-  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-size: 2rem;
   font-weight: 900;
 }
 
 .brand-lockup p:last-child {
   margin-bottom: 0;
   color: var(--color-text-muted);
-  font-size: clamp(0.94rem, 1.4vw, 1.08rem);
+  font-size: 1.05rem;
   font-weight: 650;
 }
 
@@ -220,7 +220,7 @@ h2 {
   color: var(--color-primary);
   font-size: 0.78rem;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -328,7 +328,7 @@ h2 {
 
 .onboarding-banner h2 {
   margin: 4px 0 8px;
-  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  font-size: 1.6rem;
 }
 
 .onboarding-banner p:last-child {
@@ -474,9 +474,9 @@ h2 {
 .current-solfege {
   margin-bottom: 0;
   color: var(--color-primary-strong);
-  font-size: clamp(3.1rem, 6vw, 5.6rem);
+  font-size: 4rem;
   font-weight: 950;
-  letter-spacing: -0.09em;
+  letter-spacing: 0;
 }
 
 .note-name {
@@ -624,7 +624,7 @@ h2 {
   color: #214e43;
   font-size: 0.76rem;
   font-weight: 950;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .recorder-pose-panel__open-key {
@@ -842,7 +842,9 @@ h2 {
 .recorder-scene__changes {
   grid-area: changes;
   display: grid;
-  min-height: 39px;
+  height: 80px;
+  min-height: 80px;
+  overflow: auto;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
@@ -1251,7 +1253,7 @@ h2 {
 }
 
 .note-bank-tab small {
-  color: #718095;
+  color: #53627a;
   font-size: 0.69rem;
   font-weight: 800;
 }
@@ -1341,9 +1343,9 @@ h2 {
 
 .note-key-label {
   overflow: hidden;
-  font-size: clamp(0.92rem, 1.35vw, 1.18rem);
+  font-size: 1rem;
   font-weight: 950;
-  letter-spacing: -0.04em;
+  letter-spacing: 0;
   line-height: 1.15;
   text-overflow: clip;
   white-space: normal;
@@ -1645,7 +1647,7 @@ kbd {
   }
 
   .brand-lockup h1 {
-    font-size: clamp(1.45rem, 7vw, 2rem);
+    font-size: 1.5rem;
   }
 
   .brand-lockup p:last-child {
@@ -1696,7 +1698,7 @@ kbd {
   }
 
   .current-solfege {
-    font-size: clamp(3.3rem, 17vw, 5.2rem);
+    font-size: 3.5rem;
   }
 
   .recorder-stage-frame {
@@ -1750,7 +1752,7 @@ kbd {
   }
 
   .note-key-label {
-    font-size: clamp(0.86rem, 3.7vw, 1rem);
+    font-size: 0.9rem;
   }
 
   .note-bank-tab {
@@ -1955,6 +1957,7 @@ kbd {
   }
 
   .recorder-scene__changes {
+    height: 24px;
     min-height: 24px;
     gap: 4px;
   }
