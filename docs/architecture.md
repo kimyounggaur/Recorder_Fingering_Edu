@@ -140,6 +140,8 @@ highlight-release → releasing → highlight-press → pressing → contact →
 
 ## 오디오와 요청 ID
 
+`pitchMode`는 저장 설정에서 오디오 훅과 엔진 팩토리로 전달된다. 모드 변경은 기존 엔진과 보류 unlock 요청을 무효화하고 다음 사용자 제스처에서 새 엔진을 연다. 기본 `sounding`은 기보보다 한 옥타브 높고 `written`은 그 주파수의 절반이다. 음 카드에는 기보 이름과 실음 이름을 별도 요소로 표시한다.
+
 브라우저 자동재생 정책 때문에 `AudioContext` 활성화는 지연된 contact가 아니라 사용자의 음 선택 제스처 안에서 시작합니다. 앱, `useRecorderAudio`, Web Audio 엔진이 각각 최신 요청 ID를 확인하며, 음소거·연타·언마운트에서는 보류 재생을 취소합니다. 합성 엔진 생성이나 재생이 실패해도 silent fallback을 사용하므로 시각 학습은 계속됩니다.
 
 ## 접근성과 오류 경계

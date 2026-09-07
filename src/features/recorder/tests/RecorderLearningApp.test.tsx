@@ -88,6 +88,13 @@ afterEach(() => {
 });
 
 describe("RecorderLearningApp", () => {
+  it("persists pitch mode and passes it to the audio hook", async () => {
+    await renderReadyApp();
+    fireEvent.click(screen.getByRole("radio", { name: "한 옥타브 낮게" }));
+    expect(vi.mocked(useRecorderAudio)).toHaveBeenLastCalledWith(expect.objectContaining({ pitchMode: "written" }));
+    expect(JSON.parse(localStorage.getItem("recorder-learning.preferences.v1")!)).toHaveProperty("pitchMode", "written");
+    expect(screen.getByText("실제 소리 C5")).toBeInTheDocument();
+  });
   it("renders the low bank and selects 솔 / G4 with aria-pressed", async () => {
     await renderReadyApp();
 

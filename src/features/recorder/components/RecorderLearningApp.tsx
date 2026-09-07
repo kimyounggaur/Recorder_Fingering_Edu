@@ -143,6 +143,7 @@ export function RecorderLearningApp() {
   const audio = useRecorderAudio({
     initialMuted: DEFAULT_PREFERENCES.isMuted,
     persistMuted: false,
+    pitchMode: preferences.pitchMode,
   });
   const {
     beginPlaybackRequest,
@@ -657,6 +658,8 @@ export function RecorderLearningApp() {
             showHoleNumbers={preferences.showHoleNumbers}
             showFingerNames={showFingerNames}
             onSystemChange={changeSystem}
+            pitchMode={preferences.pitchMode}
+            onPitchModeChange={(pitchMode) => updatePreferences({ pitchMode })}
             onSpeedChange={(speed) => updatePreferences({ speed })}
             onStepModeChange={changeStepMode}
             onMutedChange={changeMuted}

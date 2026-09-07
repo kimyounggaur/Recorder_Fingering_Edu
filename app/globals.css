@@ -460,6 +460,12 @@ h2 {
   font-weight: 800;
 }
 
+.sounding-pitch {
+  margin: 5px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
 .staff-note {
   display: block;
   width: 100%;
@@ -477,6 +483,7 @@ h2 {
   stroke: var(--color-primary-strong);
   stroke-width: 2;
   transform: rotate(-15deg);
+  transform-box: fill-box;
   transform-origin: center;
 }
 

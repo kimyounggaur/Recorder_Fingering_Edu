@@ -32,11 +32,13 @@ export function NoteCard({
             {note.solfegeKo}
           </h2>
           <p className="note-name">음 이름 {note.noteName}</p>
+          <p className="sounding-pitch">실제 소리 {note.soundingPitch}</p>
         </div>
         <StaffNote
           step={note.staffStep}
           label={note.solfegeKo}
           accidental={note.accidental}
+          enharmonicLabel={note.accidental ? note.solfegeKo.replace(" / ", " = ") : undefined}
         />
       </div>
       <p className="note-short-instruction">{note.shortInstruction}</p>

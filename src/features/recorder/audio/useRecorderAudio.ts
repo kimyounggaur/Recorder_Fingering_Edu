@@ -11,7 +11,7 @@ import {
   createSilentRecorderAudioEngine,
   type RecorderAudioEngine,
 } from "./RecorderAudioEngine";
-import { createWebAudioRecorderEngine } from "./WebAudioRecorderEngine";
+import { createWebAudioRecorderEngine, type PitchMode, type WebAudioRecorderEngineOptions } from "./WebAudioRecorderEngine";
 
 export const RECORDER_AUDIO_MUTED_STORAGE_KEY =
   "recorder-learning:audio-muted";
@@ -22,7 +22,8 @@ export interface UseRecorderAudioOptions {
   initialMuted?: boolean;
   persistMuted?: boolean;
   storageKey?: string;
-  engineFactory?: () => RecorderAudioEngine;
+  engineFactory?: (options?: WebAudioRecorderEngineOptions) => RecorderAudioEngine;
+  pitchMode?: PitchMode;
 }
 
 export interface UseRecorderAudioResult {
@@ -90,9 +91,12 @@ export function useRecorderAudio(
     persistMuted = true,
     storageKey = RECORDER_AUDIO_MUTED_STORAGE_KEY,
     engineFactory = createWebAudioRecorderEngine,
+    pitchMode = "sounding",
   } = options;
 
   const factoryRef = useRef(engineFactory);
+  const pitchModeRef = useRef(pitchMode);
+  const engineGenerationRef = useRef(0);
   const engineRef = useRef<RecorderAudioEngine | null>(null);
   const disposedRef = useRef(false);
   const mutedRef = useRef(initialMuted);
@@ -108,7 +112,7 @@ export function useRecorderAudio(
     }
 
     try {
-      engineRef.current = factoryRef.current();
+      engineRef.current = factoryRef.current({ pitchMode: pitchModeRef.current });
     } catch {
       engineRef.current = createSilentRecorderAudioEngine();
     }
@@ -128,10 +132,11 @@ export function useRecorderAudio(
       return unlockPromiseRef.current;
     }
 
+    const generation = engineGenerationRef.current;
     const pendingUnlock = getEngine()
       .unlock()
       .then((unlocked) => {
-        if (disposedRef.current || !unlocked) {
+        if (disposedRef.current || generation !== engineGenerationRef.current || !unlocked) {
           return false;
         }
 
@@ -263,11 +268,26 @@ export function useRecorderAudio(
   }, [setMuted]);
 
   useEffect(() => {
+    if (pitchModeRef.current === pitchMode) return;
+    pitchModeRef.current = pitchMode;
+    engineGenerationRef.current += 1;
+    latestRequestIdRef.current += 1;
+    unlockedRef.current = false;
+    unlockPromiseRef.current = null;
+    engineRef.current?.dispose();
+    engineRef.current = null;
+    let cancelled = false;
+    queueMicrotask(() => { if (!cancelled) setIsUnlocked(false); });
+    return () => { cancelled = true; };
+  }, [pitchMode]);
+
+  useEffect(() => {
     disposedRef.current = false;
     getEngine().setMuted(mutedRef.current);
 
     return () => {
       disposedRef.current = true;
+      engineGenerationRef.current += 1;
       latestRequestIdRef.current += 1;
       unlockedRef.current = false;
       unlockPromiseRef.current = null;

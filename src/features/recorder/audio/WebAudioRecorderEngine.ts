@@ -1,23 +1,23 @@
 import type { RecorderAudioEngine } from "./RecorderAudioEngine";
 
 export const RECORDER_NOTE_FREQUENCIES_HZ = {
-  C4: 261.63,
-  "C#4": 277.18,
-  D4: 293.66,
-  "D#4": 311.13,
-  E4: 329.63,
-  F4: 349.23,
-  "F#4": 369.99,
-  G4: 392,
-  "G#4": 415.3,
-  A4: 440,
-  "A#4": 466.16,
-  B4: 493.88,
-  C5: 523.25,
-  D5: 587.33,
-  E5: 659.25,
-  F5: 698.46,
-  G5: 783.99,
+  C4: 523.25,
+  "C#4": 554.37,
+  D4: 587.33,
+  "D#4": 622.25,
+  E4: 659.25,
+  F4: 698.46,
+  "F#4": 739.99,
+  G4: 783.99,
+  "G#4": 830.61,
+  A4: 880,
+  "A#4": 932.33,
+  B4: 987.77,
+  C5: 1046.50,
+  D5: 1174.66,
+  E5: 1318.51,
+  F5: 1396.91,
+  G5: 1567.98,
 } as const;
 
 export type RecorderPitchKey = keyof typeof RECORDER_NOTE_FREQUENCIES_HZ;
@@ -57,16 +57,19 @@ export const RECORDER_AUDIO_KEY_TO_PITCH: Readonly<
   G5: "G5",
 };
 
-export function getRecorderNoteFrequency(noteKey: string): number | null {
+export type PitchMode = "sounding" | "written";
+
+export function getRecorderNoteFrequency(noteKey: string, pitchMode: PitchMode = "sounding"): number | null {
   const normalizedKey = noteKey.trim().toUpperCase();
   const pitchKey = RECORDER_AUDIO_KEY_TO_PITCH[normalizedKey];
 
   return pitchKey === undefined
     ? null
-    : RECORDER_NOTE_FREQUENCIES_HZ[pitchKey];
+    : RECORDER_NOTE_FREQUENCIES_HZ[pitchKey] / (pitchMode === "written" ? 2 : 1);
 }
 
 export interface WebAudioRecorderEngineOptions {
+  pitchMode?: PitchMode;
   /** Dependency seam for deterministic unit tests. */
   contextFactory?: () => AudioContext | null;
   /** Clamped to the product requirement of 600–900 ms. */
@@ -123,6 +126,7 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
   private readonly fadeOutMs: number;
 
   private readonly transitionFadeMs: number;
+  private readonly pitchMode: PitchMode;
 
   private context: AudioContext | null = null;
 
@@ -139,6 +143,7 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
   private disposed = false;
 
   public constructor(options: WebAudioRecorderEngineOptions = {}) {
+    this.pitchMode = options.pitchMode ?? "sounding";
     this.contextFactory = options.contextFactory ?? createBrowserAudioContext;
     this.durationMs = clamp(
       finiteOr(options.durationMs, DEFAULT_DURATION_MS),
@@ -192,7 +197,7 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
 
   public async play(noteKey: string): Promise<void> {
     const playRequestId = ++this.requestId;
-    const frequency = getRecorderNoteFrequency(noteKey);
+    const frequency = getRecorderNoteFrequency(noteKey, this.pitchMode);
     const context = this.context;
 
     if (
@@ -280,6 +285,7 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
       const attackSeconds = 0.018;
       const endAt = now + this.durationMs / 1_000;
       const releaseAt = endAt - this.fadeOutMs / 1_000;
+      const highNoteGain = this.pitchMode === "sounding" && frequency >= 1000 ? 0.75 : 1;
 
       oscillator = context.createOscillator();
       gainNode = context.createGain();
@@ -291,8 +297,8 @@ export class WebAudioRecorderEngine implements RecorderAudioEngine {
 
       gainNode.gain.cancelScheduledValues(now);
       gainNode.gain.setValueAtTime(MIN_GAIN, now);
-      gainNode.gain.linearRampToValueAtTime(PEAK_GAIN, now + attackSeconds);
-      gainNode.gain.linearRampToValueAtTime(SUSTAIN_GAIN, releaseAt);
+      gainNode.gain.linearRampToValueAtTime(PEAK_GAIN * highNoteGain, now + attackSeconds);
+      gainNode.gain.linearRampToValueAtTime(SUSTAIN_GAIN * highNoteGain, releaseAt);
       gainNode.gain.exponentialRampToValueAtTime(MIN_GAIN, endAt);
 
       oscillator.connect(gainNode);

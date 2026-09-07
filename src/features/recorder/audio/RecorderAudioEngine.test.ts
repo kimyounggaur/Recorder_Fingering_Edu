@@ -176,7 +176,8 @@ describe("recorder audio pitch mapping", () => {
     ["F5", 698.46],
     ["G5", 783.99],
   ])("maps %s to %s Hz", (key, expected) => {
-    expect(getRecorderNoteFrequency(key)).toBe(expected);
+    expect(getRecorderNoteFrequency(key, "written")).toBeCloseTo(expected, 1);
+    expect(getRecorderNoteFrequency(key)).toBeCloseTo(expected * 2, 1);
   });
 
   it("contains all 17 canonical lesson frequencies", () => {
@@ -194,7 +195,8 @@ describe("recorder audio pitch mapping", () => {
     ["HIGH_C", 523.25],
     ["high-c", 523.25],
   ])("keeps the legacy %s alias at %s Hz", (key, expected) => {
-    expect(getRecorderNoteFrequency(key)).toBe(expected);
+    expect(getRecorderNoteFrequency(key, "written")).toBeCloseTo(expected, 1);
+    expect(getRecorderNoteFrequency(key)).toBeCloseTo(expected * 2, 1);
   });
 
   it("ignores an unknown note safely", () => {
@@ -221,7 +223,7 @@ describe("WebAudioRecorderEngine", () => {
     expect(context.oscillators[0].type).toBe("triangle");
     expect(context.oscillators[0].frequency.events).toContainEqual({
       kind: "set",
-      value: 261.63,
+      value: 523.25,
       time: 10,
     });
     expect(context.oscillators[0].stops[0]).toBeCloseTo(10.8);
@@ -256,6 +258,28 @@ describe("WebAudioRecorderEngine", () => {
 });
 
 describe("useRecorderAudio", () => {
+  it("recreates pitch-mode engines and rejects an old pending unlock", async () => {
+    const first = new DeferredAudioEngine();
+    const second = new DeferredAudioEngine();
+    const factory = vi.fn().mockReturnValueOnce(first).mockReturnValue(second);
+    const { result, rerender, unmount } = renderHook(
+      ({ pitchMode }: { pitchMode: "written" | "sounding" }) => useRecorderAudio({ engineFactory: factory, pitchMode, persistMuted: false }),
+      { initialProps: { pitchMode: "sounding" } },
+    );
+    let stale = 0;
+    act(() => { stale = result.current.beginPlaybackRequest(); });
+    rerender({ pitchMode: "written" });
+    expect(first.disposed).toBe(true);
+    await act(async () => { first.resolveUnlock(); await Promise.resolve(); });
+    expect(result.current.isUnlocked).toBe(false);
+    await expect(result.current.playAtContact("C", stale)).resolves.toBe(false);
+    let latest = 0;
+    act(() => { latest = result.current.beginPlaybackRequest(); });
+    await act(async () => { second.resolveUnlock(); await Promise.resolve(); });
+    await expect(result.current.playAtContact("C", latest)).resolves.toBe(true);
+    expect(factory).toHaveBeenLastCalledWith({ pitchMode: "written" });
+    unmount();
+  });
   it("drops stale contact callbacks and only plays the latest request", async () => {
     const engine = new DeferredAudioEngine();
     const { result, unmount } = renderHook(() =>

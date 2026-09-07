@@ -49,6 +49,7 @@ export interface NoteMeta {
   button: UiButtonNumber;
   solfegeKo: string;
   noteName: string;
+  soundingPitch: string;
   staffStep: number;
   audioKey: string;
   shortInstruction: string;

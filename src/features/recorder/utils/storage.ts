@@ -6,6 +6,7 @@ export interface RecorderPreferences {
   speed: PlaybackSpeed;
   showHoleNumbers: boolean;
   onboardingCompleted: boolean;
+  pitchMode: "sounding" | "written";
 }
 
 export interface ReadableStorage {
@@ -24,6 +25,7 @@ export const DEFAULT_PREFERENCES: Readonly<RecorderPreferences> = {
   speed: "normal",
   showHoleNumbers: true,
   onboardingCompleted: false,
+  pitchMode: "sounding",
 };
 
 function getBrowserStorage(): Storage | null {
@@ -48,6 +50,7 @@ export function parsePreferences(serialized: string | null): RecorderPreferences
     if (!isRecord(candidate)) return { ...DEFAULT_PREFERENCES };
 
     return {
+      pitchMode: candidate.pitchMode === "written" ? "written" : "sounding",
       fingeringSystem:
         candidate.fingeringSystem === "baroque" ||
         candidate.fingeringSystem === "german"
@@ -94,6 +97,7 @@ export function savePreferences(
   if (!storage) return false;
 
   const persistedPreferences: RecorderPreferences = {
+    pitchMode: preferences.pitchMode,
     fingeringSystem: preferences.fingeringSystem,
     isMuted: preferences.isMuted,
     speed: preferences.speed,

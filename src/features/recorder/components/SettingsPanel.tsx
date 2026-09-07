@@ -10,6 +10,8 @@ interface SettingsPanelProps {
   muted: boolean;
   showHoleNumbers: boolean;
   showFingerNames: boolean;
+  pitchMode: "sounding" | "written";
+  onPitchModeChange: (mode: "sounding" | "written") => void;
   onSystemChange: (system: FingeringSystem) => void;
   onSpeedChange: (speed: AnimationSpeed) => void;
   onStepModeChange: (enabled: boolean) => void;
@@ -54,6 +56,16 @@ export function SettingsPanel(props: SettingsPanelProps) {
         ]}
       />
 
+      <SegmentedControl
+        legend="소리 높이"
+        name="pitch-mode"
+        value={props.pitchMode}
+        onChange={props.onPitchModeChange}
+        options={[
+          { value: "sounding", label: "실제 리코더 소리" },
+          { value: "written", label: "한 옥타브 낮게" },
+        ]}
+      />
       <div className="toggle-list">
         <ToggleRow
           label="단계별 보기"

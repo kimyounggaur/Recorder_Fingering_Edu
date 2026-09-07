@@ -103,6 +103,7 @@ export function HelpDialog({ open, onClose }: HelpDialogProps) {
           <li><strong>낮은 계이름·높은 계이름·반음</strong> 탭에서 배울 음을 고릅니다.</li>
           <li><strong>파란 ↑</strong> 손가락을 먼저 떼고, <strong>노란 ↓</strong> 손가락을 구멍에 붙입니다.</li>
           <li>천천히 보고 싶다면 <strong>느리게</strong> 또는 <strong>단계별 보기</strong>를 켭니다.</li>
+          <li><strong>소리 높이</strong>에서 실제 리코더 소리와 한 옥타브 낮은 소리를 고릅니다. 악보 위의 8은 실제 소리가 한 옥타브 높다는 뜻이에요.</li>
         </ol>
         <div className="keyboard-guide">
           <span><kbd>1</kbd>–<kbd>8</kbd> 기본 음계</span>
