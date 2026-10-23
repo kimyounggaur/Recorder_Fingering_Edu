@@ -1,7 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { openNotes, openTool, waitForLesson } from "./teacher-helpers";
 
-const screens = ["onboarding", "lesson", "compare", "quiz", "quiz-build", "basics", "classroom"] as const;
+const screens = ["onboarding", "lesson", "notes", "settings", "courses", "compare", "quiz", "quiz-build", "basics", "classroom"] as const;
 for (const theme of ["default", "high-contrast"]) {
   for (const screen of screens) {
     test(`axe ${theme} ${screen}`, async ({ page }, testInfo) => {
@@ -13,12 +14,16 @@ for (const theme of ["default", "high-contrast"]) {
       }, { theme, screen });
       const route = screen === "compare" || screen === "quiz" || screen === "basics" ? `/${screen}` : screen === "quiz-build" ? "/quiz" : "/";
       await page.goto(route);
-      if (route === "/") await expect(page.getByTestId("note-button-1")).toBeVisible();
+      if (route === "/") await waitForLesson(page);
+      if (screen === "onboarding") await openTool(page, "환경 설정", "리코더 체계 안내");
+      if (screen === "notes") await openNotes(page);
+      if (screen === "settings") await openTool(page, "환경 설정", "화면·소리 설정");
+      if (screen === "courses") await openTool(page, "수업 도구", "연습 코스");
       if (screen === "compare") await expect(page.getByRole("button", { name: "독일식으로 배우기" })).toBeEnabled();
       if (screen === "quiz" || screen === "quiz-build") await expect(page.getByRole("button", { name: "퀴즈 시작" })).toBeEnabled();
       if (screen === "basics") await expect(page.getByRole("button", { name: "다음 카드", exact: true })).toBeEnabled();
       if (screen === "classroom") {
-        await page.getByRole("button", { name: "수업 모드", exact: true }).click();
+        await openTool(page, "수업 도구", "수업 모드");
         await expect(page.locator("body")).toHaveAttribute("data-classroom", "true");
       }
       if (screen === "quiz-build") {

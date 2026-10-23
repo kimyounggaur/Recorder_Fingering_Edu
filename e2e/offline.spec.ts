@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { NOTE_BANKS } from "../src/features/recorder/data/noteMeta";
 import { getRecorderPoseSource } from "../src/features/recorder/data/poseAssets";
+import { openNotes, waitForLesson } from "./teacher-helpers";
 
 test("offline after first visit keeps all 17 poses", async ({ page, context, browserName }) => {
   test.skip(browserName !== "chromium", "Service worker offline lifecycle is verified in Chromium.");
   await page.goto("http://127.0.0.1:4174/");
-  await page.getByRole("button", { name: /^바로크식/ }).click();
+  await waitForLesson(page);
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) await new Promise<void>(resolve => navigator.serviceWorker.addEventListener("controllerchange", () => resolve(), { once: true }));
@@ -13,6 +14,7 @@ test("offline after first visit keeps all 17 poses", async ({ page, context, bro
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByTestId("recorder-scene")).toBeVisible();
+  await openNotes(page);
   for (const bank of ["low", "high", "chromatic"] as const) {
     await page.getByTestId(`note-bank-${bank}`).click();
     for (const { note, digit } of NOTE_BANKS[bank]) {

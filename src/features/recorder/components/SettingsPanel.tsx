@@ -71,6 +71,13 @@ export function SettingsPanel(props: SettingsPanelProps) {
           { value: "written", label: "한 옥타브 낮게" },
         ]}
       />
+    </section>
+  );
+}
+
+export function AdvancedSettingsPanel(props: SettingsPanelProps) {
+  return (
+    <section className="advanced-settings" aria-label="화면과 소리 조절">
       <div className="toggle-list">
         <ToggleRow label="고대비" description={props.theme === "high-contrast" ? "켜짐" : "꺼짐"} checked={props.theme === "high-contrast"} onChange={(checked) => props.onThemeChange(checked ? "high-contrast" : "default")} />
         <ToggleRow
