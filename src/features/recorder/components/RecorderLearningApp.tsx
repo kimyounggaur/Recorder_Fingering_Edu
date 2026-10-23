@@ -91,16 +91,6 @@ export function RecorderLearningApp() {
       </header>
 
       <main id="learning-stage" className="learning-grid">
-        <div className="note-area" hidden={classroom.active}>
-          <NoteCard
-            note={currentNote}
-            system={system}
-            onPlay={playCurrentNote}
-            muted={preferences.isMuted}
-            shortcutLabel={currentShortcutLabel}
-          />
-        </div>
-
         <section className="card scene-card" aria-labelledby="scene-heading">
           <div className="section-heading-row scene-heading" hidden={classroom.active}>
             <div>
@@ -143,6 +133,15 @@ export function RecorderLearningApp() {
 
         <div className="settings-area" hidden={classroom.active}>
           <SettingsPanel {...settingsProps} />
+        </div>
+        <div className="note-area" hidden={classroom.active}>
+          <NoteCard
+            note={currentNote}
+            system={system}
+            onPlay={playCurrentNote}
+            muted={preferences.isMuted}
+            shortcutLabel={currentShortcutLabel}
+          />
         </div>
         {classroom.active ? <ClassroomControls lesson={lesson} /> : null}
       </main>

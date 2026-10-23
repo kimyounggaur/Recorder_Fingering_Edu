@@ -18,6 +18,8 @@ test("twenty aligned poses match reviewed visual baselines", async ({ page }, te
   await page.addStyleTag({ content: `
     .recorder-app:not([data-classroom]) .learning-grid {
       grid-template-columns: minmax(270px, .82fr) minmax(440px, 1.58fr) minmax(315px, .92fr) !important;
+      grid-template-rows: auto !important;
+      grid-template-areas: "note scene settings" !important;
     }
   ` });
   await page.evaluate(() => document.fonts.ready);
