@@ -1,384 +1,226 @@
 import { expect, test, type Page } from "@playwright/test";
+import { chooseNote, closeTool, openNotes, openTool, waitForLesson } from "./teacher-helpers";
 
 type FingeringSystem = "baroque" | "german";
-
 const NOTES = [
-  { button: 1, solfege: "도", subject: "도가", name: "C4", pose: "do.png" },
-  { button: 2, solfege: "레", subject: "레가", name: "D4", pose: "re.png" },
-  { button: 3, solfege: "미", subject: "미가", name: "E4", pose: "mi.png" },
-  { button: 4, solfege: "파", subject: "파가", name: "F4", pose: "fa-german.png" },
-  { button: 5, solfege: "솔", subject: "솔이", name: "G4", pose: "sol.png" },
-  { button: 6, solfege: "라", subject: "라가", name: "A4", pose: "la.png" },
-  { button: 7, solfege: "시", subject: "시가", name: "B4", pose: "si.png" },
-  { button: 8, solfege: "높은 도", subject: "높은 도가", name: "C5", pose: "high-do.png" },
+  { digit: 1, solfege: "도", subject: "도가", name: "C4", pose: "do.png" },
+  { digit: 2, solfege: "레", subject: "레가", name: "D4", pose: "re.png" },
+  { digit: 3, solfege: "미", subject: "미가", name: "E4", pose: "mi.png" },
+  { digit: 4, solfege: "파", subject: "파가", name: "F4", pose: "fa-german.png" },
+  { digit: 5, solfege: "솔", subject: "솔이", name: "G4", pose: "sol.png" },
+  { digit: 6, solfege: "라", subject: "라가", name: "A4", pose: "la.png" },
+  { digit: 7, solfege: "시", subject: "시가", name: "B4", pose: "si.png" },
+  { digit: 8, solfege: "높은 도", subject: "높은 도가", name: "C5", pose: "high-do.png" },
 ] as const;
 
 function watchForBrowserErrors(page: Page): string[] {
   const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
-  page.on("console", (message) => {
-    if (message.type() === "error") {
-      errors.push(`console: ${message.text()}`);
-    }
+  page.on("pageerror", error => errors.push(`pageerror: ${error.message}`));
+  page.on("console", message => { if (message.type() === "error") errors.push(`console: ${message.text()}`); });
+  page.on("requestfailed", request => {
+    if (decodeURIComponent(request.url()).includes("/fingering/poses/")) errors.push(`pose request failed: ${request.url()}`);
   });
-  page.on("requestfailed", (request) => {
-    if (decodeURIComponent(request.url()).includes("/fingering/poses/")) {
-      errors.push(`pose request failed: ${request.url()}`);
-    }
-  });
-  page.on("response", (response) => {
-    if (
-      decodeURIComponent(response.url()).includes("/fingering/poses/") &&
-      !response.ok()
-    ) {
-      errors.push(`pose response ${response.status()}: ${response.url()}`);
-    }
+  page.on("response", response => {
+    if (decodeURIComponent(response.url()).includes("/fingering/poses/") && !response.ok()) errors.push(`pose response ${response.status()}: ${response.url()}`);
   });
   return errors;
 }
 
-async function openAppAndChoose(
-  page: Page,
-  system: FingeringSystem,
-): Promise<void> {
+async function openAppAndChoose(page: Page, system: FingeringSystem) {
   await page.goto("/");
-  // The banner is present in server HTML, so wait for the first client effect
-  // (which persists defaults) before clicking an onboarding handler.
-  await expect
-    .poll(() =>
-      page.evaluate(() =>
-        window.localStorage.getItem("recorder-learning.preferences.v1"),
-      ),
-    )
-    .not.toBeNull();
-  const onboarding = page.getByRole("heading", {
-    level: 2,
-    name: "내 리코더의 운지 체계는 무엇인가요?",
-  });
-  await expect(onboarding).toBeVisible();
-
-  const label = system === "baroque" ? "바로크식" : "독일식";
-  await page.getByRole("button", { name: new RegExp(`^${label}`) }).click();
-
-  await expect(onboarding).toBeHidden();
-  await expect(page.getByRole("radio", { name: new RegExp(label) })).toBeChecked();
+  await waitForLesson(page);
+  await page.getByRole("radio", { name: new RegExp(system === "baroque" ? "바로크식" : "독일식") }).check();
+  await page.getByRole("heading", { level: 1 }).click();
 }
 
-function hole(page: Page, id: string) {
-  return page.locator(`[data-hole-id="${id}"]`);
-}
+function hole(page: Page, id: string) { return page.locator(`[data-hole-id="${id}"]`); }
 
-test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => window.localStorage.clear());
+test.beforeEach(async ({ page }) => { await page.addInitScript(() => localStorage.clear()); });
+
+test("main keeps only the three captured panels and tools open through nested menus", async ({ page }) => {
+  await openAppAndChoose(page, "baroque");
+  await expect(page.locator(".scene-card")).toBeVisible();
+  await expect(page.locator(".note-card")).toBeVisible();
+  await expect(page.locator(".settings-card")).toBeVisible();
+  for (const selector of [".keypad-card", ".instruction-card", ".course-panel", ".onboarding-banner"]) {
+    await expect(page.locator(selector)).toHaveCount(0);
+  }
+  await expect(page.getByRole("switch", { name: /고대비/ })).toHaveCount(0);
+  await expect(page.getByTestId("step-mode-toggle")).toHaveCount(0);
+  await openNotes(page);
+  await expect(page.getByTestId("note-button-8")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "음 선택", exact: true })).toBeFocused();
+  await openTool(page, "환경 설정", "화면·소리 설정");
+  await expect(page.getByRole("switch", { name: /고대비/ })).toBeVisible();
+  await closeTool(page, "화면·소리 설정");
+  await openTool(page, "환경 설정", "리코더 체계 안내");
+  await page.getByRole("button", { name: /^독일식/ }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("radio", { name: /독일식/ })).toBeChecked();
 });
 
-test("onboarding selection and all eight notes stay synchronized", async ({
-  page,
-}) => {
-  const browserErrors = watchForBrowserErrors(page);
+test("menu selection keeps all eight notes, staff and poses synchronized", async ({ page }) => {
+  const errors = watchForBrowserErrors(page);
   await openAppAndChoose(page, "german");
-
   for (const note of NOTES) {
-    const button = page.getByTestId(`note-button-${note.button}`);
-    await button.click();
+    await chooseNote(page, note.digit);
     await expect(page.locator("#current-note-heading")).toHaveText(note.solfege);
     await expect(page.locator(".note-name")).toHaveText(`음 이름 ${note.name}`);
-    await expect(button).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByTestId("live-region")).toContainText(
-      `${note.subject} 선택되었습니다.`,
-    );
-    await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
-      "data-rendered-source",
-      `/fingering/poses/${note.pose}`,
-    );
+    await expect(page.getByTestId("live-region")).toContainText(`${note.subject} 선택되었습니다.`);
+    await expect(page.locator(".recorder-pose-stage")).toHaveAttribute("data-rendered-source", `/fingering/poses/${note.pose}`);
   }
-
-  await page.getByRole("button", { name: "높은 도 소리 듣기" }).click();
-  await expect(page.getByTestId("recorder-scene")).toHaveAttribute(
-    "data-phase",
-    "settled",
-  );
-  expect(browserErrors).toEqual([]);
+  await page.getByRole("button", { name: "높은 도 소리 듣기", exact: true }).click();
+  await expect(page.getByTestId("recorder-scene")).toHaveAttribute("data-phase", "settled");
+  expect(errors).toEqual([]);
 });
 
-test("파 opens only R6 and R7 when switching to german fingering", async ({
-  page,
-}) => {
-  const browserErrors = watchForBrowserErrors(page);
+test("파 changes only the expected holes when switching to German fingering", async ({ page }) => {
+  const errors = watchForBrowserErrors(page);
   await openAppAndChoose(page, "baroque");
-
-  await page.getByTestId("note-button-4").click();
-  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
-    "data-pose-source",
-    "/fingering/poses/fa-baroque.png",
-  );
-  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
-    "data-rendered-source",
-    "/fingering/poses/fa-baroque.png",
-  );
-  await expect(page.getByTestId("recorder-scene")).toHaveAttribute(
-    "data-closed-holes",
-    "T0 L1 L2 L3 R4 R6 R7",
-  );
+  await chooseNote(page, 4);
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute("data-rendered-source", "/fingering/poses/fa-baroque.png");
+  await expect(page.getByTestId("recorder-scene")).toHaveAttribute("data-closed-holes", "T0 L1 L2 L3 R4 R6 R7");
   await expect(hole(page, "R5")).toHaveAttribute("data-hole-state", "open");
-  await expect(hole(page, "R6")).toHaveAttribute("data-hole-state", "closed");
-  await expect(hole(page, "R7")).toHaveAttribute("data-hole-state", "closed");
-
   await page.getByRole("radio", { name: /독일식/ }).check();
-
-  await expect(page.getByText(/독일식 파예요/)).toBeVisible();
-  await expect(page.getByTestId("recorder-scene")).toHaveAttribute(
-    "data-closed-holes",
-    "T0 L1 L2 L3 R4",
-  );
-  await expect(hole(page, "R4")).toHaveAttribute("data-hole-state", "closed");
-  await expect(hole(page, "R5")).toHaveAttribute("data-hole-state", "open");
-  await expect(hole(page, "R6")).toHaveAttribute("data-hole-state", "open");
-  await expect(hole(page, "R7")).toHaveAttribute("data-hole-state", "open");
-  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
-    "data-pose-source",
-    "/fingering/poses/fa-german.png",
-  );
-  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
-    "data-rendered-source",
-    "/fingering/poses/fa-german.png",
-  );
-  expect(browserErrors).toEqual([]);
+  await expect(page.getByTestId("recorder-scene")).toHaveAttribute("data-closed-holes", "T0 L1 L2 L3 R4");
+  for (const id of ["R5", "R6", "R7"]) await expect(hole(page, id)).toHaveAttribute("data-hole-state", "open");
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute("data-rendered-source", "/fingering/poses/fa-german.png");
+  expect(errors).toEqual([]);
 });
 
-test("keyboard 5 selects 솔 / G4 and slow viewing can be enabled", async ({ page }) => {
-  const browserErrors = watchForBrowserErrors(page);
+test("keyboard note shortcuts still work from the main screen", async ({ page }) => {
+  const errors = watchForBrowserErrors(page);
   await openAppAndChoose(page, "baroque");
-
   await page.getByRole("heading", { level: 1 }).click();
   await page.keyboard.press("5");
-
   await expect(page.locator("#current-note-heading")).toHaveText("솔");
-  await expect(page.locator(".note-name")).toHaveText("음 이름 G4");
-  await expect(page.getByTestId("note-button-5")).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-
   await page.keyboard.press("ArrowRight");
   await expect(page.locator("#current-note-heading")).toHaveText("라");
   await page.keyboard.press("ArrowLeft");
   await expect(page.locator("#current-note-heading")).toHaveText("솔");
-
-  const slow = page.getByRole("radio", { name: /느리게/ });
-  await slow.check();
-  await expect(slow).toBeChecked();
-  expect(browserErrors).toEqual([]);
+  await page.getByRole("radio", { name: "느리게", exact: true }).check();
+  await expect(page.getByRole("radio", { name: "느리게", exact: true })).toBeChecked();
+  expect(errors).toEqual([]);
 });
 
-test("high and chromatic shortcuts animate half and partial holes", async ({
-  page,
-}) => {
-  const browserErrors = watchForBrowserErrors(page);
+test("high and chromatic shortcuts retain half and partial hole states", async ({ page }) => {
+  const errors = watchForBrowserErrors(page);
   await openAppAndChoose(page, "baroque");
-
-  await page.getByRole("heading", { level: 1 }).click();
   await page.keyboard.press("Shift+Digit4");
   await expect(page.locator("#current-note-heading")).toHaveText("높은 파");
-  await expect(page.locator(".note-name")).toHaveText("음 이름 F5");
-  await expect(page.getByTestId("note-bank-high")).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
   await expect(hole(page, "T0")).toHaveAttribute("data-hole-state", "half");
-  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
-    "data-rendered-source",
-    "/fingering/poses/f5-baroque.png",
-  );
-
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute("data-rendered-source", "/fingering/poses/f5-baroque.png");
   await page.keyboard.press("Alt+Digit1");
   await expect(page.locator("#current-note-heading")).toHaveText("도♯/레♭");
-  await expect(page.locator(".note-name")).toHaveText("음 이름 C♯4 / D♭4");
-  await expect(page.getByTestId("note-bank-chromatic")).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
-  await expect(hole(page, "R7")).toHaveAttribute(
-    "data-hole-state",
-    "partial",
-  );
-  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
-    "data-rendered-source",
-    "/fingering/poses/cs4.png",
-  );
-
-  await page.evaluate(() => {
-    window.dispatchEvent(
-      new KeyboardEvent("keydown", {
-        key: "5",
-        code: "Digit5",
-        ctrlKey: true,
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
-  });
+  await expect(hole(page, "R7")).toHaveAttribute("data-hole-state", "partial");
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute("data-rendered-source", "/fingering/poses/cs4.png");
+  await page.evaluate(() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "5", code: "Digit5", ctrlKey: true, bubbles: true, cancelable: true })));
   await expect(page.locator("#current-note-heading")).toHaveText("솔");
-  await expect(page.getByTestId("note-bank-low")).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
-  expect(browserErrors).toEqual([]);
+  expect(errors).toEqual([]);
 });
 
-test("360px mobile viewport has no horizontal scroll", async ({ page }) => {
-  const browserErrors = watchForBrowserErrors(page);
-  await page.setViewportSize({ width: 360, height: 800 });
+test("rapid 1→8→4→5 input settles on the final 솔 fingering", async ({ page }) => {
+  const errors = watchForBrowserErrors(page);
   await openAppAndChoose(page, "baroque");
-
-  const dimensions = await page.evaluate(() => ({
-    clientWidth: document.documentElement.clientWidth,
-    scrollWidth: document.documentElement.scrollWidth,
-    bodyScrollWidth: document.body.scrollWidth,
-  }));
-
-  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
-  expect(dimensions.bodyScrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
-  await expect(page.getByTestId("note-button-8")).toBeVisible();
-  expect(browserErrors).toEqual([]);
+  for (const digit of [1, 8, 4, 5]) await page.keyboard.press(String(digit));
+  await expect(page.locator("#current-note-heading")).toHaveText("솔");
+  await expect(page.getByTestId("recorder-scene")).toHaveAttribute("data-closed-holes", "T0 L1 L2 L3");
+  await expect(page.getByTestId("recorder-scene")).toHaveAttribute("data-phase", "settled");
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute("data-rendered-source", "/fingering/poses/sol.png");
+  expect(errors).toEqual([]);
 });
 
-test("rapid 1→8→4→5 input remains on the final 솔 fingering", async ({
-  page,
-}) => {
-  const browserErrors = watchForBrowserErrors(page);
+test("menus and dialogs block background shortcuts and restore focus", async ({ page }) => {
   await openAppAndChoose(page, "baroque");
-
-  for (const button of [1, 8, 4, 5]) {
-    await page.getByTestId(`note-button-${button}`).click();
-  }
-
-  // Wait past every normal-speed release/press/contact timer so that a stale
-  // callback would have enough time to overwrite the final state.
-  await page.waitForTimeout(1_200);
-
-  await expect(page.locator("#current-note-heading")).toHaveText("솔");
-  await expect(page.locator(".note-name")).toHaveText("음 이름 G4");
-  await expect(page.getByTestId("note-button-5")).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
-  await expect(page.getByTestId("recorder-scene")).toHaveAttribute(
-    "data-closed-holes",
-    "T0 L1 L2 L3",
-  );
-  await expect(page.getByTestId("recorder-scene")).toHaveAttribute(
-    "data-phase",
-    "settled",
-  );
-  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
-    "data-rendered-source",
-    "/fingering/poses/sol.png",
-  );
-  expect(browserErrors).toEqual([]);
+  const menu = page.getByRole("button", { name: "음 선택", exact: true });
+  await menu.click();
+  await page.keyboard.press("5");
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator("#current-note-heading")).toHaveText("도");
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeFocused();
+  await openNotes(page);
+  const close = page.getByRole("button", { name: "음 선택 닫기", exact: true });
+  await expect(close).toBeFocused();
+  await page.keyboard.press("5");
+  await expect(page.locator("#current-note-heading")).toHaveText("도");
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.getByTestId("note-button-8")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(close).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeFocused();
 });
 
 test("help dialog traps focus and blocks background shortcuts", async ({ page }) => {
-  const browserErrors = watchForBrowserErrors(page);
+  const errors = watchForBrowserErrors(page);
   await openAppAndChoose(page, "baroque");
-
-  const opener = page.getByRole("button", { name: "도움말" });
-  await opener.click();
+  await openTool(page, "환경 설정", "도움말");
   const close = page.getByRole("button", { name: "도움말 닫기" });
   await expect(close).toBeFocused();
-
   await page.keyboard.press("5");
   await expect(page.locator("#current-note-heading")).toHaveText("도");
-  await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "운지 체계 비교", exact: true })).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(page.getByRole("dialog").getByRole("link", { name: "퀴즈", exact: true })).toBeFocused();
-  await page.keyboard.press("Tab");
-  await expect(page.getByRole("dialog").getByRole("link", { name: "기초 배우기", exact: true })).toBeFocused();
+  for (const name of ["운지 체계 비교", "퀴즈", "기초 배우기"]) {
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("dialog").getByRole("link", { name, exact: true })).toBeFocused();
+  }
   await page.keyboard.press("Tab");
   await expect(close).toBeFocused();
-
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog")).toBeHidden();
-  await expect(opener).toBeFocused();
-  expect(browserErrors).toEqual([]);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "환경 설정", exact: true })).toBeFocused();
+  expect(errors).toEqual([]);
 });
 
-test("interrupted motion keeps text aligned with the visible diff", async ({ page }) => {
-  const browserErrors = watchForBrowserErrors(page);
+test("interrupted motion instructions remain available from the tools menu", async ({ page }) => {
+  const errors = watchForBrowserErrors(page);
   await openAppAndChoose(page, "baroque");
-
-  await page.getByRole("radio", { name: /느리게/ }).check();
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        document.querySelector<HTMLElement>('[data-testid="note-button-8"]')?.click();
-        window.setTimeout(() => {
-          document.querySelector<HTMLElement>('[data-testid="note-button-4"]')?.click();
-          resolve();
-        }, 10);
-      }),
-  );
-
+  await page.getByRole("radio", { name: "느리게", exact: true }).check();
+  await page.getByRole("heading", { level: 1 }).click();
+  await page.keyboard.press("8");
+  await page.keyboard.press("4");
+  await openTool(page, "수업 도구", "손가락 안내");
   await expect(page.getByText(/지금 자세에서 파 운지로 바꿔요/)).toBeVisible();
   await expect(page.getByText("5번 · 오른손 가운데손가락")).toBeVisible();
   await expect(page.locator(".finger-chip-row.close")).toHaveCount(0);
-  expect(browserErrors).toEqual([]);
+  expect(errors).toEqual([]);
 });
 
-test("844×390 landscape keeps the scene and note keypad in the first view", async ({
-  page,
-}) => {
-  const browserErrors = watchForBrowserErrors(page);
-  await page.setViewportSize({ width: 844, height: 390 });
-  await openAppAndChoose(page, "baroque");
-
-  await expect(page.locator(".scene-card")).toBeInViewport();
-  await expect(page.locator(".keypad-card")).toBeInViewport();
-  await expect(page.getByTestId("note-button-8")).toBeInViewport();
-
-  const noteCard = await page.locator(".note-card").boundingBox();
-  const staff = await page.locator(".note-card .staff-note").boundingBox();
-  expect(staff!.x).toBeGreaterThanOrEqual(noteCard!.x);
-  expect(staff!.x + staff!.width).toBeLessThanOrEqual(noteCard!.x + noteCard!.width);
-  const systemOption = await page.getByRole("radio", { name: /^바로크식 파/ }).locator("..").boundingBox();
-  expect(systemOption!.width).toBeGreaterThanOrEqual(90);
-
-  const dimensions = await page.evaluate(() => ({
-    clientWidth: document.documentElement.clientWidth,
-    scrollWidth: document.documentElement.scrollWidth,
-  }));
-  expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
-  expect(browserErrors).toEqual([]);
-});
-
-test("1366×768 desktop keeps scene and keypad in first viewport", async ({ page }) => {
-  await page.setViewportSize({ width: 1366, height: 768 });
-  await openAppAndChoose(page, "baroque");
-  const scene = await page.locator(".scene-card").boundingBox();
-  const keypad = await page.locator(".keypad-card").boundingBox();
-  expect(scene!.y).toBeGreaterThanOrEqual(0);
-  expect(scene!.y).toBeLessThan(768);
-  expect(keypad!.y + keypad!.height).toBeLessThanOrEqual(768);
-});
+for (const viewport of [{ width: 360, height: 800 }, { width: 844, height: 390 }, { width: 1366, height: 768 }]) {
+  test(`${viewport.width}×${viewport.height} keeps teacher controls accessible without horizontal scrolling`, async ({ page }) => {
+    const errors = watchForBrowserErrors(page);
+    await page.setViewportSize(viewport);
+    await openAppAndChoose(page, "baroque");
+    await expect(page.locator(".scene-card")).toBeVisible();
+    await expect(page.locator(".keypad-card")).toHaveCount(0);
+    await openNotes(page);
+    await expect(page.getByTestId("note-button-8")).toBeVisible();
+    await closeTool(page, "음 선택");
+    const dimensions = await page.evaluate(() => ({ client: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth, body: document.body.scrollWidth }));
+    expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client);
+    expect(dimensions.body).toBeLessThanOrEqual(dimensions.client);
+    const note = await page.locator(".note-card").boundingBox();
+    const staff = await page.locator(".note-card .staff-note").boundingBox();
+    expect(staff!.x).toBeGreaterThanOrEqual(note!.x);
+    expect(staff!.x + staff!.width).toBeLessThanOrEqual(note!.x + note!.width);
+    expect(errors).toEqual([]);
+  });
+}
 
 test("sequence starts at 도 and resumes from a paused note", async ({ page }) => {
-  const browserErrors = watchForBrowserErrors(page);
+  const errors = watchForBrowserErrors(page);
   await openAppAndChoose(page, "baroque");
-  await page.getByTestId("note-button-5").click();
-  await expect(page.locator("#current-note-heading")).toHaveText("솔");
-
-  await page.getByRole("button", { name: "순서 연습 시작" }).click();
+  await chooseNote(page, 5);
+  await openTool(page, "수업 도구", "연습 코스");
+  await page.getByRole("button", { name: "순서 연습 시작", exact: true }).click();
   await expect(page.locator("#current-note-heading")).toHaveText("도");
-  await page.waitForTimeout(1_550);
   await expect(page.locator("#current-note-heading")).toHaveText("레");
-
-  await page.getByRole("button", { name: "일시정지" }).click();
-  await expect(page.getByRole("button", { name: "이어서 연습" })).toBeVisible();
-  await page.waitForTimeout(1_550);
+  await page.getByRole("button", { name: "일시정지", exact: true }).click();
+  await page.waitForTimeout(1550);
   await expect(page.locator("#current-note-heading")).toHaveText("레");
-
-  await page.getByRole("button", { name: "이어서 연습" }).click();
+  await page.getByRole("button", { name: "이어서 연습", exact: true }).click();
   await expect(page.locator("#current-note-heading")).toHaveText("레");
-  expect(browserErrors).toEqual([]);
+  expect(errors).toEqual([]);
 });

@@ -15,7 +15,7 @@ import { useReducedMotion } from "./useReducedMotion";
 import { useSequencePractice } from "./useSequencePractice";
 import { useCompletionCue } from "./useCompletionCue";
 import { useClassroom } from "./useClassroom";
-export function useRecorderLesson() {
+export function useRecorderLesson(shortcutsBlocked = false) {
   const { preferences, loaded: preferencesLoaded, update: updatePreferences, reset, restore } = usePreferences();
   const [statusMessage, setStatusMessage] = useState("");
 
@@ -48,7 +48,7 @@ export function useRecorderLesson() {
   const classroom = useClassroom({ note: selection.selectedNote, bank: selection.activeBank, system: selection.system, speed: preferences.speed, stepMode: preferences.stepMode }, selection.restoreSelection, stopClassroomPlayback);
   const toggleSpeed = useCallback(() => updatePreferences({ speed: preferences.speed === "slow" ? "normal" : "slow" }), [preferences.speed, updatePreferences]);
   const toggleMuted = useCallback(() => changeMuted(!preferences.isMuted), [changeMuted, preferences.isMuted]);
-  useGlobalShortcuts({ ...selection, helpOpen, classroom: classroom.active, toggleClassroom: classroom.toggle, exitClassroom: classroom.exit, toggleSpeed, toggleMuted, toggleCourse: sequence.toggleSequence });
+  useGlobalShortcuts({ ...selection, helpOpen: helpOpen || shortcutsBlocked, classroom: classroom.active, toggleClassroom: classroom.toggle, exitClassroom: classroom.exit, toggleSpeed, toggleMuted, toggleCourse: sequence.toggleSequence });
 
   const closeHelp = useCallback(() => setHelpOpen(false), []);
   const resetPreferences = useCallback(() => { selection.prepareReset(); reset(); setStatusMessage("설정을 처음 상태로 되돌렸어요"); }, [selection, reset]);

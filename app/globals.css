@@ -5,6 +5,7 @@
 @import "./basics.css";
 @import "./classroom.css";
 @import "./high-contrast.css";
+@import "./teacher.css";
 
 :root {
   --color-bg: #f3f6fb;

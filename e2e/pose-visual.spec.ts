@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { ALL_NOTE_IDS, NOTE_BANKS, NOTE_BANK_LABELS } from "../src/features/recorder/data/noteMeta";
+import { ALL_NOTE_IDS, NOTE_BANKS } from "../src/features/recorder/data/noteMeta";
 import { getNoteBank } from "../src/features/recorder/data/practiceCourses";
 import { getRecorderPoseSource } from "../src/features/recorder/data/poseAssets";
+import { chooseNote } from "./teacher-helpers";
 
 test("twenty aligned poses match reviewed visual baselines", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "chromium", "Fixed desktop Chromium visual baseline; functional tests cover mobile engines.");
@@ -11,6 +12,14 @@ test("twenty aligned poses match reviewed visual baselines", async ({ page }, te
   await page.addInitScript(() => localStorage.setItem("recorder-learning.preferences.v1", JSON.stringify({ onboardingCompleted: true, isMuted: true, speed: "normal" })));
   await page.goto("/");
   await expect(page.getByRole("radio", { name: "보통", exact: true })).toBeChecked();
+  // Keep the reviewed pose canvas/map dimensions independent of the teacher
+  // workspace's new column proportions. The responsive workspace is covered
+  // separately; this baseline protects the unchanged pose artwork and holes.
+  await page.addStyleTag({ content: `
+    .recorder-app:not([data-classroom]) .learning-grid {
+      grid-template-columns: minmax(270px, .82fr) minmax(440px, 1.58fr) minmax(315px, .92fr) !important;
+    }
+  ` });
   await page.evaluate(() => document.fonts.ready);
   let stageSize: { width: number; height: number } | null = null;
   for (const system of ["baroque", "german"] as const) {
@@ -18,9 +27,8 @@ test("twenty aligned poses match reviewed visual baselines", async ({ page }, te
     const notes = system === "baroque" ? ALL_NOTE_IDS : ["fa", "faSharp", "highFa"] as const;
     for (const note of notes) {
       const bank = getNoteBank(note);
-      await page.getByRole("tab", { name: new RegExp(NOTE_BANK_LABELS[bank]) }).click();
       const digit = NOTE_BANKS[bank].find(entry => entry.note === note)!.digit;
-      await page.locator(".note-keypad button").nth(digit - 1).click();
+      await chooseNote(page, digit, bank);
       const source = getRecorderPoseSource(note, system);
       await expect(page.locator(`.recorder-pose-stage[data-ready="true"][data-rendered-source="${source}"]`)).toBeVisible();
       await expect(page.getByTestId("recorder-scene")).toHaveAttribute("data-phase", "settled");
