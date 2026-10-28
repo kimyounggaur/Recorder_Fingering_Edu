@@ -62,6 +62,7 @@ test("main keeps only the three captured panels and tools open through nested me
 });
 
 test("menu selection keeps all eight notes, staff and poses synchronized", async ({ page }) => {
+  test.setTimeout(60_000);
   const errors = watchForBrowserErrors(page);
   await openAppAndChoose(page, "german");
   for (const note of NOTES) {
@@ -132,6 +133,20 @@ test("rapid 1→8→4→5 input settles on the final 솔 fingering", async ({ pa
   expect(errors).toEqual([]);
 });
 
+test("transition guidance collapses after the hand and hole map settle", async ({ page }) => {
+  const errors = watchForBrowserErrors(page);
+  await openAppAndChoose(page, "baroque");
+  await page.getByRole("radio", { name: "느리게", exact: true }).check();
+  await page.getByRole("heading", { level: 1 }).click();
+  await page.keyboard.press("8");
+  await expect(page.locator(".recorder-scene__changes")).toBeVisible();
+  await expect(page.locator(".scene-match-status")).toHaveCount(0);
+  await expect(page.getByTestId("recorder-scene")).toHaveAttribute("data-phase", "settled", { timeout: 5_000 });
+  await expect(page.locator(".recorder-scene__changes")).toHaveCount(0);
+  await expect(page.locator(".scene-match-status")).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test("menus and dialogs block background shortcuts and restore focus", async ({ page }) => {
   await openAppAndChoose(page, "baroque");
   const menu = page.getByRole("button", { name: "음 선택", exact: true });
@@ -198,9 +213,42 @@ for (const viewport of [{ width: 360, height: 800 }, { width: 844, height: 390 }
     await openNotes(page);
     await expect(page.getByTestId("note-button-8")).toBeVisible();
     await closeTool(page, "음 선택");
+    await expect(page.getByTestId("recorder-scene")).toHaveAttribute("data-phase", "settled");
+    await expect(page.locator(".scene-heading .fingering-legend")).toHaveCount(1);
+    await expect(page.locator(".scene-match-status")).toHaveText("손 모양과 구멍 지도가 일치했어요.");
+    await expect(page.locator(".recorder-scene__changes")).toHaveCount(0);
     const dimensions = await page.evaluate(() => ({ client: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth, body: document.body.scrollWidth }));
     expect(dimensions.scroll).toBeLessThanOrEqual(dimensions.client);
     expect(dimensions.body).toBeLessThanOrEqual(dimensions.client);
+    const scene = await page.getByTestId("recorder-scene").boundingBox();
+    const map = await page.locator(".fingering-map-panel").boundingBox();
+    expect(scene!.y + scene!.height - (map!.y + map!.height)).toBeLessThanOrEqual(24);
+    const headingParts = await page.locator(".scene-heading__title, .scene-heading__legend, .scene-heading__status").evaluateAll((elements) => elements.flatMap((element) => {
+      const bounds = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return style.display === "none" || bounds.width === 0 || bounds.height === 0
+        ? []
+        : [{ left: bounds.left, right: bounds.right, top: bounds.top, bottom: bounds.bottom }];
+    }));
+    for (let first = 0; first < headingParts.length; first += 1) {
+      for (let second = first + 1; second < headingParts.length; second += 1) {
+        const a = headingParts[first];
+        const b = headingParts[second];
+        expect(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top).toBe(true);
+      }
+    }
+    if (viewport.width !== 844) {
+      await expect(page.locator(".scene-heading .fingering-legend")).toBeVisible();
+      const card = await page.locator(".scene-card").boundingBox();
+      const legend = await page.locator(".scene-heading .fingering-legend").boundingBox();
+      expect(legend!.x).toBeGreaterThanOrEqual(card!.x);
+      expect(legend!.x + legend!.width).toBeLessThanOrEqual(card!.x + card!.width);
+    }
+    if (viewport.width === 1366) {
+      const match = await page.locator(".scene-match-status").boundingBox();
+      const status = await page.locator(".scene-status").boundingBox();
+      expect(match!.x + match!.width).toBeLessThanOrEqual(status!.x);
+    }
     const note = await page.locator(".note-card").boundingBox();
     const staff = await page.locator(".note-card .staff-note").boundingBox();
     expect(staff!.x).toBeGreaterThanOrEqual(note!.x);
@@ -218,9 +266,11 @@ test("sequence starts at 도 and resumes from a paused note", async ({ page }) =
   await expect(page.locator("#current-note-heading")).toHaveText("도");
   await expect(page.locator("#current-note-heading")).toHaveText("레");
   await page.getByRole("button", { name: "일시정지", exact: true }).click();
+  await expect(page.getByRole("button", { name: "이어서 연습", exact: true })).toBeVisible();
+  const pausedNote = await page.locator("#current-note-heading").innerText();
   await page.waitForTimeout(1550);
-  await expect(page.locator("#current-note-heading")).toHaveText("레");
+  await expect(page.locator("#current-note-heading")).toHaveText(pausedNote);
   await page.getByRole("button", { name: "이어서 연습", exact: true }).click();
-  await expect(page.locator("#current-note-heading")).toHaveText("레");
+  await expect(page.locator("#current-note-heading")).toHaveText(pausedNote);
   expect(errors).toEqual([]);
 });

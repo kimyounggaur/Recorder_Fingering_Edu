@@ -532,16 +532,64 @@ h2 {
 }
 
 .scene-heading {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  grid-template-areas: "title legend status";
+  align-items: center;
+  gap: 8px 16px;
   margin-bottom: 10px;
+}
+
+.scene-heading__title {
+  grid-area: title;
+  min-width: 0;
+}
+
+.scene-heading__legend {
+  grid-area: legend;
+  min-width: 0;
+}
+
+.scene-heading__status {
+  grid-area: status;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+
+.scene-heading .fingering-legend {
+  justify-content: flex-start;
+  gap: 5px 10px;
+  margin-top: 0;
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.scene-heading .fingering-legend > span {
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.scene-match-status {
+  margin: 0;
+  color: #517067;
+  font-size: 0.69rem;
+  font-weight: 850;
+  white-space: nowrap;
 }
 
 .scene-status {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 8px;
   color: var(--color-text-muted);
   font-size: 0.82rem;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .scene-status-dot {
@@ -579,14 +627,19 @@ h2 {
   height: min(73vh, 790px);
   max-height: 100%;
   grid-template-columns: minmax(0, 1fr) minmax(150px, 0.42fr);
-  grid-template-rows: minmax(0, 1fr) auto;
-  grid-template-areas:
-    "pose map"
-    "changes changes";
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "pose map";
   gap: clamp(10px, 1.4vw, 16px);
   padding: clamp(10px, 1.6vw, 16px);
   overflow: hidden;
   filter: none;
+}
+
+.recorder-scene--has-changes {
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "pose map"
+    "changes changes";
 }
 
 .recorder-pose-panel {
@@ -898,16 +951,6 @@ h2 {
 .pose-change-chip strong {
   font-size: 0.67rem;
   font-weight: 950;
-}
-
-.pose-change-stable {
-  grid-column: 1 / -1;
-  align-self: center;
-  margin: 0;
-  color: #517067;
-  font-size: 0.69rem;
-  font-weight: 850;
-  text-align: center;
 }
 
 .recorder-scene__debug-readout {
@@ -1549,6 +1592,15 @@ kbd {
   100% { opacity: 0.18; transform: scale(1.7); }
 }
 
+@media (max-width: 1180px) {
+  .scene-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title status"
+      "legend legend";
+  }
+}
+
 @media (min-width: 1081px) {
   .learning-grid { grid-template-areas: "note scene keypad" "instruction scene settings"; }
   .keypad-card .section-heading-row { display: block; }
@@ -1823,6 +1875,19 @@ kbd {
     display: none;
   }
 
+  .scene-heading {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "title"
+      "status"
+      "legend";
+    align-items: start;
+  }
+
+  .scene-heading__status {
+    justify-content: flex-start;
+  }
+
   .fingering-legend {
     gap: 7px 10px;
     font-size: 0.69rem;
@@ -1835,13 +1900,20 @@ kbd {
   .recorder-scene {
     height: 920px;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 500px minmax(350px, 1fr);
+    grid-template-areas:
+      "pose"
+      "map";
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .recorder-scene.recorder-scene--has-changes {
     grid-template-rows: 500px 350px auto;
     grid-template-areas:
       "pose"
       "map"
       "changes";
-    gap: 8px;
-    padding: 8px;
   }
 
   .recorder-pose-panel__open-key,
@@ -1889,6 +1961,7 @@ kbd {
   .scene-card .eyebrow,
   .keypad-card .eyebrow,
   .keyboard-hint,
+  .scene-heading__legend,
   .fingering-legend,
   .scene-status {
     display: none;

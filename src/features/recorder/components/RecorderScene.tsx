@@ -146,6 +146,9 @@ export function RecorderScene({
     ? getRecorderPoseSource(transitionFromNote, transitionFromSystem ?? system)
     : null;
   const poseDuration = reducedMotion ? 0 : speed === "slow" ? 720 : 260;
+  const showChanges = !readonly
+    && phase !== "settled"
+    && (toOpen.length > 0 || toClose.length > 0);
 
   return (
     <div
@@ -155,6 +158,7 @@ export function RecorderScene({
         `recorder-scene--phase-${phase}`,
         reducedMotion ? "recorder-scene--reduced-motion" : "",
         debug ? "recorder-scene--debug" : "",
+        showChanges ? "recorder-scene--has-changes" : "",
         className,
       ]
         .filter(Boolean)
@@ -221,12 +225,9 @@ export function RecorderScene({
         />
       </section>
 
-      {!readonly ? <div className="recorder-scene__changes" aria-hidden="true">
+      {showChanges ? <div className="recorder-scene__changes" aria-hidden="true">
         <ChangeList holes={toOpen} kind="release" />
         <ChangeList holes={toClose} kind="press" />
-        {!toOpen.length && !toClose.length ? (
-          <p className="pose-change-stable">손 모양과 구멍 지도가 일치했어요.</p>
-        ) : null}
       </div> : null}
 
       {debug ? (

@@ -22,7 +22,8 @@ body[data-classroom="true"] { overflow: hidden; background: var(--color-surface)
 .recorder-app[data-classroom="true"] .learning-grid { height: calc(100dvh - 80px); display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 3fr); grid-template-areas: "scene classroom"; gap: 16px; align-items: stretch; }
 .recorder-app[data-classroom="true"] .scene-card { padding: 0; height: 100%; border: 0; border-radius: 0; background: none; box-shadow: none; }
 .recorder-app[data-classroom="true"] .recorder-stage-frame { height: 100%; min-height: 0; max-height: none; border: 0; border-radius: 0; background: none; }
-.recorder-app[data-classroom="true"] .recorder-scene { height: 100%; max-height: none; padding: 0; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "pose map" "changes changes"; grid-template-rows: minmax(0, 1fr) auto; gap: 12px; }
+.recorder-app[data-classroom="true"] .recorder-scene { height: 100%; max-height: none; padding: 0; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "pose map"; grid-template-rows: minmax(0, 1fr); gap: 12px; }
+.recorder-app[data-classroom="true"] .recorder-scene.recorder-scene--has-changes { grid-template-areas: "pose map" "changes changes"; grid-template-rows: minmax(0, 1fr) auto; }
 .recorder-app[data-classroom="true"] .recorder-pose-panel, .recorder-app[data-classroom="true"] .fingering-map-panel { border-radius: 8px; box-shadow: none; }
 .recorder-app[data-classroom="true"] .fingering-map-panel { padding: 8px; }
 .recorder-app[data-classroom="true"] .fingering-map-panel__heading { font-size: 1rem; }
@@ -30,7 +31,7 @@ body[data-classroom="true"] { overflow: hidden; background: var(--color-surface)
 .fingering-map[data-classroom="true"] [data-hole-id="T0"] .fingering-map__hole-number { transform: translateX(32px); }
 .recorder-app[data-classroom="true"] .fingering-map__hand-label, .recorder-app[data-classroom="true"] .fingering-map__view-label, .recorder-app[data-classroom="true"] .fingering-map__hand-guide { display: none; }
 .recorder-app[data-classroom="true"] .pose-change-list { font-size: 1rem; }
-.recorder-app[data-classroom="true"] :is(.pose-change-chip, .pose-change-chip strong, .pose-change-list__label, .pose-change-stable) { font-size: 1rem; line-height: 1.25; }
+.recorder-app[data-classroom="true"] :is(.pose-change-chip, .pose-change-chip strong, .pose-change-list__label) { font-size: 1rem; line-height: 1.25; }
 .recorder-app[data-classroom="true"] .pose-change-chip { padding: 4px 6px; border-radius: 6px; }
 .recorder-app[data-classroom="true"] .recorder-scene__changes { grid-template-columns: minmax(0, 1fr); }
 .recorder-app[data-classroom="true"] .recorder-scene__changes { min-height: 0; }

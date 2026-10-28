@@ -62,6 +62,9 @@ export function RecorderLearningApp() {
     );
   }
 
+  const showFingerChanges = displayAnimation.phase !== "settled"
+    && (displayAnimation.diff.toOpen.length > 0 || displayAnimation.diff.toClose.length > 0);
+
   return (
     <div
       className="recorder-app"
@@ -93,13 +96,21 @@ export function RecorderLearningApp() {
       <main id="learning-stage" className="learning-grid">
         <section className="card scene-card" aria-labelledby="scene-heading">
           <div className="section-heading-row scene-heading" hidden={classroom.active}>
-            <div>
+            <div className="scene-heading__title">
               <p className="eyebrow">앞면 1–7 · 뒷면 엄지 0</p>
               <h2 id="scene-heading">손가락 학습 무대</h2>
             </div>
-            <div className="scene-status" aria-hidden="true">
-              <span className="scene-status-dot" data-phase={displayAnimation.phase} />
-              {displayAnimation.phase === "settled" ? "운지 완성" : stepMode ? displayAnimation.stepLabel : "손가락 이동 중"}
+            <div className="scene-heading__legend">
+              <FingeringLegend />
+            </div>
+            <div className="scene-heading__status" aria-hidden="true">
+              {!showFingerChanges ? (
+                <p className="scene-match-status">손 모양과 구멍 지도가 일치했어요.</p>
+              ) : null}
+              <div className="scene-status">
+                <span className="scene-status-dot" data-phase={displayAnimation.phase} />
+                {displayAnimation.phase === "settled" ? "운지 완성" : stepMode ? displayAnimation.stepLabel : "손가락 이동 중"}
+              </div>
             </div>
           </div>
           <div className="recorder-stage-frame">
@@ -128,7 +139,6 @@ export function RecorderLearningApp() {
               description={liveMessage}
             />
           </div>
-          <div hidden={classroom.active}><FingeringLegend /></div>
         </section>
 
         <div className="settings-area" hidden={classroom.active}>
