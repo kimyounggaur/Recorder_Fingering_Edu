@@ -66,8 +66,16 @@ beforeEach(() => {
 afterEach(() => { vi.useRealTimers(); });
 
 describe("RecorderLearningApp", () => {
-  it("shows only the three teaching areas until a submenu is opened", async () => {
+  it("merges the current note into the settings card until a submenu is opened", async () => {
     await renderReadyApp();
+    const settingsCard = document.querySelector<HTMLElement>(".settings-card")!;
+    const noteCard = document.querySelector<HTMLElement>(".note-card")!;
+    expect(document.querySelector(".note-area")).not.toBeInTheDocument();
+    expect(settingsCard).toContainElement(noteCard);
+    expect(noteCard).toHaveClass("note-card--embedded");
+    expect(noteCard).not.toHaveClass("card");
+    expect(within(noteCard).getByRole("img")).toHaveClass("staff-note");
+    expect(within(noteCard).getByRole("button")).toHaveClass("primary-button");
     expect(screen.getByRole("heading", { name: "손가락 학습 무대" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "학습 설정" })).toBeInTheDocument();
     expect(currentNote()).toHaveTextContent("도");

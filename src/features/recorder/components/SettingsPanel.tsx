@@ -1,10 +1,12 @@
 import type { FingeringSystem } from "../model/types";
 import type { AnimationSpeed } from "../animation/motionTimings";
+import type { ReactNode } from "react";
 import { SegmentedControl } from "./SegmentedControl";
 import { ToggleRow } from "./ToggleRow";
 import Link from "next/link";
 
 interface SettingsPanelProps {
+  children?: ReactNode;
   theme: "default" | "high-contrast";
   onThemeChange: (theme: "default" | "high-contrast") => void;
   system: FingeringSystem;
@@ -71,6 +73,7 @@ export function SettingsPanel(props: SettingsPanelProps) {
           { value: "written", label: "한 옥타브 낮게" },
         ]}
       />
+      {props.children}
     </section>
   );
 }

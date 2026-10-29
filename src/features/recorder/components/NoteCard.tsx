@@ -3,6 +3,7 @@ import type { NoteMeta } from "../data/noteMeta";
 import { StaffNote } from "./StaffNote";
 
 interface NoteCardProps {
+  embedded?: boolean;
   note: NoteMeta;
   system: FingeringSystem;
   onPlay: () => void;
@@ -11,6 +12,7 @@ interface NoteCardProps {
 }
 
 export function NoteCard({
+  embedded = false,
   note,
   system,
   onPlay,
@@ -20,7 +22,10 @@ export function NoteCard({
   const systemLabel = system === "baroque" ? "바로크식" : "독일식";
 
   return (
-    <section className="card note-card" aria-labelledby="current-note-heading">
+    <section
+      className={embedded ? "note-card note-card--embedded" : "card note-card"}
+      aria-labelledby="current-note-heading"
+    >
       <div className="card-eyebrow-row">
         <p className="eyebrow">지금 배울 음</p>
         <span className="status-badge">{systemLabel}</span>

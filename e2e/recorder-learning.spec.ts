@@ -37,11 +37,13 @@ function hole(page: Page, id: string) { return page.locator(`[data-hole-id="${id
 
 test.beforeEach(async ({ page }) => { await page.addInitScript(() => localStorage.clear()); });
 
-test("main keeps only the three captured panels and tools open through nested menus", async ({ page }) => {
+test("main merges the current note into settings and keeps tools in nested menus", async ({ page }) => {
   await openAppAndChoose(page, "baroque");
   await expect(page.locator(".scene-card")).toBeVisible();
-  await expect(page.locator(".note-card")).toBeVisible();
   await expect(page.locator(".settings-card")).toBeVisible();
+  await expect(page.locator(".settings-card > .note-card--embedded")).toBeVisible();
+  await expect(page.locator(".note-area")).toHaveCount(0);
+  await expect(page.locator(".card.note-card")).toHaveCount(0);
   for (const selector of [".keypad-card", ".instruction-card", ".course-panel", ".onboarding-banner"]) {
     await expect(page.locator(selector)).toHaveCount(0);
   }
@@ -65,8 +67,16 @@ test("menu selection keeps all eight notes, staff and poses synchronized", async
   test.setTimeout(60_000);
   const errors = watchForBrowserErrors(page);
   await openAppAndChoose(page, "german");
+  const mergedNote = page.locator(".settings-card > .note-card--embedded");
   for (const note of NOTES) {
     await chooseNote(page, note.digit);
+    await expect(mergedNote.locator(".status-badge")).not.toHaveText("");
+    await expect(mergedNote.locator(".note-number")).toContainText(String(note.digit));
+    await expect(mergedNote.locator(".sounding-pitch")).toContainText(
+      note.name.replace(/\d$/, octave => String(Number(octave) + 1)),
+    );
+    await expect(mergedNote.locator(".staff-note")).toHaveAttribute("aria-label", new RegExp(note.solfege));
+    await expect(mergedNote.locator(".note-short-instruction")).not.toHaveText("");
     await expect(page.locator("#current-note-heading")).toHaveText(note.solfege);
     await expect(page.locator(".note-name")).toHaveText(`음 이름 ${note.name}`);
     await expect(page.getByTestId("live-region")).toContainText(`${note.subject} 선택되었습니다.`);
@@ -250,7 +260,11 @@ for (const viewport of [
         ".note-card",
         ".segmented-control",
         ".segment-option",
+        ".staff-note",
+        ".note-name",
+        ".sounding-pitch",
         ".note-short-instruction",
+        ".note-card .primary-button",
       ]) {
         for (const element of document.querySelectorAll<HTMLElement>(selector)) {
           if (element.clientWidth > 0 && element.scrollWidth > element.clientWidth + 1) localOverflow.push(selector);
@@ -315,6 +329,7 @@ for (const viewport of [
     const sceneCard = await page.locator(".scene-card").boundingBox();
     const settings = await page.locator(".settings-card").boundingBox();
     const currentNote = await page.locator(".note-card").boundingBox();
+    const soundButton = await page.locator(".note-card .primary-button").boundingBox();
     const firstSegmentOptions = await page.locator(".settings-card .segmented-control").first().locator(".segment-option").evaluateAll((elements) => elements.map((element) => {
       const bounds = element.getBoundingClientRect();
       return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
@@ -322,21 +337,44 @@ for (const viewport of [
     if (viewport.width > 760) {
       expect(settings!.width).toBeGreaterThanOrEqual(159);
       expect(settings!.width).toBeLessThanOrEqual(201);
-      expect(currentNote!.width).toBeCloseTo(settings!.width, 0);
-      expect(currentNote!.x).toBeCloseTo(settings!.x, 0);
       expect(sceneCard!.x + sceneCard!.width).toBeLessThanOrEqual(settings!.x);
       expect(sceneCard!.width).toBeGreaterThan(settings!.width);
-      expect(firstSegmentOptions[1].x).toBeCloseTo(firstSegmentOptions[0].x, 0);
-      expect(firstSegmentOptions[1].y).toBeGreaterThanOrEqual(firstSegmentOptions[0].y + firstSegmentOptions[0].height - 1);
+      expect(Math.abs(sceneCard!.y + sceneCard!.height - (settings!.y + settings!.height))).toBeLessThanOrEqual(2);
+      expect(Math.abs(firstSegmentOptions[1].y - firstSegmentOptions[0].y)).toBeLessThanOrEqual(1);
+      expect(firstSegmentOptions[1].x).toBeGreaterThanOrEqual(firstSegmentOptions[0].x + firstSegmentOptions[0].width - 1);
     } else {
       expect(settings!.y).toBeGreaterThanOrEqual(sceneCard!.y + sceneCard!.height);
-      expect(firstSegmentOptions[1].y).toBeCloseTo(firstSegmentOptions[0].y, 0);
+      expect(Math.abs(firstSegmentOptions[1].y - firstSegmentOptions[0].y)).toBeLessThanOrEqual(1);
       expect(firstSegmentOptions[1].x).toBeGreaterThanOrEqual(firstSegmentOptions[0].x + firstSegmentOptions[0].width - 1);
     }
-    const note = await page.locator(".note-card").boundingBox();
+    for (const option of firstSegmentOptions) expect(option.height).toBeGreaterThanOrEqual(44);
     const staff = await page.locator(".note-card .staff-note").boundingBox();
-    expect(staff!.x).toBeGreaterThanOrEqual(note!.x);
-    expect(staff!.x + staff!.width).toBeLessThanOrEqual(note!.x + note!.width);
+    expect(currentNote!.x).toBeGreaterThanOrEqual(settings!.x);
+    expect(currentNote!.x + currentNote!.width).toBeLessThanOrEqual(settings!.x + settings!.width);
+    expect(currentNote!.y).toBeGreaterThanOrEqual(settings!.y);
+    expect(staff!.width).toBeGreaterThan(0);
+    expect(staff!.height).toBeGreaterThan(0);
+    expect(staff!.x).toBeGreaterThanOrEqual(currentNote!.x);
+    expect(staff!.x + staff!.width).toBeLessThanOrEqual(currentNote!.x + currentNote!.width);
+    expect(staff!.y + staff!.height).toBeLessThanOrEqual(currentNote!.y + currentNote!.height + 1);
+    expect(soundButton!.y + soundButton!.height).toBeLessThanOrEqual(currentNote!.y + currentNote!.height + 1);
+    expect(soundButton!.height).toBeGreaterThanOrEqual(44);
+    if (currentNote!.y + currentNote!.height > settings!.y + settings!.height + 1) {
+      const scrollSize = await page.locator(".settings-card").evaluate(element => ({
+        clientHeight: element.clientHeight,
+        scrollHeight: element.scrollHeight,
+      }));
+      expect(scrollSize.scrollHeight).toBeGreaterThan(scrollSize.clientHeight);
+      await page.locator(".note-card .primary-button").scrollIntoViewIfNeeded();
+      const visibleSoundButton = await page.locator(".note-card .primary-button").boundingBox();
+      expect(visibleSoundButton!.y).toBeGreaterThanOrEqual(settings!.y);
+      expect(visibleSoundButton!.y + visibleSoundButton!.height).toBeLessThanOrEqual(settings!.y + settings!.height + 1);
+    }
+    if (viewport.width === 844) {
+      await page.locator(".note-card .primary-button").scrollIntoViewIfNeeded();
+      await page.locator(".note-card .primary-button").click();
+      await expect(page.getByTestId("recorder-scene")).toHaveAttribute("data-phase", "settled");
+    }
     expect(errors).toEqual([]);
   });
 }

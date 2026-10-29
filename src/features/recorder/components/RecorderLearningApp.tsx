@@ -142,16 +142,16 @@ export function RecorderLearningApp() {
         </section>
 
         <div className="settings-area" hidden={classroom.active}>
-          <SettingsPanel {...settingsProps} />
-        </div>
-        <div className="note-area" hidden={classroom.active}>
-          <NoteCard
-            note={currentNote}
-            system={system}
-            onPlay={playCurrentNote}
-            muted={preferences.isMuted}
-            shortcutLabel={currentShortcutLabel}
-          />
+          <SettingsPanel {...settingsProps}>
+            <NoteCard
+              embedded
+              note={currentNote}
+              system={system}
+              onPlay={playCurrentNote}
+              muted={preferences.isMuted}
+              shortcutLabel={currentShortcutLabel}
+            />
+          </SettingsPanel>
         </div>
         {classroom.active ? <ClassroomControls lesson={lesson} /> : null}
       </main>
