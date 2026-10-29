@@ -4,20 +4,20 @@ const COMMON_POSES: Record<
   Exclude<SolfegeId, "fa" | "faSharp" | "highFa">,
   string
 > = {
-  do: "/fingering/poses/do.png",
-  re: "/fingering/poses/re.png",
-  mi: "/fingering/poses/mi.png",
-  sol: "/fingering/poses/sol.png",
-  la: "/fingering/poses/la.png",
-  si: "/fingering/poses/si.png",
-  highDo: "/fingering/poses/high-do.png",
-  doSharp: "/fingering/poses/cs4.png",
-  reSharp: "/fingering/poses/ds4.png",
-  solSharp: "/fingering/poses/gs4.png",
-  laSharp: "/fingering/poses/as4.png",
-  highRe: "/fingering/poses/d5.png",
-  highMi: "/fingering/poses/e5.png",
-  highSol: "/fingering/poses/g5.png",
+  do: "/fingering/poses-focused/do.png",
+  re: "/fingering/poses-focused/re.png",
+  mi: "/fingering/poses-focused/mi.png",
+  sol: "/fingering/poses-focused/sol.png",
+  la: "/fingering/poses-focused/la.png",
+  si: "/fingering/poses-focused/si.png",
+  highDo: "/fingering/poses-focused/high-do.png",
+  doSharp: "/fingering/poses-focused/cs4.png",
+  reSharp: "/fingering/poses-focused/ds4.png",
+  solSharp: "/fingering/poses-focused/gs4.png",
+  laSharp: "/fingering/poses-focused/as4.png",
+  highRe: "/fingering/poses-focused/d5.png",
+  highMi: "/fingering/poses-focused/e5.png",
+  highSol: "/fingering/poses-focused/g5.png",
 };
 
 const SYSTEM_POSES: Record<
@@ -25,22 +25,22 @@ const SYSTEM_POSES: Record<
   Record<FingeringSystem, string>
 > = {
   fa: {
-    baroque: "/fingering/poses/fa-baroque.png",
-    german: "/fingering/poses/fa-german.png",
+    baroque: "/fingering/poses-focused/fa-baroque.png",
+    german: "/fingering/poses-focused/fa-german.png",
   },
   faSharp: {
-    baroque: "/fingering/poses/fs4-baroque.png",
-    german: "/fingering/poses/fs4-german.png",
+    baroque: "/fingering/poses-focused/fs4-baroque.png",
+    german: "/fingering/poses-focused/fs4-german.png",
   },
   highFa: {
-    baroque: "/fingering/poses/f5-baroque.png",
-    german: "/fingering/poses/f5-german.png",
+    baroque: "/fingering/poses-focused/f5-baroque.png",
+    german: "/fingering/poses-focused/f5-german.png",
   },
 };
 
 /**
- * High-resolution pose exports derived from the user-provided `02 Fingering`
- * Illustrator source. Baroque and German F/F-sharp poses deliberately differ.
+ * Focused 723x1084 derivatives of the aligned 976x1360 source exports. The
+ * originals remain untouched; Baroque and German F/F-sharp poses differ.
  */
 export function getRecorderPoseSource(
   note: SolfegeId,
@@ -57,3 +57,5 @@ export const RECORDER_POSE_SOURCES = [
   ...Object.values(SYSTEM_POSES.faSharp),
   ...Object.values(SYSTEM_POSES.highFa),
 ] as const;
+
+export const RECORDER_POSE_FRAME = { width: 723, height: 1084 } as const;

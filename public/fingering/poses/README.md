@@ -3,6 +3,8 @@
 These 20 aligned `976×1360` PNG files cover 17 unique pitches from C4 to G5.
 They were rendered from the user-provided
 `02 Fingering/리코더_운지법(크몽).ai` source for the web learning stage.
+The app displays the pixel-equivalent focused derivatives in
+[`../poses-focused/`](../poses-focused/); keep these source files unchanged.
 F4, F♯4, and F5 each have separate Baroque and German poses, while C5 is shared by
 the low-bank 8 button and the high-bank 1 button.
 

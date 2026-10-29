@@ -50,7 +50,7 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET" || url.origin !== self.location.origin || isDevRuntimePath(url.pathname)) return;
   if (request.mode === "navigate") {
     event.respondWith(networkFirst(request));
-  } else if (RUNTIME_DESTINATIONS.has(request.destination) || url.pathname.startsWith("/fingering/poses/") || url.pathname === "/manifest.webmanifest") {
+  } else if (RUNTIME_DESTINATIONS.has(request.destination) || url.pathname.startsWith("/fingering/poses-focused/") || url.pathname === "/manifest.webmanifest") {
     event.respondWith(cacheFirst(request));
   }
 });

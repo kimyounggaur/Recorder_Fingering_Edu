@@ -1,10 +1,13 @@
 /* Teacher workspace: the three teaching panels stay on the main screen. */
 .recorder-app:not([data-classroom]) .learning-grid {
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+  grid-template-columns: minmax(0, 1fr) clamp(160px, 14vw, 200px);
   grid-template-rows: auto 1fr;
   grid-template-areas: "scene settings" "scene note";
   align-items: start;
 }
+.recorder-app:not([data-classroom]) .scene-card { padding: 4px; }
+.recorder-app:not([data-classroom]) .recorder-scene { gap: 3px; padding: 3px; }
+.recorder-app:not([data-classroom]) :is(.settings-area, .note-area) { min-width: 0; }
 .app-header.teacher-header {
   position: relative;
   z-index: 30;
@@ -65,6 +68,24 @@
 .teacher-menu-items :is(button, a):hover { background: var(--color-primary-soft); color: var(--color-primary-strong); }
 .recorder-app:not([data-classroom]) .settings-card { display: block; }
 .recorder-app:not([data-classroom]) .settings-card > .text-link { display: inline-block; margin: 0 0 12px; }
+@media (min-width: 761px) {
+  .recorder-app:not([data-classroom]) :is(.settings-area .settings-card, .note-area .note-card) { padding: 10px; }
+  .recorder-app:not([data-classroom]) .settings-area .settings-card > .section-heading-row {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .recorder-app:not([data-classroom]) .settings-area .settings-card > .section-heading-row .text-button { width: 100%; }
+  .recorder-app:not([data-classroom]) .settings-area .setting-fieldset { margin-bottom: 12px; }
+  .recorder-app:not([data-classroom]) .settings-area .segmented-control { grid-template-columns: minmax(0, 1fr) !important; }
+  .recorder-app:not([data-classroom]) .settings-area .segment-option { min-height: 48px; padding: 6px 4px; }
+  .recorder-app:not([data-classroom]) .note-area .card-eyebrow-row { flex-wrap: wrap; gap: 6px; }
+  .recorder-app:not([data-classroom]) .note-area .note-card-main { grid-template-columns: minmax(0, 1fr); }
+  .recorder-app:not([data-classroom]) .note-area .staff-note { min-width: 0; max-width: 100%; }
+  .recorder-app:not([data-classroom]) .note-area .current-solfege { font-size: 3rem; }
+  .recorder-app:not([data-classroom]) .note-area .note-short-instruction { min-height: 0; padding: 10px; }
+  .recorder-app:not([data-classroom]) .note-area .primary-button { padding-inline: 6px; }
+}
 .teacher-dialog-backdrop {
   position: fixed;
   z-index: 110;
@@ -106,7 +127,7 @@
   .app-header.teacher-header { flex-wrap: wrap; padding-block: 18px; }
   .teacher-navigation { margin-left: auto; }
   .recorder-app:not([data-classroom]) .learning-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, .7fr);
+    grid-template-columns: minmax(0, 1fr) clamp(160px, 14vw, 200px);
     gap: 18px;
   }
 }
@@ -118,6 +139,8 @@
   .teacher-menu-items { width: 190px; right: auto; left: 0; }
   .teacher-menu:nth-child(n+3) .teacher-menu-items { right: 0; left: auto; }
   .recorder-app:not([data-classroom]) .learning-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-template-areas: "scene" "settings" "note"; gap: 16px; }
+  .recorder-app:not([data-classroom]) .scene-card { padding: 12px; }
+  .recorder-app:not([data-classroom]) .recorder-scene { gap: 8px; padding: 8px; }
   .teacher-dialog-backdrop { padding: 10px; }
   .teacher-dialog { max-height: calc(100dvh - 20px); border-radius: 18px; }
   .teacher-dialog-heading { padding: 16px; }

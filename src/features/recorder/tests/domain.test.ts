@@ -16,7 +16,11 @@ import {
   NOTE_META,
   NOTE_ORDER,
 } from "../data/noteMeta";
-import { getRecorderPoseSource, RECORDER_POSE_SOURCES } from "../data/poseAssets";
+import {
+  getRecorderPoseSource,
+  RECORDER_POSE_FRAME,
+  RECORDER_POSE_SOURCES,
+} from "../data/poseAssets";
 import type { HoleId, HoleState, SolfegeId } from "../model/types";
 import { buildInstruction } from "../utils/buildInstruction";
 import {
@@ -169,6 +173,7 @@ describe("recorder domain data", () => {
 
       expect(RECORDER_POSE_SOURCES).toContain(baroqueSource);
       expect(RECORDER_POSE_SOURCES).toContain(germanSource);
+      expect(baroqueSource).toMatch(/^\/fingering\/poses-focused\//);
       expect(baroqueSource.endsWith(".png")).toBe(true);
 
       if (systemSpecificNotes.has(note)) {
@@ -179,7 +184,7 @@ describe("recorder domain data", () => {
     }
   });
 
-  it("ships all 20 pose files in one aligned 976×1360 frame", () => {
+  it("ships all 20 focused pose files in one aligned 723×1084 frame", () => {
     expect(RECORDER_POSE_SOURCES).toHaveLength(20);
     expect(new Set(RECORDER_POSE_SOURCES).size).toBe(20);
 
@@ -188,8 +193,19 @@ describe("recorder domain data", () => {
         join(process.cwd(), "public", source.replace(/^\//, "")),
       );
       expect(png.subarray(1, 4).toString("ascii")).toBe("PNG");
-      expect(png.readUInt32BE(16)).toBe(976);
-      expect(png.readUInt32BE(20)).toBe(1360);
+      expect(png.readUInt32BE(16)).toBe(RECORDER_POSE_FRAME.width);
+      expect(png.readUInt32BE(20)).toBe(RECORDER_POSE_FRAME.height);
+    }
+  });
+
+  it("preserves the 20 aligned 976×1360 source pose files", () => {
+    for (const source of RECORDER_POSE_SOURCES) {
+      const original = readFileSync(
+        join(process.cwd(), "public/fingering/poses", source.split("/").at(-1)!),
+      );
+      expect(original.subarray(1, 4).toString("ascii")).toBe("PNG");
+      expect(original.readUInt32BE(16)).toBe(976);
+      expect(original.readUInt32BE(20)).toBe(1360);
     }
   });
 

@@ -2,6 +2,7 @@
 
 import NextImage from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { RECORDER_POSE_FRAME } from "../data/poseAssets";
 import { usePosePreload } from "../hooks/usePosePreload";
 import type { FingeringSystem, NoteBank } from "../model/types";
 import { loadPose } from "../utils/poseLoader";
@@ -223,8 +224,8 @@ export function RecorderPoseStage({
         className="recorder-pose-stage__fallback"
         src={ready && renderedSource ? renderedSource : source}
         alt=""
-        width={976}
-        height={1360}
+        width={RECORDER_POSE_FRAME.width}
+        height={RECORDER_POSE_FRAME.height}
         sizes="(max-width: 700px) 76vw, (max-width: 1100px) 48vw, 390px"
         unoptimized
         aria-hidden="true"

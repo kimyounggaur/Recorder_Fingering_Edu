@@ -182,6 +182,9 @@ describe("RecorderLearningApp", () => {
     const app = document.querySelector(".recorder-app");
     const poseImage = document.querySelector(".recorder-pose-stage__fallback");
     expect(fireEvent.contextMenu(app!)).toBe(false);
+    expect(poseImage).toHaveAttribute("src", "/fingering/poses-focused/do.png");
+    expect(poseImage).toHaveAttribute("width", "723");
+    expect(poseImage).toHaveAttribute("height", "1084");
     expect(poseImage).toHaveAttribute("draggable", "false");
     expect(fireEvent.dragStart(poseImage!)).toBe(false);
   });
@@ -223,12 +226,12 @@ describe("RecorderLearningApp", () => {
     expect(hole("T0")).toHaveAttribute("data-hole-state", "half");
     expect(hole("R6")).toHaveAttribute("data-hole-state", "closed");
     expect(screen.getByTestId("recorder-scene")).toHaveAttribute("data-contacted-holes", "T0 L1 L2 L3 R4 R6");
-    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses/f5-baroque.png");
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses-focused/f5-baroque.png");
     fireEvent.click(screen.getByRole("radio", { name: /독일식/ }));
     await finishAnimations();
     expect(hole("T0")).toHaveAttribute("data-hole-state", "half");
     expect(hole("R6")).toHaveAttribute("data-hole-state", "open");
-    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses/f5-german.png");
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses-focused/f5-german.png");
   });
 
   it("maps Shift, Alt, and Ctrl chords to their note banks", async () => {
@@ -254,14 +257,14 @@ describe("RecorderLearningApp", () => {
     expect(hole("R5")).toHaveAttribute("data-hole-state", "open");
     expect(hole("R6")).toHaveAttribute("data-hole-state", "closed");
     expect(hole("R7")).toHaveAttribute("data-hole-state", "closed");
-    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses/fa-baroque.png");
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses-focused/fa-baroque.png");
     fireEvent.click(screen.getByRole("radio", { name: /독일식/ }));
     await finishAnimations();
     expect(hole("R4")).toHaveAttribute("data-hole-state", "closed");
     expect(hole("R5")).toHaveAttribute("data-hole-state", "open");
     expect(hole("R6")).toHaveAttribute("data-hole-state", "open");
     expect(hole("R7")).toHaveAttribute("data-hole-state", "open");
-    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses/fa-german.png");
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses-focused/fa-german.png");
     openPanel("수업 도구", "손가락 안내");
     expect(screen.getByText(/독일식 파예요/)).toBeInTheDocument();
   });
@@ -342,13 +345,13 @@ describe("RecorderLearningApp", () => {
     enableSteps();
     selectLow(2);
     openPanel("수업 도구", "손가락 안내");
-    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses/do.png");
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses-focused/do.png");
     fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
-    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses/do.png");
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses-focused/do.png");
     fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
     expect(hole("R7")).toHaveAttribute("data-hole-state", "open");
     expect(screen.getByTestId("recorder-scene")).toHaveAttribute("data-closed-holes", "T0 L1 L2 L3 R4 R5 R6");
-    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses/re.png");
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses-focused/re.png");
   });
 
   it("traps help focus, blocks global shortcuts, and restores the settings trigger", async () => {

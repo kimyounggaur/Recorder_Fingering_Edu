@@ -158,7 +158,7 @@ curl -i https://recorder-fingering-edu.vercel.app/.well-known/assetlinks.json
 
 새 음은 [설계서 부록 A 계약](<리코더_웹앱_개선보완_바이브코딩_프롬프트_v3(Fable51).md#부록-a-새-음-추가-계약-체크리스트>) 전체를 같은 변경에서 충족해야 합니다. 출처 두 곳의 일치와 엄지 상태가 확인되기 전에는 추측한 음을 추가하지 않습니다. 이번 릴리스의 신규 음은 0개입니다.
 
-포즈는 모두 976×1360, 동일 크롭 창과 악기 위치를 유지합니다. [20개 자산 매핑](public/fingering/poses/README.md)과 [시각 회귀 갱신 절차](docs/animation-tuning.md)를 따르세요. 원본 `02 Fingering`을 콘텐츠 경계로 자동 크롭하지 않습니다. 오디오 샘플 교체는 [라이선스·엔진 계약](public/audio/recorder/README.md)을 확인하세요.
+원본 포즈 20개는 976×1360으로 보존하며, 화면에는 공통 콘텐츠 경계에 16px 안전 여백을 더한 723×1084 파생본을 사용합니다. [원본 자산 매핑](public/fingering/poses/README.md), [화면용 파생본 계약](public/fingering/poses-focused/README.md), [시각 회귀 갱신 절차](docs/animation-tuning.md)를 따르세요. 오디오 샘플 교체는 [라이선스·엔진 계약](public/audio/recorder/README.md)을 확인하세요.
 
 ## 결과와 제약
 

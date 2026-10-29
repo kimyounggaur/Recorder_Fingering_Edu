@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { NOTE_BANKS } from "../src/features/recorder/data/noteMeta";
 import { getRecorderPoseSource } from "../src/features/recorder/data/poseAssets";
-import { openNotes, waitForLesson } from "./teacher-helpers";
+import { chooseNote, closeTool, openNotes, waitForLesson } from "./teacher-helpers";
+
+const offlineBaseURL = process.env.PLAYWRIGHT_OFFLINE_BASE_URL ?? "http://127.0.0.1:4174";
 
 test("offline after first visit keeps all 17 poses", async ({ page, context, browserName }) => {
   test.skip(browserName !== "chromium", "Service worker offline lifecycle is verified in Chromium.");
-  await page.goto("http://127.0.0.1:4174/");
+  await page.goto(`${offlineBaseURL}/`);
   await waitForLesson(page);
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
@@ -21,6 +23,20 @@ test("offline after first visit keeps all 17 poses", async ({ page, context, bro
       await page.getByTestId(bank === "low" ? `note-button-${digit}` : `note-button-${bank}-${digit}`).click();
       await expect(page.locator(".recorder-pose-stage")).toHaveAttribute("data-rendered-source", getRecorderPoseSource(note, "baroque"));
     }
+  }
+  await closeTool(page, "음 선택");
+  await page.getByRole("radio", { name: /독일식/ }).check();
+  for (const [bank, note] of [
+    ["low", "fa"],
+    ["chromatic", "faSharp"],
+    ["high", "highFa"],
+  ] as const) {
+    const digit = NOTE_BANKS[bank].find((entry) => entry.note === note)!.digit;
+    await chooseNote(page, digit, bank);
+    await expect(page.locator(".recorder-pose-stage")).toHaveAttribute(
+      "data-rendered-source",
+      getRecorderPoseSource(note, "german"),
+    );
   }
   await context.setOffline(false);
 });
