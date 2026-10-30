@@ -94,10 +94,15 @@ test("파 changes only the expected holes when switching to German fingering", a
   await expect(page.locator(".recorder-pose-stage")).toHaveAttribute("data-rendered-source", "/fingering/poses-focused/fa-baroque.png");
   await expect(page.getByTestId("recorder-scene")).toHaveAttribute("data-closed-holes", "T0 L1 L2 L3 R4 R6 R7");
   await expect(hole(page, "R5")).toHaveAttribute("data-hole-state", "open");
-  await page.getByRole("radio", { name: /독일식/ }).check();
+  await page.locator(".segment-option").filter({ hasText: "독일식" }).click();
+  await expect(page.getByRole("radio", { name: /독일식/ })).toBeChecked();
   await expect(page.getByTestId("recorder-scene")).toHaveAttribute("data-closed-holes", "T0 L1 L2 L3 R4");
   for (const id of ["R5", "R6", "R7"]) await expect(hole(page, id)).toHaveAttribute("data-hole-state", "open");
   await expect(page.locator(".recorder-pose-stage")).toHaveAttribute("data-rendered-source", "/fingering/poses-focused/fa-german.png");
+  await page.locator(".segment-option").filter({ hasText: "바로크식" }).click();
+  await expect(page.getByRole("radio", { name: /바로크식/ })).toBeChecked();
+  await expect(page.getByTestId("recorder-scene")).toHaveAttribute("data-closed-holes", "T0 L1 L2 L3 R4 R6 R7");
+  await expect(page.locator(".recorder-pose-stage")).toHaveAttribute("data-rendered-source", "/fingering/poses-focused/fa-baroque.png");
   expect(errors).toEqual([]);
 });
 
