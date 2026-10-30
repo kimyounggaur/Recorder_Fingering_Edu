@@ -235,7 +235,7 @@ describe("RecorderLearningApp", () => {
     expect(hole("R6")).toHaveAttribute("data-hole-state", "closed");
     expect(screen.getByTestId("recorder-scene")).toHaveAttribute("data-contacted-holes", "T0 L1 L2 L3 R4 R6");
     expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses-focused/f5-baroque.png");
-    fireEvent.click(screen.getByRole("radio", { name: /독일식/ }));
+    fireEvent.click(screen.getByText("독일식", { selector: ".segment-option span" }));
     await finishAnimations();
     expect(hole("T0")).toHaveAttribute("data-hole-state", "half");
     expect(hole("R6")).toHaveAttribute("data-hole-state", "open");
@@ -273,8 +273,17 @@ describe("RecorderLearningApp", () => {
     expect(hole("R6")).toHaveAttribute("data-hole-state", "open");
     expect(hole("R7")).toHaveAttribute("data-hole-state", "open");
     expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses-focused/fa-german.png");
+    expect(screen.getByRole("radio", { name: /독일식/ })).toBeChecked();
+    expect(screen.getByText(/독일식 선택됨/)).toBeInTheDocument();
     openPanel("수업 도구", "손가락 안내");
     expect(screen.getByText(/독일식 파예요/)).toBeInTheDocument();
+    closePanel("손가락 안내");
+    fireEvent.click(screen.getByText("바로크식", { selector: ".segment-option span" }));
+    await finishAnimations();
+    expect(screen.getByRole("radio", { name: /바로크식/ })).toBeChecked();
+    expect(hole("R6")).toHaveAttribute("data-hole-state", "closed");
+    expect(hole("R7")).toHaveAttribute("data-hole-state", "closed");
+    expect(document.querySelector(".recorder-pose-stage")).toHaveAttribute("data-pose-source", "/fingering/poses-focused/fa-baroque.png");
   });
 
   it("toggles mute in the settings submenu and updates the main sound button", async () => {

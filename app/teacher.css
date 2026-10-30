@@ -98,6 +98,7 @@
   .recorder-app:not([data-classroom]) .settings-area .segment-option { min-height: 52px; padding: 4px 2px; border-radius: 9px; }
   .recorder-app:not([data-classroom]) .settings-area .segment-option span { font-size: .75rem; }
   .recorder-app:not([data-classroom]) .settings-area .segment-option small { font-size: .65rem; line-height: 1.2; }
+  .recorder-app:not([data-classroom]) .settings-area .system-hint { margin: -3px 0 8px; font-size: .65rem; }
   .recorder-app:not([data-classroom]) .note-card--embedded { padding-top: 9px; }
   .recorder-app:not([data-classroom]) .note-card--embedded .card-eyebrow-row { align-items: center; flex-wrap: wrap; gap: 4px; }
   .recorder-app:not([data-classroom]) .note-card--embedded .status-badge { min-height: 24px; padding: 3px 6px; font-size: .65rem; }

@@ -1165,9 +1165,12 @@ h2 {
 
 .segment-option input {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   opacity: 0;
+  cursor: pointer;
 }
 
 .segment-option span {
@@ -1190,6 +1193,13 @@ h2 {
   outline: 3px solid #163f91;
   outline-offset: 2px;
   box-shadow: 0 0 0 2px #fff;
+}
+
+.system-hint {
+  margin: -10px 0 14px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
 }
 
 .toggle-list {

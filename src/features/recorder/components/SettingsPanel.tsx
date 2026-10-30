@@ -51,6 +51,9 @@ export function SettingsPanel(props: SettingsPanelProps) {
           { value: "german", label: "독일식", description: "파: 5·6·7번 열기" },
         ]}
       />
+      <p className="system-hint" aria-live="polite">
+        {props.system === "baroque" ? "바로크식" : "독일식"} 선택됨 · 파, 파♯, 높은 파에서 운지 차이를 확인하세요.
+      </p>
 
       <SegmentedControl
         legend="보기 속도"
