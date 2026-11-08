@@ -66,6 +66,21 @@ beforeEach(() => {
 afterEach(() => { vi.useRealTimers(); });
 
 describe("RecorderLearningApp", () => {
+  it("toggles stage fullscreen with 0 and ignores typing and modified keys", async () => {
+    await renderReadyApp();
+    const stage = document.querySelector(".scene-card")!;
+    fireEvent.keyDown(window, { key: "0", code: "Digit0", ctrlKey: true });
+    expect(stage).not.toHaveAttribute("data-stage-fullscreen");
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    fireEvent.keyDown(input, { key: "0", code: "Digit0" });
+    input.remove();
+    expect(stage).not.toHaveAttribute("data-stage-fullscreen");
+    await act(async () => { fireEvent.keyDown(window, { key: "0", code: "Digit0" }); await Promise.resolve(); });
+    expect(stage).toHaveAttribute("data-stage-fullscreen", "true");
+    await act(async () => { fireEvent.keyDown(window, { key: "0", code: "Numpad0" }); });
+    expect(stage).not.toHaveAttribute("data-stage-fullscreen");
+  });
   it("tracks native fullscreen and restores the stage when the browser exits", async () => {
     let fullscreen: Element | null = null;
     const descriptor = Object.getOwnPropertyDescriptor(document, "fullscreenElement");
