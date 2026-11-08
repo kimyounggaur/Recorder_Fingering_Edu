@@ -15,8 +15,8 @@ function isTypingTarget(target: EventTarget | null): boolean {
     target.tagName === "SELECT"
   );
 }
-export function useGlobalShortcuts({ activeBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote, classroom, toggleClassroom, exitClassroom, toggleSpeed, toggleMuted, toggleCourse }: Pick<ReturnType<typeof useNoteSelection>, "activeBank" | "goNext" | "goPrevious" | "playCurrentNote" | "selectNote"> & {
-  helpOpen: boolean; classroom: boolean; toggleClassroom: () => void; exitClassroom: () => void;
+export function useGlobalShortcuts({ activeBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote, classroom, stageFullscreen, toggleClassroom, exitClassroom, toggleSpeed, toggleMuted, toggleCourse }: Pick<ReturnType<typeof useNoteSelection>, "activeBank" | "goNext" | "goPrevious" | "playCurrentNote" | "selectNote"> & {
+  helpOpen: boolean; classroom: boolean; stageFullscreen: boolean; toggleClassroom: () => void; exitClassroom: () => void;
   toggleSpeed: () => void; toggleMuted: () => void; toggleCourse: () => void;
 }) {
   useEffect(() => {
@@ -38,7 +38,7 @@ export function useGlobalShortcuts({ activeBank, goNext, goPrevious, helpOpen, p
 
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const key = event.key.toLowerCase();
-      if (key === "t") { event.preventDefault(); toggleClassroom(); }
+      if (key === "t" && !stageFullscreen) { event.preventDefault(); toggleClassroom(); }
       else if (classroom && key === "escape") { event.preventDefault(); exitClassroom(); }
       else if (classroom && key === "s") { event.preventDefault(); toggleSpeed(); }
       else if (classroom && key === "m") { event.preventDefault(); toggleMuted(); }
@@ -57,5 +57,5 @@ export function useGlobalShortcuts({ activeBank, goNext, goPrevious, helpOpen, p
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote, classroom, toggleClassroom, exitClassroom, toggleSpeed, toggleMuted, toggleCourse]);
+  }, [activeBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote, classroom, stageFullscreen, toggleClassroom, exitClassroom, toggleSpeed, toggleMuted, toggleCourse]);
 }

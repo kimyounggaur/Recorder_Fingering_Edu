@@ -66,6 +66,42 @@ beforeEach(() => {
 afterEach(() => { vi.useRealTimers(); });
 
 describe("RecorderLearningApp", () => {
+  it("tracks native fullscreen and restores the stage when the browser exits", async () => {
+    let fullscreen: Element | null = null;
+    const descriptor = Object.getOwnPropertyDescriptor(document, "fullscreenElement");
+    Object.defineProperty(document, "fullscreenElement", { configurable: true, get: () => fullscreen });
+    try {
+      await renderReadyApp();
+      const stage = document.querySelector<HTMLElement>(".scene-card")!;
+      stage.requestFullscreen = vi.fn(async () => { fullscreen = stage; document.dispatchEvent(new Event("fullscreenchange")); });
+      const button = screen.getByRole("button", { name: /^전체화면$/ });
+      await act(async () => { fireEvent.click(button); await Promise.resolve(); });
+      expect(stage).toHaveAttribute("data-stage-fullscreen", "true");
+      expect(stage).not.toHaveAttribute("data-fullscreen-fallback");
+      await act(async () => { fullscreen = null; document.dispatchEvent(new Event("fullscreenchange")); });
+      expect(stage).not.toHaveAttribute("data-stage-fullscreen");
+      expect(button).toHaveFocus();
+    } finally {
+      if (descriptor) Object.defineProperty(document, "fullscreenElement", descriptor);
+      else Reflect.deleteProperty(document, "fullscreenElement");
+    }
+  });
+  it("expands the stage without fullscreen support and restores it with Escape", async () => {
+    await renderReadyApp();
+    const button = screen.getByRole("button", { name: /^전체화면$/ });
+    await act(async () => { fireEvent.click(button); await Promise.resolve(); });
+    const stage = document.querySelector(".scene-card")!;
+    expect(stage).toHaveAttribute("data-stage-fullscreen", "true");
+    expect(stage).toHaveAttribute("data-fullscreen-fallback", "true");
+    selectLow(4);
+    expect(currentNote()).toHaveTextContent("파");
+    fireEvent.keyDown(window, { key: "t" });
+    expect(document.body).not.toHaveAttribute("data-classroom");
+    await act(async () => { fireEvent.keyDown(window, { key: "Escape" }); });
+    expect(stage).not.toHaveAttribute("data-stage-fullscreen");
+    expect(currentNote()).toHaveTextContent("파");
+    expect(button).toHaveFocus();
+  });
   it("merges the current note into the settings card until a submenu is opened", async () => {
     await renderReadyApp();
     const settingsCard = document.querySelector<HTMLElement>(".settings-card")!;
