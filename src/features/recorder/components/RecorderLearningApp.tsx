@@ -6,6 +6,7 @@ import { FingeringLegend } from "./FingeringLegend";
 import { HelpDialog } from "./HelpDialog";
 import { InstructionPanel } from "./InstructionPanel";
 import { NoteCard } from "./NoteCard";
+import { StaffNote } from "./StaffNote";
 import { NoteKeypad } from "./NoteKeypad";
 import { OnboardingBanner } from "./OnboardingBanner";
 import { CoursePanel } from "./CoursePanel";
@@ -117,6 +118,17 @@ export function RecorderLearningApp() {
             </div>
           </div>
           <div className="recorder-stage-frame">
+            {stageFullscreen.active && (
+              <aside className="fullscreen-note" aria-label="현재 음 정보" aria-live="polite">
+                <div className="fullscreen-note__text">
+                  <strong className="fullscreen-note__solfege">{currentNote.solfegeKo}</strong>
+                  <p>음 이름 {currentNote.noteName}</p>
+                  <p>실제 소리 {currentNote.soundingPitch}</p>
+                </div>
+                <StaffNote step={currentNote.staffStep} label={currentNote.solfegeKo} accidental={currentNote.accidental} enharmonicLabel={currentNote.accidental ? currentNote.solfegeKo.replace(" / ", " = ") : undefined} />
+                <p className="fullscreen-note__instruction">{currentNote.shortInstruction}</p>
+              </aside>
+            )}
             <RecorderScene
               bank={activeBank}
               className="recorder-scene"
