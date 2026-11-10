@@ -78,8 +78,16 @@ describe("RecorderLearningApp", () => {
     expect(stage).not.toHaveAttribute("data-stage-fullscreen");
     await act(async () => { fireEvent.keyDown(window, { key: "0", code: "Digit0" }); await Promise.resolve(); });
     expect(stage).toHaveAttribute("data-stage-fullscreen", "true");
+    const noteInfo = within(stage as HTMLElement).getByRole("complementary", { name: "현재 음 정보" });
+    expect(noteInfo).toHaveTextContent("도");
+    expect(noteInfo).toHaveTextContent("음 이름 C4");
+    expect(within(noteInfo).getByRole("img")).toBeInTheDocument();
+    selectLow(4);
+    expect(noteInfo).toHaveTextContent("파");
+    expect(noteInfo).toHaveTextContent("음 이름 F4");
     await act(async () => { fireEvent.keyDown(window, { key: "0", code: "Numpad0" }); });
     expect(stage).not.toHaveAttribute("data-stage-fullscreen");
+    expect(within(stage as HTMLElement).queryByRole("complementary", { name: "현재 음 정보" })).not.toBeInTheDocument();
   });
   it("tracks native fullscreen and restores the stage when the browser exits", async () => {
     let fullscreen: Element | null = null;

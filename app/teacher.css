@@ -206,10 +206,30 @@
 }
 .recorder-app:not([data-classroom]) .scene-card[data-stage-fullscreen="true"] .recorder-stage-frame {
   flex: 1 1 auto;
+  grid-template-columns: clamp(180px, 20vw, 300px) minmax(0, 1fr);
+  align-items: stretch;
   min-height: 0;
   max-height: none;
   overflow: hidden;
 }
+.fullscreen-note {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(12px, 2vh, 24px);
+  min-width: 0;
+  margin: 8px 0 8px 8px;
+  padding: clamp(12px, 1.5vw, 24px);
+  border: 1px solid #dfd7c8;
+  border-radius: 18px;
+  background: #fff;
+  color: #36445a;
+}
+.fullscreen-note__solfege { display: block; color: #204cab; font-size: clamp(3rem, 7vw, 6.5rem); line-height: 1.05; }
+.fullscreen-note__text p { margin: 5px 0 0; font-size: clamp(.9rem, 1.3vw, 1.2rem); }
+.fullscreen-note .staff-note { width: 100%; max-width: 240px; height: auto; }
+.fullscreen-note__instruction { margin: 0; padding: 12px; border-left: 4px solid #e8a600; border-radius: 0 8px 8px 0; background: #fff1cc; font-size: clamp(.9rem, 1.2vw, 1.15rem); }
 .recorder-app:not([data-classroom]) .scene-card[data-stage-fullscreen="true"] .recorder-scene {
   height: 100%;
   max-height: none;
@@ -217,6 +237,15 @@
 }
 .stage-fullscreen-button { min-height: 36px; padding: 6px 10px; white-space: nowrap; }
 @media (max-width: 760px) {
+  .recorder-app:not([data-classroom]) .scene-card[data-stage-fullscreen="true"] .recorder-stage-frame {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .fullscreen-note { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; margin: 6px 6px 0; padding: 8px; }
+  .fullscreen-note__solfege { font-size: clamp(2rem, 8vw, 3rem); }
+  .fullscreen-note__text p { font-size: .72rem; }
+  .fullscreen-note .staff-note { width: min(25vw, 130px); }
+  .fullscreen-note__instruction { max-width: 33%; padding: 6px; font-size: .75rem; }
   .recorder-app:not([data-classroom]) .scene-card[data-stage-fullscreen="true"] .scene-heading {
     grid-template-columns: 1fr auto;
     grid-template-areas: "title status" "legend legend";
