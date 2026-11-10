@@ -15,7 +15,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
     target.tagName === "SELECT"
   );
 }
-export function useGlobalShortcuts({ activeBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote, classroom, stageFullscreen, toggleStageFullscreen, toggleClassroom, exitClassroom, toggleSpeed, toggleMuted, toggleCourse }: Pick<ReturnType<typeof useNoteSelection>, "activeBank" | "goNext" | "goPrevious" | "playCurrentNote" | "selectNote"> & {
+export function useGlobalShortcuts({ keyboardBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote, classroom, stageFullscreen, toggleStageFullscreen, toggleClassroom, exitClassroom, toggleSpeed, toggleMuted, toggleCourse }: Pick<ReturnType<typeof useNoteSelection>, "keyboardBank" | "goNext" | "goPrevious" | "playCurrentNote" | "selectNote"> & {
   helpOpen: boolean; classroom: boolean; stageFullscreen: boolean; toggleStageFullscreen: () => void; toggleClassroom: () => void; exitClassroom: () => void;
   toggleSpeed: () => void; toggleMuted: () => void; toggleCourse: () => void;
 }) {
@@ -24,13 +24,16 @@ export function useGlobalShortcuts({ activeBank, goNext, goPrevious, helpOpen, p
       if (helpOpen || event.defaultPrevented) return;
       if (isTypingTarget(event.target) || event.isComposing) return;
 
-      const shortcutNote = resolveNoteShortcut(event, activeBank);
+      // A modified key temporarily selects another bank without changing the
+      // default chosen in the note menu or classroom controls.
+      const defaultBank: NoteBank = keyboardBank;
+      const shortcutNote = resolveNoteShortcut(event, defaultBank);
       if (shortcutNote) {
         const bank: NoteBank = event.shiftKey
           ? "high"
           : event.altKey
             ? "chromatic"
-            : event.ctrlKey ? "low" : activeBank;
+            : event.ctrlKey ? "low" : defaultBank;
         event.preventDefault();
         selectNote(shortcutNote, { bank });
         return;
@@ -58,5 +61,5 @@ export function useGlobalShortcuts({ activeBank, goNext, goPrevious, helpOpen, p
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote, classroom, stageFullscreen, toggleStageFullscreen, toggleClassroom, exitClassroom, toggleSpeed, toggleMuted, toggleCourse]);
+  }, [keyboardBank, goNext, goPrevious, helpOpen, playCurrentNote, selectNote, classroom, stageFullscreen, toggleStageFullscreen, toggleClassroom, exitClassroom, toggleSpeed, toggleMuted, toggleCourse]);
 }
