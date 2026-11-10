@@ -315,6 +315,26 @@ describe("RecorderLearningApp", () => {
     expect(currentNote()).toHaveTextContent("솔");
   });
 
+  it("returns to the low bank after releasing Shift or Alt", async () => {
+    await renderReadyApp();
+    fireEvent.keyDown(window, { key: "@", code: "Digit2", shiftKey: true });
+    expect(currentNote()).toHaveTextContent("높은 레");
+    fireEvent.keyUp(window, { key: "Shift", code: "ShiftLeft" });
+    fireEvent.keyDown(window, { key: "2", code: "Digit2" });
+    expect(currentNote()).toHaveTextContent("레");
+    fireEvent.keyDown(window, { key: "1", code: "Digit1", altKey: true });
+    expect(currentNote()).toHaveTextContent("도♯/레♭");
+    fireEvent.keyUp(window, { key: "Alt", code: "AltLeft" });
+    fireEvent.keyDown(window, { key: "1", code: "Digit1" });
+    expect(currentNote()).toHaveTextContent("도");
+    openPanel("음 선택", "높은 계이름");
+    closePanel("음 선택");
+    fireEvent.keyDown(window, { key: "1", code: "Digit1", altKey: true });
+    fireEvent.keyUp(window, { key: "Alt", code: "AltLeft" });
+    fireEvent.keyDown(window, { key: "2", code: "Digit2" });
+    expect(currentNote()).toHaveTextContent("높은 레");
+  });
+
   it("opens R6 and R7 when 파 changes from baroque to german", async () => {
     vi.useFakeTimers();
     await renderReadyApp();

@@ -49,7 +49,12 @@ export function useNoteSelection({ preferences, updatePreferences, reducedMotion
   const { beginPlaybackRequest, playAtContact, setMuted: setAudioMuted, stop: stopAudio } = audio;
   const [selectedNote, setSelectedNote] = useState<SolfegeId>("do");
 
-  const [activeBank, setActiveBank] = useState<NoteBank>("low");
+  const [activeBank, setActiveBankState] = useState<NoteBank>("low");
+  const [keyboardBank, setKeyboardBank] = useState<NoteBank>("low");
+  const setActiveBank = useCallback((bank: NoteBank) => {
+    setActiveBankState(bank);
+    setKeyboardBank(bank);
+  }, []);
 
   const [transitionOrigin, setTransitionOrigin] =
     useState<TransitionOrigin | null>(null);
@@ -162,7 +167,7 @@ export function useNoteSelection({ preferences, updatePreferences, reducedMotion
       } = {},
     ) => {
       const { stopSequence = true, play = true, bank } = options;
-      if (bank) setActiveBank(bank);
+      if (bank) setActiveBankState(bank);
       if (stopSequence) {
         onStopSequence();
       }
@@ -336,5 +341,5 @@ export function useNoteSelection({ preferences, updatePreferences, reducedMotion
     updatePreferences({ fingeringSystem: snapshot.system, speed: snapshot.speed, stepMode: snapshot.stepMode });
     requestAnimation();
   }, [cancelAudio, onStopSequence, selectedNote, system, getVisualClosedHoles, updatePreferences, requestAnimation]);
-  return { selectedNote, setSelectedNote, activeBank, setActiveBank, transitionOrigin, animationKey, system, currentNote, currentShortcutLabel, displayAnimation, displayedHoleStates, selectNote, playCurrentNote, replay, changeSystem, chooseOnboardingSystem, changeMuted, changeStepMode, currentIndex, goPrevious, goNext, instruction, liveMessage, cancelAudio, prepareReset, setStepMode, restoreSelection };
+  return { selectedNote, setSelectedNote, activeBank, keyboardBank, setActiveBank, transitionOrigin, animationKey, system, currentNote, currentShortcutLabel, displayAnimation, displayedHoleStates, selectNote, playCurrentNote, replay, changeSystem, chooseOnboardingSystem, changeMuted, changeStepMode, currentIndex, goPrevious, goNext, instruction, liveMessage, cancelAudio, prepareReset, setStepMode, restoreSelection };
 }
