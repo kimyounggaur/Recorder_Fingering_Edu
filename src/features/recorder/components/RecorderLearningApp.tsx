@@ -17,10 +17,10 @@ import { TeacherDialog } from "./TeacherDialog";
 import { useStageFullscreen } from "../hooks/useStageFullscreen";
 import { ClassroomControls } from "./ClassroomControls";
 export function RecorderLearningApp() {
-  const stageFullscreen = useStageFullscreen();
+  const { stageRef, buttonRef, active: stageFullscreenActive, fallback: stageFullscreenFallback, toggle: toggleStageFullscreen } = useStageFullscreen();
   const [panel, setPanel] = useState<TeacherPanel | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const lesson = useRecorderLesson(panel !== null || menuOpen, stageFullscreen.active, stageFullscreen.toggle);
+  const lesson = useRecorderLesson(panel !== null || menuOpen, stageFullscreenActive, toggleStageFullscreen);
   const { preferences, preferencesLoaded, updatePreferences, resetPreferences, reducedMotion, audio, statusMessage, helpOpen, setHelpOpen, closeHelp, debug, classroom, stepMode, showFingerNames, setShowFingerNames, selectedNote, activeBank, setActiveBank, transitionOrigin, animationKey, system, currentNote, currentShortcutLabel, displayAnimation, displayedHoleStates, selectNote, playCurrentNote, replay, changeSystem, chooseOnboardingSystem, changeMuted, changeStepMode, goPrevious, goNext, instruction, liveMessage, coursePractice } = lesson;
   const closePanel = useCallback(() => setPanel(null), []);
   const openPanel = (nextPanel: TeacherPanel) => {
@@ -97,7 +97,7 @@ export function RecorderLearningApp() {
       </header>
 
       <main id="learning-stage" className="learning-grid">
-        <section ref={stageFullscreen.stageRef} className="card scene-card" data-stage-fullscreen={stageFullscreen.active || undefined} data-fullscreen-fallback={stageFullscreen.fallback || undefined} aria-labelledby="scene-heading">
+        <section ref={stageRef} className="card scene-card" data-stage-fullscreen={stageFullscreenActive || undefined} data-fullscreen-fallback={stageFullscreenFallback || undefined} aria-labelledby="scene-heading">
           <div className="section-heading-row scene-heading" hidden={classroom.active}>
             <div className="scene-heading__title">
               <p className="eyebrow">앞면 1–7 · 뒷면 엄지 0</p>
@@ -107,7 +107,7 @@ export function RecorderLearningApp() {
               <FingeringLegend />
             </div>
             <div className="scene-heading__status">
-              {!classroom.active && <button ref={stageFullscreen.buttonRef} type="button" className="secondary-button stage-fullscreen-button" title="단축키: 0" onClick={stageFullscreen.toggle} aria-pressed={stageFullscreen.active}>{stageFullscreen.active ? "전체화면 종료" : "전체화면"}</button>}
+              {!classroom.active && <button ref={buttonRef} type="button" className="secondary-button stage-fullscreen-button" title="단축키: 0" onClick={toggleStageFullscreen} aria-pressed={stageFullscreenActive}>{stageFullscreenActive ? "전체화면 종료" : "전체화면"}</button>}
               {!showFingerChanges ? (
                 <p className="scene-match-status">손 모양과 구멍 지도가 일치했어요.</p>
               ) : null}
@@ -118,7 +118,7 @@ export function RecorderLearningApp() {
             </div>
           </div>
           <div className="recorder-stage-frame">
-            {stageFullscreen.active && (
+            {stageFullscreenActive && (
               <aside className="fullscreen-note" aria-label="현재 음 정보" aria-live="polite">
                 <div className="fullscreen-note__text">
                   <strong className="fullscreen-note__solfege">{currentNote.solfegeKo}</strong>
