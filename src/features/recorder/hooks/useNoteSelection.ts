@@ -340,6 +340,6 @@ export function useNoteSelection({ preferences, updatePreferences, reducedMotion
     setSelectedNote(snapshot.note); setActiveBank(snapshot.bank);
     updatePreferences({ fingeringSystem: snapshot.system, speed: snapshot.speed, stepMode: snapshot.stepMode });
     requestAnimation();
-  }, [cancelAudio, onStopSequence, selectedNote, system, getVisualClosedHoles, updatePreferences, requestAnimation]);
+  }, [cancelAudio, onStopSequence, selectedNote, system, getVisualClosedHoles, setActiveBank, updatePreferences, requestAnimation]);
   return { selectedNote, setSelectedNote, activeBank, keyboardBank, setActiveBank, transitionOrigin, animationKey, system, currentNote, currentShortcutLabel, displayAnimation, displayedHoleStates, selectNote, playCurrentNote, replay, changeSystem, chooseOnboardingSystem, changeMuted, changeStepMode, currentIndex, goPrevious, goNext, instruction, liveMessage, cancelAudio, prepareReset, setStepMode, restoreSelection };
 }

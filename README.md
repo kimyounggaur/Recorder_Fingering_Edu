@@ -171,3 +171,7 @@ curl -i https://recorder-fingering-edu.vercel.app/.well-known/assetlinks.json
 기존 17음과 운지는 유지했습니다. 높은 라 이상·높은 반음 확장은 검증 자료 부족으로 보류했습니다. 실제 녹음·마이크 음정 인식·계정 동기화는 제공하지 않습니다. iOS Safari/Android TWA 실기기와 실물 프로젝터 검수는 자동 테스트와 구분해 인수 문서에 남깁니다. 전체화면 거절 시 동일한 수업 레이아웃을 제공합니다.
 
 next/font의 실제 로드가 vinext에서 확인되지 않아 한국어 시스템 폰트를 사용합니다. 개발 HMR의 multiple-renderers 경고와 개발 도구 의존성 보안 경고는 남아 있으며, 프로덕션 의존성 audit는 0건입니다. 수치는 검사 시점의 결과이며 [인수 문서](docs/acceptance-v3.md)에 범위를 기록합니다.
+
+### 리코더 운지 MCP
+
+공개 운지표를 원격 MCP에서 조회하는 방법은 [리코더 운지 MCP 안내](docs/recorder-mcp.md)를 참고하세요.
